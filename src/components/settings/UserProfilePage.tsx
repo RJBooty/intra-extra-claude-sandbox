@@ -9,7 +9,7 @@ import {
   EyeOff, FileText, FolderOpen, Globe, Heart, Key, Lock, Luggage, 
   Mail, MessageCircle, MessageSquare, Mountain, Package, Phone, Plane, 
   Plus, Receipt, Save, Scale, Send, Settings, Shield, ShieldCheck, 
-  Star, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
+  Star, Train, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
   UserX, Users, Wrench, X, XCircle, Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -436,64 +436,197 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
 
   // Availability Tab
   const renderAvailabilityTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-      <div className="lg:col-span-3">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-800">Calendar View</h3>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700">
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="text-lg font-medium text-gray-800">May 2024</span>
-                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700">
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-                <button className="text-sm font-medium text-blue-600 hover:text-blue-800">View Year</button>
+    <div className="grid grid-cols-3 gap-8">
+      <div className="col-span-2">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Calendar View</h2>
+            <div className="flex items-center">
+              <button className="text-gray-500 hover:text-gray-900">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="font-semibold mx-2">May 2024</span>
+              <button className="text-gray-500 hover:text-gray-900">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              <a className="text-blue-600 text-sm ml-4" href="#">View Year</a>
+            </div>
+          </div>
+          <div className="grid grid-cols-7 text-center text-sm font-medium text-gray-500 mb-2">
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
+          </div>
+          <div className="grid grid-cols-7 text-center">
+            <div className="py-2 text-gray-400">29</div>
+            <div className="py-2 text-gray-400">30</div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">1</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">2</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">3</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">4</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">5</span></div>
+            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">6</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">7</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">8</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">9</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">10</span></div>
+            <div className="py-2"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">11</span></div>
+            <div className="py-2"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">12</span></div>
+            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">13</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">14</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-blue-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto ring-2 ring-blue-500">15</span></div>
+            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">16</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">17</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">18</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
+            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">19</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">20</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">21</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">22</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">23</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">24</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">25</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">26</span></div>
+            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">27</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">28</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">29</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">30</span></div>
+            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">31</span></div>
+            <div className="py-2 text-gray-400">1</div>
+            <div className="py-2 text-gray-400">2</div>
+          </div>
+          <div className="flex items-center justify-between mt-4 text-sm">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center"><span className="h-3 w-3 bg-green-400 rounded-full mr-2"></span>Available</div>
+              <div className="flex items-center"><span className="h-3 w-3 bg-red-400 rounded-full mr-2"></span>Booked</div>
+              <div className="flex items-center"><span className="h-3 w-3 bg-blue-400 rounded-full mr-2"></span>Pencilled In</div>
+              <div className="flex items-center"><span className="h-3 w-3 bg-yellow-400 rounded-full mr-2"></span>Personal Holiday</div>
+              <div className="flex items-center"><span className="h-3 w-3 bg-gray-800 rounded-full mr-2"></span>Blackout Date</div>
+            </div>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm flex items-center">
+              <Calendar className="w-4 h-4 mr-1" /> Edit Availability
+            </button>
+          </div>
+        </div>
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold flex items-center mb-4"><AlertTriangle className="text-yellow-500 mr-2" />Scheduling Clashes</h2>
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex">
+            <div className="text-center mr-4">
+              <div className="text-sm text-red-500 font-semibold">MAY</div>
+              <div className="text-2xl font-bold">15</div>
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-semibold">Clash Detected: Project Overlap</h3>
+              <p className="text-sm text-gray-600 mb-2">This individual has two confirmed projects overlapping on this date:</p>
+              <ul className="list-disc list-inside text-sm text-gray-600">
+                <li>Geneva Motor Show (Ends 15 May)</li>
+                <li>New Project Alpha (Starts 15 May)</li>
+              </ul>
+              <a className="text-sm text-blue-600 font-semibold mt-2 inline-block" href="#">Resolve Clash</a>
+            </div>
+          </div>
+        </div>
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold flex items-center mb-4"><Clock className="mr-2" />Upcoming Projects</h2>
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm flex">
+              <div className="text-center mr-4">
+                <div className="text-sm text-red-500 font-semibold">MAY</div>
+                <div className="text-2xl font-bold">06</div>
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-semibold">Geneva Motor Show</h3>
+                <p className="text-sm text-gray-500">06 May - 15 May 2024</p>
+                <span className="mt-1 inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Confirmed</span>
               </div>
             </div>
-
-            {/* Calendar */}
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="grid grid-cols-7 gap-px text-center text-xs font-semibold text-gray-500 border-b border-gray-200">
-                <div className="py-2">Mon</div>
-                <div className="py-2">Tue</div>
-                <div className="py-2">Wed</div>
-                <div className="py-2">Thu</div>
-                <div className="py-2">Fri</div>
-                <div className="py-2">Sat</div>
-                <div className="py-2">Sun</div>
+            <div className="bg-white p-4 rounded-lg shadow-sm flex">
+              <div className="text-center mr-4">
+                <div className="text-sm text-red-500 font-semibold">MAY</div>
+                <div className="text-2xl font-bold">16</div>
               </div>
-              <div className="grid grid-cols-7 gap-1 p-1">
-                {[
-                  { day: 29, status: 'disabled' }, { day: 30, status: 'disabled' }, { day: 1, status: 'available' },
-                  { day: 2, status: 'available' }, { day: 3, status: 'available' }, { day: 4, status: 'blackout' },
-                  { day: 5, status: 'blackout' }, { day: 6, status: 'booked' }, { day: 7, status: 'booked' },
-                  { day: 8, status: 'booked' }, { day: 9, status: 'booked' }, { day: 10, status: 'booked' },
-                  { day: 11, status: 'booked' }, { day: 12, status: 'booked' }, { day: 13, status: 'booked' },
-                  { day: 14, status: 'booked' }, { day: 15, status: 'today-booked' }, { day: 16, status: 'pencilled' },
-                  { day: 17, status: 'pencilled' }, { day: 18, status: 'pencilled' }, { day: 19, status: 'pencilled' },
-                  { day: 20, status: 'available' }, { day: 21, status: 'available' }, { day: 22, status: 'available' }
-                ].map((date, index) => (
-                  <div
-                    key={index}
-                    className={`aspect-square flex items-center justify-center text-sm cursor-pointer rounded ${
-                      date.status === 'disabled' ? 'text-gray-300' :
-                      date.status === 'available' ? 'text-gray-700 hover:bg-green-50' :
-                      date.status === 'blackout' ? 'bg-red-100 text-red-700' :
-                      date.status === 'booked' ? 'bg-blue-100 text-blue-700' :
-                      date.status === 'today-booked' ? 'bg-blue-600 text-white' :
-                      date.status === 'pencilled' ? 'bg-yellow-100 text-yellow-700' :
-                      'text-gray-700'
-                    }`}
-                  >
-                    {date.day}
-                  </div>
-                ))}
+              <div className="flex-grow">
+                <h3 className="font-semibold">Project Hold: Paris Olympics</h3>
+                <p className="text-sm text-gray-500">16 May - 19 May 2024</p>
+                <span className="mt-1 inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold">Pencilled in</span>
               </div>
+            </div>
+          </div>
+          <div className="text-center mt-6">
+            <a className="text-blue-600 font-semibold" href="#">View All Upcoming & Past Projects</a>
+          </div>
+        </div>
+      </div>
+      <div className="col-span-1">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold flex items-center mb-4"><Plane className="mr-2" />Travel Preferences</h2>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <label className="text-sm font-medium text-gray-500">Home Airport</label>
+            <p className="font-semibold">LHR - London Heathrow</p>
+          </div>
+          <div className="mt-4">
+            <label className="text-sm font-medium text-gray-500">Preferred Plane Seat</label>
+            <div className="flex items-center space-x-6 mt-2">
+              <label className="flex items-center">
+                <input checked className="form-radio text-blue-600" name="seat" type="radio"/>
+                <span className="ml-2">Aisle</span>
+              </label>
+              <label className="flex items-center">
+                <input className="form-radio text-blue-600" name="seat" type="radio"/>
+                <span className="ml-2">Middle</span>
+              </label>
+              <label className="flex items-center">
+                <input className="form-radio text-blue-600" name="seat" type="radio"/>
+                <span className="ml-2">Window</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow mt-8">
+          <h2 className="text-lg font-semibold flex items-center mb-4"><CreditCard className="mr-2" />Frequent Flyer Numbers</h2>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <label className="text-sm font-medium text-gray-500">British Airways</label>
+            <p className="font-semibold">BA12345678</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg mt-4">
+            <label className="text-sm font-medium text-gray-500">Virgin Atlantic</label>
+            <p className="font-semibold">VS87654321</p>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow mt-8">
+          <h2 className="text-lg font-semibold flex items-center mb-4"><Train className="mr-2" />Railcards</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">16-25 Railcard</span>
+              <button className="text-gray-400 hover:text-gray-600">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Network Railcard</span>
+              <button className="text-gray-400 hover:text-gray-600">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700" htmlFor="railcard-type">Add Railcard</label>
+            <div className="mt-1 flex rounded-md shadow-sm">
+              <div className="relative flex-grow focus-within:z-10">
+                <select className="form-select block w-full rounded-none rounded-l-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" id="railcard-type" name="railcard-type">
+                  <option>Select type...</option>
+                  <option>26-30 Railcard</option>
+                  <option>Senior Railcard</option>
+                  <option>Family & Friends Railcard</option>
+                </select>
+              </div>
+              <button className="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" type="button">
+                <Plus className="w-4 h-4" />
+                <span>Add</span>
+              </button>
             </div>
           </div>
         </div>
