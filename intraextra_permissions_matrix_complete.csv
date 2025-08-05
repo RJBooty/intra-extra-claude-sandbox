@@ -1,0 +1,445 @@
+Category,Module,Component/Table,Field/Action,Type,Description,Master,Senior,Mid,External,HR_Finance,Notes
+Database,Authentication,users,id,View,"View user ID",✓,✓,Own Only,Own Only,✓,Master can view all users
+Database,Authentication,users,name,View,"View user name",✓,✓,✓,✓,✓,Public within organization
+Database,Authentication,users,name,Edit,"Edit user name",✓,✓,Own Only,Own Only,✓,Users can edit own name
+Database,Authentication,users,email,View,"View user email",✓,✓,✓,✓,✓,Public within organization
+Database,Authentication,users,email,Edit,"Edit user email",✓,✓,Own Only,Own Only,✓,Users can edit own email
+Database,Authentication,users,role,View,"View user role",✓,✓,✓,✓,✓,Public within organization
+Database,Authentication,users,role,Edit,"Edit user role",✓,✓,✗,✗,✗,Only Master and Senior can assign roles
+Database,Client Management,clients,id,View,"View client ID",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,name,View,"View client name",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,name,Edit,"Edit client name",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+Database,Client Management,clients,email,View,"View client email",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,email,Edit,"Edit client email",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+Database,Client Management,clients,phone,View,"View client phone",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,phone,Edit,"Edit client phone",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+Database,Client Management,clients,company,View,"View client company",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,company,Edit,"Edit client company",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+Database,Client Management,clients,classification,View,"View client classification",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,classification,Edit,"Edit client classification",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+Database,Client Management,clients,created_at,View,"View client creation date",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Client Management,clients,updated_at,View,"View client update date",✓,✓,✓,✗,✓,External staff cannot view client data
+Database,Project Management,projects,id,View,"View project ID",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,project_id,View,"View project identifier",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,project_id,Edit,"Edit project identifier",✓,✓,✗,✗,✗,Only Master and Senior can edit project ID
+Database,Project Management,projects,client_id,View,"View project client ID",✓,✓,✓,✗,✓,External staff cannot view client associations
+Database,Project Management,projects,client_id,Edit,"Edit project client",✓,✓,✗,✗,✗,Only Master and Senior can change client
+Database,Project Management,projects,event_location,View,"View event location",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,event_location,Edit,"Edit event location",✓,✓,✗,✗,✗,Only Master and Senior can edit location
+Database,Project Management,projects,event_start_date,View,"View event start date",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,event_start_date,Edit,"Edit event start date",✓,✓,✗,✗,✗,Only Master and Senior can edit dates
+Database,Project Management,projects,event_end_date,View,"View event end date",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,event_end_date,Edit,"Edit event end date",✓,✓,✗,✗,✗,Only Master and Senior can edit dates
+Database,Project Management,projects,expected_attendance,View,"View expected attendance",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,expected_attendance,Edit,"Edit expected attendance",✓,✓,✗,✗,✗,Only Master and Senior can edit attendance
+Database,Project Management,projects,classification,View,"View project classification",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,classification,Edit,"Edit project classification",✓,✓,✗,✗,✗,Only Master and Senior can edit classification
+Database,Project Management,projects,current_phase,View,"View current project phase",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,current_phase,Edit,"Edit current project phase",✓,✓,✗,✗,✗,Only Master and Senior can change phases
+Database,Project Management,projects,phase_progress,View,"View phase progress",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,phase_progress,Edit,"Edit phase progress",✓,✓,✓,✗,✗,Mid level can update progress on assigned projects
+Database,Project Management,projects,status,View,"View project status",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,status,Edit,"Edit project status",✓,✓,✗,✗,✗,Only Master and Senior can change status
+Database,Project Management,projects,delivery_address,View,"View delivery address",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,delivery_address,Edit,"Edit delivery address",✓,✓,✗,✗,✗,Only Master and Senior can edit delivery info
+Database,Project Management,projects,delivery_contact_name,View,"View delivery contact name",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,delivery_contact_name,Edit,"Edit delivery contact name",✓,✓,✗,✗,✗,Only Master and Senior can edit delivery info
+Database,Project Management,projects,delivery_contact_phone,View,"View delivery contact phone",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,delivery_contact_phone,Edit,"Edit delivery contact phone",✓,✓,✗,✗,✗,Only Master and Senior can edit delivery info
+Database,Project Management,projects,delivery_contact_email,View,"View delivery contact email",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+Database,Project Management,projects,delivery_contact_email,Edit,"Edit delivery contact email",✓,✓,✗,✗,✗,Only Master and Senior can edit delivery info
+Database,Sales Pipeline,opportunities,id,View,"View opportunity ID",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,company_name,View,"View opportunity company",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,company_name,Edit,"Edit opportunity company",✓,✓,✗,✗,✗,Only Master and Senior can edit opportunities
+Database,Sales Pipeline,opportunities,event_name,View,"View opportunity event name",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,event_name,Edit,"Edit opportunity event name",✓,✓,✗,✗,✗,Only Master and Senior can edit opportunities
+Database,Sales Pipeline,opportunities,deal_value,View,"View deal value",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,Sales Pipeline,opportunities,deal_value,Edit,"Edit deal value",✓,✓,✗,✗,✗,Only Master and Senior can edit financial data
+Database,Sales Pipeline,opportunities,currency,View,"View deal currency",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,Sales Pipeline,opportunities,currency,Edit,"Edit deal currency",✓,✓,✗,✗,✗,Only Master and Senior can edit financial data
+Database,Sales Pipeline,opportunities,stage,View,"View opportunity stage",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,stage,Edit,"Edit opportunity stage",✓,✓,✗,✗,✗,Only Master and Senior can move stages
+Database,Sales Pipeline,opportunities,lead_score,View,"View lead score",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,lead_score,Edit,"Edit lead score",✓,✓,✗,✗,✗,Only Master and Senior can edit scores
+Database,Sales Pipeline,opportunities,temperature,View,"View opportunity temperature",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,temperature,Edit,"Edit opportunity temperature",✓,✓,✗,✗,✗,Only Master and Senior can edit temperature
+Database,Sales Pipeline,opportunities,client_tier,View,"View client tier",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,client_tier,Edit,"Edit client tier",✓,✓,✗,✗,✗,Only Master and Senior can edit tiers
+Database,Sales Pipeline,opportunities,owner_id,View,"View opportunity owner",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,owner_id,Edit,"Edit opportunity owner",✓,✓,✗,✗,✗,Only Master and Senior can reassign opportunities
+Database,Sales Pipeline,opportunities,win_probability,View,"View win probability",✓,✓,✓,✗,✓,External staff cannot access sales data
+Database,Sales Pipeline,opportunities,win_probability,Edit,"Edit win probability",✓,✓,✗,✗,✗,Only Master and Senior can edit probability
+Database,ROI Analysis,roi_calculations,id,View,"View ROI calculation ID",✓,✓,✗,✗,✓,Financial data restricted
+Database,ROI Analysis,roi_calculations,total_revenue_estimate,View,"View revenue estimates",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,ROI Analysis,roi_calculations,total_revenue_estimate,Edit,"Edit revenue estimates",✓,✓,✗,✗,✗,Only Master and Senior can edit financial projections
+Database,ROI Analysis,roi_calculations,total_costs_estimate,View,"View cost estimates",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,ROI Analysis,roi_calculations,total_costs_estimate,Edit,"Edit cost estimates",✓,✓,✗,✗,✗,Only Master and Senior can edit financial projections
+Database,ROI Analysis,roi_calculations,margin_percentage,View,"View margin percentage",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,ROI Analysis,roi_calculations,margin_percentage,Edit,"Edit margin percentage",✓,✗,✗,✗,✗,Only Master can edit margins
+Database,ROI Analysis,roi_calculations,roi_percentage,View,"View ROI percentage",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+Database,ROI Analysis,roi_calculations,roi_percentage,Edit,"Edit ROI percentage",✓,✗,✗,✗,✗,Only Master can edit ROI
+Database,ROI Analysis,revenue_streams,unit_price,View,"View revenue unit prices",✓,✓,✗,✗,✓,Financial data restricted
+Database,ROI Analysis,revenue_streams,unit_price,Edit,"Edit revenue unit prices",✓,✓,✗,✗,✗,Only Master and Senior can edit pricing
+Database,ROI Analysis,revenue_streams,quantity,View,"View revenue quantities",✓,✓,✗,✗,✓,Financial data restricted
+Database,ROI Analysis,revenue_streams,quantity,Edit,"Edit revenue quantities",✓,✓,✗,✗,✗,Only Master and Senior can edit quantities
+Database,ROI Analysis,revenue_streams,fee_percentage,View,"View fee percentages",✓,✓,✗,✗,✓,Financial data restricted
+Database,ROI Analysis,revenue_streams,fee_percentage,Edit,"Edit fee percentages",✓,✗,✗,✗,✗,Only Master can edit fee structures
+Database,ROI Analysis,cost_streams,unit_cost,View,"View cost unit prices",✓,✓,✗,✗,✓,Financial data restricted
+Database,ROI Analysis,cost_streams,unit_cost,Edit,"Edit cost unit prices",✓,✓,✗,✗,✗,Only Master and Senior can edit costs
+Database,Operations,project_phases,status,View,"View phase status",✓,✓,✓,Assigned Only,✓,External staff only see assigned project phases
+Database,Operations,project_phases,status,Edit,"Edit phase status",✓,✓,✓,✗,✗,Mid level can update phase status
+Database,Operations,project_phases,progress_percentage,View,"View phase progress",✓,✓,✓,Assigned Only,✓,External staff only see assigned project phases
+Database,Operations,project_phases,progress_percentage,Edit,"Edit phase progress",✓,✓,✓,✗,✗,Mid level can update progress
+Database,Operations,project_phases,checklist_items,View,"View phase checklist",✓,✓,✓,Assigned Only,✓,External staff only see assigned project phases
+Database,Operations,project_phases,checklist_items,Edit,"Edit phase checklist",✓,✓,✗,✗,✗,Only Master and Senior can modify checklists
+Database,Operations,project_phases,checklist_completed,View,"View checklist completion",✓,✓,✓,Assigned Only,✓,External staff only see assigned project phases
+Database,Operations,project_phases,checklist_completed,Edit,"Edit checklist completion",✓,✓,✓,✗,✗,Mid level can mark items complete
+Database,Operations,project_tasks,task_name,View,"View task name",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,task_name,Edit,"Edit task name",✓,✓,✓,✗,✗,Mid level can edit task details
+Database,Operations,project_tasks,description,View,"View task description",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,description,Edit,"Edit task description",✓,✓,✓,✗,✗,Mid level can edit task details
+Database,Operations,project_tasks,assignee_id,View,"View task assignee",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,assignee_id,Edit,"Edit task assignee",✓,✓,✗,✗,✗,Only Master and Senior can reassign tasks
+Database,Operations,project_tasks,status,View,"View task status",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,status,Edit,"Edit task status",✓,✓,✓,Own Only,✗,Users can update status of assigned tasks
+Database,Operations,project_tasks,priority,View,"View task priority",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,priority,Edit,"Edit task priority",✓,✓,✗,✗,✗,Only Master and Senior can change priority
+Database,Operations,project_tasks,estimated_hours,View,"View estimated hours",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+Database,Operations,project_tasks,estimated_hours,Edit,"Edit estimated hours",✓,✓,✓,✗,✗,Mid level can update estimates
+Database,Operations,project_tasks,actual_hours,View,"View actual hours",✓,✓,✓,Own Only,✓,Users can see hours on assigned tasks
+Database,Operations,project_tasks,actual_hours,Edit,"Edit actual hours",✓,✓,✓,Own Only,✗,Users can log hours on assigned tasks
+Database,Operations,team_members,name,View,"View team member name",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,email,View,"View team member email",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,role,View,"View team member role",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,department,View,"View team member department",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,skills,View,"View team member skills",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,skills,Edit,"Edit team member skills",✓,✓,Own Only,Own Only,✓,Users can edit own skills
+Database,Operations,team_members,availability_status,View,"View availability status",✓,✓,✓,✓,✓,Public within organization
+Database,Operations,team_members,availability_status,Edit,"Edit availability status",✓,✓,Own Only,Own Only,✗,Users can update own availability
+Database,Logistics,resource_allocations,resource_name,View,"View allocated resource name",✓,✓,✓,Assigned Only,✓,External staff only see assigned project resources
+Database,Logistics,resource_allocations,resource_name,Edit,"Edit allocated resource name",✓,✓,✗,✗,✗,Only Master and Senior can modify allocations
+Database,Logistics,resource_allocations,quantity,View,"View resource quantity",✓,✓,✓,Assigned Only,✓,External staff only see assigned project resources
+Database,Logistics,resource_allocations,quantity,Edit,"Edit resource quantity",✓,✓,✗,✗,✗,Only Master and Senior can modify quantities
+Database,Logistics,resource_allocations,allocated_from,View,"View allocation start date",✓,✓,✓,Assigned Only,✓,External staff only see assigned project resources
+Database,Logistics,resource_allocations,allocated_from,Edit,"Edit allocation start date",✓,✓,✗,✗,✗,Only Master and Senior can modify dates
+Database,Logistics,resource_allocations,allocated_to,View,"View allocation end date",✓,✓,✓,Assigned Only,✓,External staff only see assigned project resources
+Database,Logistics,resource_allocations,allocated_to,Edit,"Edit allocation end date",✓,✓,✗,✗,✗,Only Master and Senior can modify dates
+Database,Documents,document_templates,name,View,"View template name",✓,✓,✓,✗,✓,External staff cannot access templates
+Database,Documents,document_templates,name,Edit,"Edit template name",✓,✓,✗,✗,✗,Only Master and Senior can modify templates
+Database,Documents,document_templates,description,View,"View template description",✓,✓,✓,✗,✓,External staff cannot access templates
+Database,Documents,document_templates,description,Edit,"Edit template description",✓,✓,✗,✗,✗,Only Master and Senior can modify templates
+Database,Documents,project_documents,document_name,View,"View document name",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+Database,Documents,project_documents,document_name,Edit,"Edit document name",✓,✓,✗,✗,✗,Only Master and Senior can rename documents
+Database,Documents,project_documents,document_url,View,"View document URL",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+Database,Documents,project_documents,document_url,Edit,"Edit document URL",✓,✓,✗,✗,✗,Only Master and Senior can modify document links
+Database,Documents,project_documents,file_size,View,"View document file size",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+Database,Documents,project_documents,uploaded_by,View,"View document uploader",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+UI,Authentication,LoginPage,Login Form,Access,"Access login page",✓,✓,✓,✓,✓,Public access for authentication
+UI,Authentication,LoginPage,Email Field,Edit,"Enter email for login",✓,✓,✓,✓,✓,Public access for authentication
+UI,Authentication,LoginPage,Password Field,Edit,"Enter password for login",✓,✓,✓,✓,✓,Public access for authentication
+UI,Authentication,LoginPage,Login Button,Action,"Submit login credentials",✓,✓,✓,✓,✓,Public access for authentication
+UI,Authentication,LoginPage,Signup Toggle,Action,"Switch to signup mode",✓,✓,✓,✓,✓,Public access for registration
+UI,Dashboard,HomeDashboard,Dashboard Access,Access,"Access home dashboard",✓,✓,✓,✗,✓,External staff cannot access main dashboard
+UI,Dashboard,HomeDashboard,Quick Stats,View,"View dashboard statistics",✓,✓,✓,✗,✓,External staff cannot view organization stats
+UI,Dashboard,HomeDashboard,Recent Activity,View,"View recent activity feed",✓,✓,✓,✗,✓,External staff cannot view organization activity
+UI,Dashboard,HomeDashboard,Quick Actions,Action,"Access quick action buttons",✓,✓,✓,✗,✓,External staff cannot access quick actions
+UI,Project Management,ProjectForm,Project ID Field,Edit,"Enter project identifier",✓,✓,✗,✗,✗,Only Master and Senior can create projects
+UI,Project Management,ProjectForm,Client Selection,Edit,"Select project client",✓,✓,✗,✗,✗,Only Master and Senior can assign clients
+UI,Project Management,ProjectForm,Event Location Field,Edit,"Enter event location",✓,✓,✗,✗,✗,Only Master and Senior can set location
+UI,Project Management,ProjectForm,Event Dates,Edit,"Set event start/end dates",✓,✓,✗,✗,✗,Only Master and Senior can set dates
+UI,Project Management,ProjectForm,Expected Attendance,Edit,"Set expected attendance",✓,✓,✗,✗,✗,Only Master and Senior can set attendance
+UI,Project Management,ProjectForm,Event Type,Edit,"Select event classification",✓,✓,✗,✗,✗,Only Master and Senior can set classification
+UI,Project Management,ProjectForm,Create Button,Action,"Submit new project",✓,✓,✗,✗,✗,Only Master and Senior can create projects
+UI,Project Management,ProjectForm,Generate ID Button,Action,"Auto-generate project ID",✓,✓,✗,✗,✗,Only Master and Senior can generate IDs
+UI,Project Management,ProjectsList,Projects Table,View,"View projects list",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectsList,Search Projects,Action,"Search through projects",✓,✓,✓,Assigned Only,✓,External staff only search assigned projects
+UI,Project Management,ProjectsList,Filter Projects,Action,"Filter projects by criteria",✓,✓,✓,Assigned Only,✓,External staff only filter assigned projects
+UI,Project Management,ProjectsList,Create New Project Button,Action,"Navigate to project creation",✓,✓,✗,✗,✗,Only Master and Senior can create projects
+UI,Project Management,ProjectView,Core Info Tab,Access,"Access project core information",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,ROI3 Tab,Access,"Access ROI analysis",✓,✓,✗,✗,✓,Financial data restricted
+UI,Project Management,ProjectView,Logistics Tab,Access,"Access logistics management",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Operations Tab,Access,"Access operations pipeline",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Crew Tab,Access,"Access crew management",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Notifications Tab,Access,"Access project notifications",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Documents Tab,Access,"Access project documents",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Timeline Tab,Access,"Access project timeline",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectView,Settings Tab,Access,"Access project settings",✓,✓,✗,✗,✗,Only Master and Senior can access settings
+UI,Project Management,CoreInfoPage,Edit Info Button,Action,"Edit project information",✓,✓,✗,✗,✗,Only Master and Senior can edit project info
+UI,Project Management,CoreInfoPage,Generate Proposal Button,Action,"Generate project proposal",✓,✓,✗,✗,✗,Only Master and Senior can generate proposals
+UI,Project Management,CoreInfoPage,Create Contract Button,Action,"Create project contract",✓,✓,✗,✗,✗,Only Master and Senior can create contracts
+UI,Project Management,PhaseTracker,Phase Progress,View,"View project phase progress",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,PhaseTracker,Phase Details,View,"View phase descriptions",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,DocumentManager,Upload Documents,Action,"Upload project documents",✓,✓,✓,✗,✗,External staff cannot upload documents
+UI,Project Management,DocumentManager,Download Documents,Action,"Download project documents",✓,✓,✓,Assigned Only,✓,External staff only download assigned project docs
+UI,Project Management,DocumentManager,Use Template,Action,"Use document template",✓,✓,✗,✗,✗,Only Master and Senior can use templates
+UI,Project Management,ProjectMetadata,Additional Info,View,"View project metadata",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Project Management,ProjectMetadata,Back-Office Links,Action,"Access back-office connections",✓,✓,✗,✗,✗,Only Master and Senior can access back-office
+UI,Client Management,ClientForm,Name Field,Edit,"Enter client name",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+UI,Client Management,ClientForm,Company Field,Edit,"Enter client company",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+UI,Client Management,ClientForm,Email Field,Edit,"Enter client email",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+UI,Client Management,ClientForm,Phone Field,Edit,"Enter client phone",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+UI,Client Management,ClientForm,Classification Field,Edit,"Select client classification",✓,✓,✗,✗,✗,Only Master and Senior can set classification
+UI,Client Management,ClientForm,Create Button,Action,"Submit new client",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+UI,Sales Pipeline,SalesPipeline,Pipeline Access,Access,"Access sales pipeline",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,SalesPipeline,Kanban View,View,"View opportunities in kanban",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,SalesPipeline,List View,View,"View opportunities in list",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,SalesPipeline,Search Opportunities,Action,"Search through opportunities",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,SalesPipeline,Filter Opportunities,Action,"Filter opportunities by stage",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,SalesPipeline,New Opportunity Button,Action,"Create new opportunity",✓,✓,✗,✗,✗,Only Master and Senior can create opportunities
+UI,Sales Pipeline,SalesPipeline,Metrics Button,Action,"View pipeline metrics",✓,✓,✗,✗,✓,Financial metrics restricted
+UI,Sales Pipeline,KanbanBoard,Drag Drop,Action,"Move opportunities between stages",✓,✓,✗,✗,✗,Only Master and Senior can move stages
+UI,Sales Pipeline,KanbanBoard,Stage Totals,View,"View stage value totals",✓,✓,✗,✗,✓,Financial data restricted
+UI,Sales Pipeline,OpportunityCard,Deal Value,View,"View opportunity value",✓,✓,✗,✗,✓,Financial data restricted
+UI,Sales Pipeline,OpportunityCard,Temperature,View,"View opportunity temperature",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,OpportunityCard,Lead Score,View,"View opportunity lead score",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,OpportunityCard,Win Probability,View,"View win probability",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,OpportunityForm,Company Name,Edit,"Enter opportunity company",✓,✓,✗,✗,✗,Only Master and Senior can create opportunities
+UI,Sales Pipeline,OpportunityForm,Event Name,Edit,"Enter opportunity event name",✓,✓,✗,✗,✗,Only Master and Senior can create opportunities
+UI,Sales Pipeline,OpportunityForm,Deal Value,Edit,"Enter deal value",✓,✓,✗,✗,✗,Financial data restricted
+UI,Sales Pipeline,OpportunityForm,Currency,Edit,"Select deal currency",✓,✓,✗,✗,✗,Financial data restricted
+UI,Sales Pipeline,OpportunityForm,Stage,Edit,"Select opportunity stage",✓,✓,✗,✗,✗,Only Master and Senior can set stages
+UI,Sales Pipeline,OpportunityForm,Client Tier,Edit,"Select client tier",✓,✓,✗,✗,✗,Only Master and Senior can set tiers
+UI,Sales Pipeline,OpportunityForm,Owner,Edit,"Assign opportunity owner",✓,✓,✗,✗,✗,Only Master and Senior can assign owners
+UI,Sales Pipeline,OpportunityForm,Win Probability,Edit,"Set win probability",✓,✓,✗,✗,✗,Only Master and Senior can set probability
+UI,Sales Pipeline,OpportunityForm,Lead Scoring Factors,Edit,"Set lead scoring factors",✓,✓,✗,✗,✗,Only Master and Senior can set scoring
+UI,Sales Pipeline,OpportunityDetails,Convert to Project,Action,"Convert opportunity to project",✓,✓,✗,✗,✗,Only Master and Senior can convert
+UI,Sales Pipeline,OpportunityDetails,Add Activity,Action,"Add opportunity activity",✓,✓,✓,✗,✗,Mid level can add activities
+UI,Sales Pipeline,OpportunityDetails,View Activities,View,"View opportunity activities",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,PipelineMetrics,Total Opportunities,View,"View total opportunities count",✓,✓,✗,✗,✓,Financial metrics restricted
+UI,Sales Pipeline,PipelineMetrics,Total Value,View,"View total pipeline value",✓,✓,✗,✗,✓,Financial data restricted
+UI,Sales Pipeline,PipelineMetrics,Conversion Rate,View,"View conversion rate",✓,✓,✗,✗,✓,Financial metrics restricted
+UI,Sales Pipeline,PipelineMetrics,Average Deal Size,View,"View average deal size",✓,✓,✗,✗,✓,Financial data restricted
+UI,Sales Pipeline,PipelineMetrics,Stage Distribution,View,"View stage distribution",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,Sales Pipeline,PipelineMetrics,Temperature Distribution,View,"View temperature distribution",✓,✓,✓,✗,✓,External staff cannot access sales data
+UI,ROI Analysis,ROI3,ROI Access,Access,"Access ROI analysis module",✓,✓,✗,✗,✓,Financial data restricted to Master/Senior/HR
+UI,ROI Analysis,ROI3,Revenue Streams,View,"View revenue stream data",✓,✓,✗,✗,✓,Financial data restricted
+UI,ROI Analysis,ROI3,Revenue Streams,Edit,"Edit revenue stream data",✓,✓,✗,✗,✗,Only Master and Senior can edit revenue
+UI,ROI Analysis,ROI3,Cost Streams,View,"View cost stream data",✓,✓,✗,✗,✓,Financial data restricted
+UI,ROI Analysis,ROI3,Cost Streams,Edit,"Edit cost stream data",✓,✓,✗,✗,✗,Only Master and Senior can edit costs
+UI,ROI Analysis,ROI3,Margin Calculations,View,"View margin calculations",✓,✓,✗,✗,✓,Financial data restricted
+UI,ROI Analysis,ROI3,Margin Calculations,Edit,"Edit margin calculations",✓,✗,✗,✗,✗,Only Master can edit margins
+UI,ROI Analysis,ROI3,Scenario Modeling,View,"View scenario models",✓,✓,✗,✗,✓,Financial data restricted
+UI,ROI Analysis,ROI3,Scenario Modeling,Edit,"Edit scenario models",✓,✓,✗,✗,✗,Only Master and Senior can edit scenarios
+UI,ROI Analysis,ROI3,Export Excel,Action,"Export ROI to Excel",✓,✓,✗,✗,✓,Financial export restricted
+UI,ROI Analysis,ROI3,Export QuickBooks,Action,"Export to QuickBooks",✓,✗,✗,✗,✓,Only Master and HR can export to accounting
+UI,ROI Analysis,ROI3,Approval Workflow,View,"View approval status",✓,✓,✗,✗,✓,Financial approval restricted
+UI,ROI Analysis,ROI3,Approval Workflow,Action,"Submit for approval",✓,✓,✗,✗,✗,Only Master and Senior can submit for approval
+UI,Operations,OperationsPipeline,Operations Access,Access,"Access operations pipeline",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Operations,OperationsPipeline,Overview Tab,Access,"Access operations overview",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Operations,OperationsPipeline,Tasks Tab,Access,"Access all tasks view",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+UI,Operations,OperationsPipeline,Phase Tabs,Access,"Access individual phase tabs",✓,✓,✓,Assigned Only,✓,External staff only see assigned phases
+UI,Operations,OverviewTab,Project Team,View,"View project team members",✓,✓,✓,Assigned Only,✓,External staff only see assigned project team
+UI,Operations,OverviewTab,Critical Dates,View,"View critical project dates",✓,✓,✓,Assigned Only,✓,External staff only see assigned project dates
+UI,Operations,OverviewTab,Project Status,View,"View project status overview",✓,✓,✓,Assigned Only,✓,External staff only see assigned project status
+UI,Operations,OverviewTab,Key Documents,View,"View key document list",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+UI,Operations,OverviewTab,Key Documents,Edit,"Upload/link key documents",✓,✓,✓,✗,✗,External staff cannot upload documents
+UI,Operations,OverviewTab,Integration Indicators,View,"View integration status",✓,✓,✓,✗,✗,External staff cannot view integrations
+UI,Operations,TasksTab,All Tasks View,View,"View all project tasks",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+UI,Operations,TasksTab,Task Filters,Action,"Filter tasks by criteria",✓,✓,✓,Assigned Only,✓,External staff only filter assigned tasks
+UI,Operations,TasksTab,Critical Path View,View,"View critical path analysis",✓,✓,✓,✗,✗,External staff cannot view critical path
+UI,Operations,TasksTab,New Task Button,Action,"Create new task",✓,✓,✓,✗,✗,External staff cannot create tasks
+UI,Operations,PhaseTab,Phase Overview,View,"View phase information",✓,✓,✓,Assigned Only,✓,External staff only see assigned phases
+UI,Operations,PhaseTab,Phase Checklist,View,"View phase checklist",✓,✓,✓,Assigned Only,✓,External staff only see assigned phases
+UI,Operations,PhaseTab,Phase Checklist,Edit,"Update checklist items",✓,✓,✓,✗,✗,External staff cannot update checklists
+UI,Operations,PhaseTab,Complete Phase Button,Action,"Mark phase as complete",✓,✓,✓,✗,✗,External staff cannot complete phases
+UI,Operations,PhaseTab,Phase Tasks,View,"View phase-specific tasks",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+UI,Operations,PhaseTab,Phase Comments,View,"View phase comments",✓,✓,✓,Assigned Only,✓,External staff only see assigned phase comments
+UI,Operations,PhaseTab,Phase Comments,Edit,"Add phase comments",✓,✓,✓,Assigned Only,✗,External staff cannot add comments
+UI,Operations,TaskForm,Task Name,Edit,"Enter task name",✓,✓,✓,✗,✗,External staff cannot create tasks
+UI,Operations,TaskForm,Task Description,Edit,"Enter task description",✓,✓,✓,✗,✗,External staff cannot create tasks
+UI,Operations,TaskForm,Assign Task,Edit,"Assign task to team member",✓,✓,✗,✗,✗,Only Master and Senior can assign tasks
+UI,Operations,TaskForm,Set Priority,Edit,"Set task priority",✓,✓,✗,✗,✗,Only Master and Senior can set priority
+UI,Operations,TaskForm,Set Due Date,Edit,"Set task due date",✓,✓,✓,✗,✗,Mid level can set due dates
+UI,Operations,TaskForm,Estimated Hours,Edit,"Set estimated hours",✓,✓,✓,✗,✗,Mid level can set estimates
+UI,Operations,TaskDetails,Task Information,View,"View task details",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+UI,Operations,TaskDetails,Update Status,Action,"Update task status",✓,✓,✓,Own Only,✗,Users can update status of assigned tasks
+UI,Operations,TaskDetails,Task Comments,View,"View task comments",✓,✓,✓,Assigned Only,✓,External staff only see assigned task comments
+UI,Operations,TaskDetails,Task Comments,Edit,"Add task comments",✓,✓,✓,Assigned Only,✗,External staff cannot add comments
+UI,Logistics,Logistics,Equipment Planning,Access,"Access equipment planning",✓,✓,✓,Assigned Only,✓,External staff only see assigned project logistics
+UI,Logistics,Logistics,Site Allocation,Access,"Access site allocation",✓,✓,✓,Assigned Only,✓,External staff only see assigned project logistics
+UI,Logistics,Logistics,Shipping Documentation,Access,"Access shipping documentation",✓,✓,✓,Assigned Only,✓,External staff only see assigned project logistics
+UI,Logistics,Logistics,Equipment Categories,View,"View equipment by category",✓,✓,✓,Assigned Only,✓,External staff only see assigned project equipment
+UI,Logistics,Logistics,Equipment Quantities,View,"View equipment quantities",✓,✓,✓,Assigned Only,✓,External staff only see assigned project equipment
+UI,Logistics,Logistics,Equipment Quantities,Edit,"Edit equipment quantities",✓,✓,✓,✗,✗,External staff cannot edit equipment requests
+UI,Logistics,Logistics,Equipment Comments,View,"View equipment comments",✓,✓,✓,Assigned Only,✓,External staff only see assigned project equipment
+UI,Logistics,Logistics,Equipment Comments,Edit,"Edit equipment comments",✓,✓,✓,✗,✗,External staff cannot edit equipment comments
+UI,Logistics,Logistics,Push to JUE,Action,"Push equipment request to JUE",✓,✓,✗,✗,✗,Only Master and Senior can push to JUE
+UI,Logistics,Logistics,Cost Tracking,View,"View logistics costs",✓,✓,✗,✗,✓,Financial data restricted
+UI,Logistics,Logistics,Cost Tracking,Edit,"Edit logistics costs",✓,✓,✗,✗,✗,Only Master and Senior can edit costs
+UI,Logistics,Logistics,Push to ROI,Action,"Push costs to ROI analysis",✓,✓,✗,✗,✗,Only Master and Senior can push to ROI
+UI,Logistics,Logistics,Shipping Details,View,"View shipping information",✓,✓,✓,Assigned Only,✓,External staff only see assigned project shipping
+UI,Logistics,Logistics,Shipping Details,Edit,"Edit shipping information",✓,✓,✗,✗,✗,Only Master and Senior can edit shipping
+UI,Logistics,Logistics,Carnet Information,View,"View carnet details",✓,✓,✓,Assigned Only,✓,External staff only see assigned project carnet
+UI,Logistics,Logistics,Carnet Information,Edit,"Edit carnet details",✓,✓,✗,✗,✗,Only Master and Senior can edit carnet
+UI,Logistics,Logistics,Document Checklist,View,"View document checklist",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+UI,Logistics,Logistics,Document Checklist,Edit,"Update document checklist",✓,✓,✓,✗,✗,External staff cannot update document status
+UI,Logistics,Logistics,Generate Documents,Action,"Generate shipping documents",✓,✓,✗,✗,✗,Only Master and Senior can generate documents
+UI,Logistics,Logistics,Upload Documents,Action,"Upload shipping documents",✓,✓,✓,✗,✗,External staff cannot upload documents
+UI,Crew Management,CrewManagement,Crew Assignment,Access,"Access crew assignment",✓,✓,✓,✗,✗,External staff cannot access crew management
+UI,Crew Management,CrewManagement,Crew Requirements,View,"View crew requirements",✓,✓,✓,✗,✓,External staff cannot view crew requirements
+UI,Crew Management,CrewManagement,Crew Requirements,Edit,"Edit crew requirements",✓,✓,✗,✗,✗,Only Master and Senior can edit requirements
+UI,Crew Management,CrewManagement,AI Suggestions,View,"View AI crew suggestions",✓,✓,✓,✗,✗,External staff cannot view AI suggestions
+UI,Crew Management,CrewManagement,Assigned Crew,View,"View assigned crew list",✓,✓,✓,✗,✓,External staff cannot view crew assignments
+UI,Crew Management,CrewManagement,Assigned Crew,Edit,"Modify crew assignments",✓,✓,✗,✗,✗,Only Master and Senior can assign crew
+UI,Crew Management,CrewManagement,Crew Compliance,View,"View crew compliance status",✓,✓,✓,✗,✓,External staff cannot view compliance
+UI,Crew Management,CrewManagement,Crew Documents,View,"View crew documents",✓,✓,✓,✗,✓,External staff cannot view crew documents
+UI,Crew Management,CrewManagement,Request Documents,Action,"Request crew documents",✓,✓,✓,✗,✗,External staff cannot request documents
+UI,Crew Management,CrewManagement,Export Documents,Action,"Export crew documents",✓,✓,✗,✗,✓,Document export restricted
+UI,Crew Management,CrewManagement,Travel Booking,View,"View travel arrangements",✓,✓,✓,✗,✓,External staff cannot view travel
+UI,Crew Management,CrewManagement,Travel Booking,Edit,"Edit travel arrangements",✓,✓,✗,✗,✗,Only Master and Senior can edit travel
+UI,Crew Management,CrewManagement,Accommodation,View,"View accommodation details",✓,✓,✓,✗,✓,External staff cannot view accommodation
+UI,Crew Management,CrewManagement,Accommodation,Edit,"Edit accommodation details",✓,✓,✗,✗,✗,Only Master and Senior can edit accommodation
+UI,Crew Management,CrewManagement,Crew Costs,View,"View crew cost breakdown",✓,✓,✗,✗,✓,Financial data restricted
+UI,Crew Management,CrewManagement,Crew Costs,Edit,"Edit crew costs",✓,✓,✗,✗,✗,Only Master and Senior can edit crew costs
+UI,Crew Management,CrewManagement,Crew Rota,View,"View crew schedule",✓,✓,✓,Own Only,✓,External staff only see own schedule
+UI,Crew Management,CrewManagement,Crew Rota,Edit,"Edit crew schedule",✓,✓,✗,✗,✗,Only Master and Senior can edit schedules
+UI,Team Management,TeamPage,All Profiles,View,"View all team profiles",✓,✓,✓,✗,✓,External staff cannot view all profiles
+UI,Team Management,TeamPage,Internal Profiles,View,"View internal team profiles",✓,✓,✓,✗,✓,External staff cannot view internal profiles
+UI,Team Management,TeamPage,Spain Profiles,View,"View Spain crew profiles",✓,✓,✓,Spain Only,✓,Spain crew can view other Spain crew
+UI,Team Management,TeamPage,Contractor Profiles,View,"View contractor profiles",✓,✓,✓,Contractor Only,✓,Contractors can view other contractors
+UI,Team Management,TeamPage,Profile Details,View,"View detailed profile information",✓,✓,✓,Own Only,✓,Users can view own profile details
+UI,Team Management,TeamPage,Profile Details,Edit,"Edit profile information",✓,✓,Own Only,Own Only,✓,Users can edit own profile
+UI,Team Management,TeamPage,Platform Statistics,View,"View platform overview stats",✓,✓,✗,✗,✓,Statistics restricted to Master/Senior/HR
+UI,Settings,SettingsHoldingPage,Settings Access,Access,"Access settings module",✓,✓,✓,✓,✓,All users can access settings
+UI,Settings,SettingsHoldingPage,Profile Settings,Access,"Access profile settings",✓,✓,✓,✓,✓,All users can access profile settings
+UI,Settings,SettingsHoldingPage,System Settings,Access,"Access system settings",✓,✓,✗,✗,✗,Only Master and Senior can access system settings
+UI,Settings,ProfileSettingsPage,Personal Info,View,"View personal information",✓,✓,✓,✓,✓,Users can view own profile
+UI,Settings,ProfileSettingsPage,Personal Info,Edit,"Edit personal information",✓,✓,✓,✓,✓,Users can edit own profile
+UI,Settings,ProfileSettingsPage,Account Security,View,"View security settings",✓,✓,✓,✓,✓,Users can view own security settings
+UI,Settings,ProfileSettingsPage,Account Security,Edit,"Edit security settings",✓,✓,✓,✓,✓,Users can edit own security settings
+UI,Settings,ProfileSettingsPage,Change Password,Action,"Change account password",✓,✓,✓,✓,✓,Users can change own password
+UI,Settings,ProfileSettingsPage,Two-Factor Auth,Action,"Enable/disable 2FA",✓,✓,✓,✓,✓,Users can manage own 2FA
+UI,Settings,ProfileSettingsPage,Preferences,View,"View user preferences",✓,✓,✓,✓,✓,Users can view own preferences
+UI,Settings,ProfileSettingsPage,Preferences,Edit,"Edit user preferences",✓,✓,✓,✓,✓,Users can edit own preferences
+UI,Settings,SystemSettingsPage,System Configuration,View,"View system configuration",✓,✓,✗,✗,✗,Only Master and Senior can view system config
+UI,Settings,SystemSettingsPage,System Configuration,Edit,"Edit system configuration",✓,✗,✗,✗,✗,Only Master can edit system config
+UI,Settings,SystemSettingsPage,API Integration,View,"View API integration settings",✓,✓,✗,✗,✗,Only Master and Senior can view API settings
+UI,Settings,SystemSettingsPage,API Integration,Edit,"Edit API integration settings",✓,✗,✗,✗,✗,Only Master can edit API settings
+UI,Settings,SystemSettingsPage,Currency Settings,Edit,"Edit default currency",✓,✗,✗,✗,✗,Only Master can edit currency settings
+UI,Settings,SystemSettingsPage,Date Format,Edit,"Edit date format settings",✓,✓,✗,✗,✗,Only Master and Senior can edit date formats
+UI,Notifications,ProjectNotifications,Notifications Access,Access,"Access project notifications",✓,✓,✓,Assigned Only,✓,External staff only see assigned project notifications
+UI,Notifications,ProjectNotifications,Mark as Read,Action,"Mark notifications as read",✓,✓,✓,✓,✓,Users can mark own notifications as read
+UI,Notifications,ProjectNotifications,Filter Notifications,Action,"Filter notifications by type",✓,✓,✓,✓,✓,Users can filter own notifications
+UI,Notifications,ProjectNotifications,Notification Actions,Action,"Take action on notifications",✓,✓,✓,Assigned Only,✗,External staff cannot take actions on notifications
+UI,Header,Header,Search Function,Action,"Search across platform",✓,✓,✓,Assigned Only,✓,External staff only search assigned content
+UI,Header,Header,User Profile Menu,Access,"Access user profile menu",✓,✓,✓,✓,✓,Users can access own profile menu
+UI,Header,Header,Navigate to Dashboard,Action,"Navigate to dashboard",✓,✓,✓,✗,✓,External staff cannot access main dashboard
+UI,Sidebar,Sidebar,Dashboard Navigation,Action,"Navigate to dashboard",✓,✓,✓,✗,✓,External staff cannot access main dashboard
+UI,Sidebar,Sidebar,Pipeline Navigation,Action,"Navigate to sales pipeline",✓,✓,✓,✗,✓,External staff cannot access sales pipeline
+UI,Sidebar,Sidebar,Projects Navigation,Action,"Navigate to projects",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+UI,Sidebar,Sidebar,Clients Navigation,Action,"Navigate to clients",✓,✓,✓,✗,✓,External staff cannot access client management
+UI,Sidebar,Sidebar,Team Navigation,Action,"Navigate to team management",✓,✓,✓,✗,✓,External staff cannot access team management
+UI,Sidebar,Sidebar,Reports Navigation,Action,"Navigate to reports",✓,✓,✗,✗,✓,Reports restricted to Master/Senior/HR
+UI,Sidebar,Sidebar,Settings Navigation,Action,"Navigate to settings",✓,✓,✓,✓,✓,All users can access settings
+API,Authentication,/auth/login,POST,Action,"Authenticate user login",✓,✓,✓,✓,✓,Public authentication endpoint
+API,Authentication,/auth/logout,POST,Action,"Logout user session",✓,✓,✓,✓,✓,Public logout endpoint
+API,Authentication,/auth/signup,POST,Action,"Register new user account",✓,✓,✓,✓,✓,Public registration endpoint
+API,User Management,/api/users,GET,View,"Retrieve users list",✓,✓,✓,✗,✓,External staff cannot list all users
+API,User Management,/api/users,POST,Create,"Create new user",✓,✓,✗,✗,✗,Only Master and Senior can create users
+API,User Management,/api/users/:id,GET,View,"Retrieve specific user",✓,✓,✓,Own Only,✓,Users can view own profile
+API,User Management,/api/users/:id,PUT,Edit,"Update user information",✓,✓,Own Only,Own Only,✓,Users can edit own profile
+API,User Management,/api/users/:id,DELETE,Delete,"Delete user account",✓,✗,✗,✗,✗,Only Master can delete users
+API,Client Management,/api/clients,GET,View,"Retrieve clients list",✓,✓,✓,✗,✓,External staff cannot access client data
+API,Client Management,/api/clients,POST,Create,"Create new client",✓,✓,✗,✗,✗,Only Master and Senior can create clients
+API,Client Management,/api/clients/:id,GET,View,"Retrieve specific client",✓,✓,✓,✗,✓,External staff cannot access client data
+API,Client Management,/api/clients/:id,PUT,Edit,"Update client information",✓,✓,✗,✗,✗,Only Master and Senior can edit clients
+API,Client Management,/api/clients/:id,DELETE,Delete,"Delete client",✓,✗,✗,✗,✗,Only Master can delete clients
+API,Project Management,/api/projects,GET,View,"Retrieve projects list",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+API,Project Management,/api/projects,POST,Create,"Create new project",✓,✓,✗,✗,✗,Only Master and Senior can create projects
+API,Project Management,/api/projects/:id,GET,View,"Retrieve specific project",✓,✓,✓,Assigned Only,✓,External staff only see assigned projects
+API,Project Management,/api/projects/:id,PUT,Edit,"Update project information",✓,✓,✗,✗,✗,Only Master and Senior can edit projects
+API,Project Management,/api/projects/:id,DELETE,Delete,"Delete project",✓,✗,✗,✗,✗,Only Master can delete projects
+API,Project Management,/api/projects/:id/documents,GET,View,"Retrieve project documents",✓,✓,✓,Assigned Only,✓,External staff only see assigned project documents
+API,Project Management,/api/projects/:id/documents,POST,Create,"Upload project document",✓,✓,✓,✗,✗,External staff cannot upload documents
+API,Project Management,/api/projects/:id/documents/:docId,DELETE,Delete,"Delete project document",✓,✓,✗,✗,✗,Only Master and Senior can delete documents
+API,Sales Pipeline,/api/opportunities,GET,View,"Retrieve opportunities list",✓,✓,✓,✗,✓,External staff cannot access sales data
+API,Sales Pipeline,/api/opportunities,POST,Create,"Create new opportunity",✓,✓,✗,✗,✗,Only Master and Senior can create opportunities
+API,Sales Pipeline,/api/opportunities/:id,GET,View,"Retrieve specific opportunity",✓,✓,✓,✗,✓,External staff cannot access sales data
+API,Sales Pipeline,/api/opportunities/:id,PUT,Edit,"Update opportunity information",✓,✓,✗,✗,✗,Only Master and Senior can edit opportunities
+API,Sales Pipeline,/api/opportunities/:id,DELETE,Delete,"Delete opportunity",✓,✗,✗,✗,✗,Only Master can delete opportunities
+API,Sales Pipeline,/api/opportunities/:id/activities,GET,View,"Retrieve opportunity activities",✓,✓,✓,✗,✓,External staff cannot access sales data
+API,Sales Pipeline,/api/opportunities/:id/activities,POST,Create,"Create opportunity activity",✓,✓,✓,✗,✗,Mid level can add activities
+API,Sales Pipeline,/api/opportunities/:id/convert,POST,Action,"Convert opportunity to project",✓,✓,✗,✗,✗,Only Master and Senior can convert
+API,Sales Pipeline,/api/pipeline/metrics,GET,View,"Retrieve pipeline metrics",✓,✓,✗,✗,✓,Financial metrics restricted
+API,ROI Analysis,/api/roi/:projectId,GET,View,"Retrieve ROI calculation",✓,✓,✗,✗,✓,Financial data restricted
+API,ROI Analysis,/api/roi/:projectId,POST,Create,"Create ROI calculation",✓,✓,✗,✗,✗,Only Master and Senior can create ROI
+API,ROI Analysis,/api/roi/:projectId,PUT,Edit,"Update ROI calculation",✓,✓,✗,✗,✗,Only Master and Senior can edit ROI
+API,ROI Analysis,/api/roi/:projectId/export/excel,GET,Export,"Export ROI to Excel",✓,✓,✗,✗,✓,Financial export restricted
+API,ROI Analysis,/api/roi/:projectId/export/quickbooks,GET,Export,"Export ROI to QuickBooks",✓,✗,✗,✗,✓,Only Master and HR can export to accounting
+API,ROI Analysis,/api/roi/:projectId/approve,POST,Action,"Approve ROI calculation",✓,✗,✗,✗,✗,Only Master can approve ROI
+API,ROI Analysis,/api/roi/templates,GET,View,"Retrieve ROI templates",✓,✓,✗,✗,✓,Financial templates restricted
+API,ROI Analysis,/api/roi/templates,POST,Create,"Create ROI template",✓,✗,✗,✗,✗,Only Master can create templates
+API,Operations,/api/operations/:projectId/phases,GET,View,"Retrieve project phases",✓,✓,✓,Assigned Only,✓,External staff only see assigned project phases
+API,Operations,/api/operations/:projectId/phases,POST,Create,"Create project phase",✓,✓,✗,✗,✗,Only Master and Senior can create phases
+API,Operations,/api/operations/:projectId/phases/:id,PUT,Edit,"Update project phase",✓,✓,✓,✗,✗,Mid level can update phase progress
+API,Operations,/api/operations/:projectId/phases/:id/complete,POST,Action,"Complete project phase",✓,✓,✓,✗,✗,Mid level can complete phases
+API,Operations,/api/operations/:projectId/tasks,GET,View,"Retrieve project tasks",✓,✓,✓,Assigned Only,✓,External staff only see assigned tasks
+API,Operations,/api/operations/:projectId/tasks,POST,Create,"Create project task",✓,✓,✓,✗,✗,External staff cannot create tasks
+API,Operations,/api/operations/:projectId/tasks/:id,PUT,Edit,"Update project task",✓,✓,✓,Own Only,✗,Users can update assigned tasks
+API,Operations,/api/operations/:projectId/tasks/:id,DELETE,Delete,"Delete project task",✓,✓,✗,✗,✗,Only Master and Senior can delete tasks
+API,Operations,/api/operations/:projectId/team,GET,View,"Retrieve project team",✓,✓,✓,Assigned Only,✓,External staff only see assigned project team
+API,Operations,/api/operations/:projectId/critical-path,GET,View,"Retrieve critical path analysis",✓,✓,✓,✗,✗,External staff cannot view critical path
+API,Operations,/api/operations/:projectId/integrations,GET,View,"Retrieve integration status",✓,✓,✓,✗,✗,External staff cannot view integrations
+API,Operations,/api/operations/:projectId/sync/jira,POST,Action,"Sync project to Jira",✓,✓,✗,✗,✗,Only Master and Senior can sync to Jira
+API,Operations,/api/operations/:projectId/sync/jue,POST,Action,"Sync equipment to JUE",✓,✓,✗,✗,✗,Only Master and Senior can sync to JUE
+API,Operations,/api/operations/:projectId/sync/rms,POST,Action,"Sync resources to RMS",✓,✓,✗,✗,✗,Only Master and Senior can sync to RMS
+API,Logistics,/api/logistics/:projectId/equipment,GET,View,"Retrieve equipment allocations",✓,✓,✓,Assigned Only,✓,External staff only see assigned project equipment
+API,Logistics,/api/logistics/:projectId/equipment,POST,Create,"Create equipment allocation",✓,✓,✗,✗,✗,Only Master and Senior can allocate equipment
+API,Logistics,/api/logistics/:projectId/equipment/:id,PUT,Edit,"Update equipment allocation",✓,✓,✗,✗,✗,Only Master and Senior can modify allocations
+API,Logistics,/api/logistics/:projectId/equipment/:id,DELETE,Delete,"Delete equipment allocation",✓,✓,✗,✗,✗,Only Master and Senior can delete allocations
+API,Logistics,/api/logistics/:projectId/shipping,GET,View,"Retrieve shipping information",✓,✓,✓,Assigned Only,✓,External staff only see assigned project shipping
+API,Logistics,/api/logistics/:projectId/shipping,PUT,Edit,"Update shipping information",✓,✓,✗,✗,✗,Only Master and Senior can edit shipping
+API,Logistics,/api/logistics/:projectId/costs,GET,View,"Retrieve logistics costs",✓,✓,✗,✗,✓,Financial data restricted
+API,Logistics,/api/logistics/:projectId/costs,PUT,Edit,"Update logistics costs",✓,✓,✗,✗,✗,Only Master and Senior can edit costs
+API,Team Management,/api/team,GET,View,"Retrieve team members list",✓,✓,✓,✗,✓,External staff cannot list all team members
+API,Team Management,/api/team/:id,GET,View,"Retrieve team member profile",✓,✓,✓,Own Only,✓,Users can view own profile
+API,Team Management,/api/team/:id,PUT,Edit,"Update team member profile",✓,✓,Own Only,Own Only,✓,Users can edit own profile
+API,Team Management,/api/team/:id/availability,PUT,Edit,"Update availability status",✓,✓,Own Only,Own Only,✗,Users can update own availability
+API,Team Management,/api/team/:id/skills,PUT,Edit,"Update skills list",✓,✓,Own Only,Own Only,✓,Users can update own skills
+API,Documents,/api/documents/templates,GET,View,"Retrieve document templates",✓,✓,✓,✗,✓,External staff cannot access templates
+API,Documents,/api/documents/templates,POST,Create,"Create document template",✓,✓,✗,✗,✗,Only Master and Senior can create templates
+API,Documents,/api/documents/templates/:id,PUT,Edit,"Update document template",✓,✓,✗,✗,✗,Only Master and Senior can edit templates
+API,Documents,/api/documents/templates/:id,DELETE,Delete,"Delete document template",✓,✗,✗,✗,✗,Only Master can delete templates
+API,Documents,/api/documents/upload,POST,Create,"Upload document file",✓,✓,✓,✗,✗,External staff cannot upload documents
+API,Documents,/api/documents/:id/download,GET,Export,"Download document file",✓,✓,✓,Assigned Only,✓,External staff only download assigned project documents
+API,Notifications,/api/notifications/:projectId,GET,View,"Retrieve project notifications",✓,✓,✓,Assigned Only,✓,External staff only see assigned project notifications
+API,Notifications,/api/notifications/:id/read,PUT,Edit,"Mark notification as read",✓,✓,✓,✓,✓,Users can mark own notifications as read
+API,Notifications,/api/notifications/unread-count,GET,View,"Get unread notification count",✓,✓,✓,✓,✓,Users can see own unread count
+API,Reports,/api/reports/projects,GET,Export,"Export projects report",✓,✓,✗,✗,✓,Reports restricted to Master/Senior/HR
+API,Reports,/api/reports/sales,GET,Export,"Export sales report",✓,✓,✗,✗,✓,Financial reports restricted
+API,Reports,/api/reports/roi,GET,Export,"Export ROI report",✓,✓,✗,✗,✓,Financial reports restricted
+API,Reports,/api/reports/team,GET,Export,"Export team report",✓,✓,✗,✗,✓,Team reports restricted
+API,Reports,/api/reports/operations,GET,Export,"Export operations report",✓,✓,✓,✗,✓,External staff cannot access operations reports
+API,System,/api/system/health,GET,View,"Check system health",✓,✓,✗,✗,✗,Only Master and Senior can check system health
+API,System,/api/system/logs,GET,View,"Retrieve system logs",✓,✗,✗,✗,✗,Only Master can access system logs
+API,System,/api/system/backup,POST,Action,"Trigger system backup",✓,✗,✗,✗,✗,Only Master can trigger backups
+API,System,/api/system/config,GET,View,"Retrieve system configuration",✓,✓,✗,✗,✗,Only Master and Senior can view system config
+API,System,/api/system/config,PUT,Edit,"Update system configuration",✓,✗,✗,✗,✗,Only Master can edit system config
+API,Integration,/api/integrations/jira/status,GET,View,"Check Jira integration status",✓,✓,✗,✗,✗,Only Master and Senior can check integrations
+API,Integration,/api/integrations/jue/status,GET,View,"Check JUE integration status",✓,✓,✗,✗,✗,Only Master and Senior can check integrations
+API,Integration,/api/integrations/rms/status,GET,View,"Check RMS integration status",✓,✓,✗,✗,✗,Only Master and Senior can check integrations
+API,Integration,/api/integrations/quickbooks/sync,POST,Action,"Sync with QuickBooks",✓,✗,✗,✗,✓,Only Master and HR can sync accounting
+API,Audit,/api/audit/logs,GET,View,"Retrieve audit logs",✓,✗,✗,✗,✓,Only Master and HR can access audit logs
+API,Audit,/api/audit/user-activity,GET,View,"Retrieve user activity logs",✓,✓,✗,✗,✓,Only Master/Senior/HR can view user activity
+API,Audit,/api/audit/financial-changes,GET,View,"Retrieve financial change logs",✓,✗,✗,✗,✓,Only Master and HR can view financial audit
+API,Bulk Operations,/api/bulk/projects/export,GET,Export,"Bulk export projects",✓,✓,✗,✗,✓,Bulk export restricted
+API,Bulk Operations,/api/bulk/projects/import,POST,Create,"Bulk import projects",✓,✗,✗,✗,✗,Only Master can bulk import
+API,Bulk Operations,/api/bulk/users/export,GET,Export,"Bulk export users",✓,✗,✗,✗,✓,Only Master and HR can export users
+API,Bulk Operations,/api/bulk/opportunities/export,GET,Export,"Bulk export opportunities",✓,✓,✗,✗,✓,Financial bulk export restricted
+API,Archive,/api/archive/projects,GET,View,"Access archived projects",✓,✓,✗,✗,✓,Archive access restricted
+API,Archive,/api/archive/opportunities,GET,View,"Access archived opportunities",✓,✓,✗,✗,✓,Archive access restricted
+API,Archive,/api/archive/restore/:id,POST,Action,"Restore archived item",✓,✗,✗,✗,✗,Only Master can restore archived items
+System,Platform,Master User Access,All,Access,"Full platform access and control",✓,✗,✗,✗,✗,James Tyson master user access
+System,Platform,User Approval,All,Action,"Approve new user registrations",✓,✗,✗,✗,✗,Only Master can approve new users
+System,Platform,Role Assignment,All,Action,"Assign user roles and permissions",✓,✓,✗,✗,✗,Only Master and Senior can assign roles
+System,Platform,Data Export,All,Export,"Export all platform data",✓,✗,✗,✗,✓,Only Master and HR can export all data
+System,Platform,System Maintenance,All,Action,"Perform system maintenance",✓,✗,✗,✗,✗,Only Master can perform maintenance
+System,Financial,Margin Approval,All,Action,"Approve margins below 50%",✓,✗,✗,✗,✗,Only Master can approve low margins
+System,Financial,Cost Ratio Approval,All,Action,"Approve cost ratios above 60%",✓,✗,✗,✗,✗,Only Master can approve high cost ratios
+System,Financial,Financial Audit,All,View,"Access financial audit trails",✓,✗,✗,✗,✓,Only Master and HR can access financial audits
+System,Communication,Email All Crew,All,Action,"Send emails to all crew members",✓,✓,✗,✗,✗,Only Master and Senior can email all crew
+System,Communication,WhatsApp Groups,All,Action,"Create/manage WhatsApp groups",✓,✓,✓,✗,✗,External staff cannot manage groups
+System,Communication,Teams Channels,All,Action,"Create/manage Teams channels",✓,✓,✓,✗,✗,External staff cannot manage channels
+System,Emergency,Critical Escalation,All,Action,"Access critical escalation contacts",✓,✓,✓,Assigned Only,✗,External staff only for assigned projects
+System,Emergency,Emergency Contacts,All,View,"View emergency contact information",✓,✓,✓,Own Only,✓,Users can view own emergency contacts
+System,Emergency,Emergency Contacts,All,Edit,"Edit emergency contact information",✓,✓,Own Only,Own Only,✓,Users can edit own emergency contacts
