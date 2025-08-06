@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, Package, MapPin, ArrowRight, X, Plus, Clock } from 'lucide-react';
+import { Truck, Package, MapPin, ArrowRight, X, Plus, Clock, Mail, MessageSquare, Phone, AlertTriangle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface LogisticsProps {
@@ -373,40 +373,107 @@ export function Logistics({ project }: LogisticsProps) {
 
   const renderShippingDocumentation = () => (
     <div className="space-y-8" style={{ fontFamily: 'Inter, sans-serif' }}>
-      {/* Timeline */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="relative pt-2 pb-4">
-          <div className="absolute left-0 top-1 h-0.5 w-full bg-gray-300"></div>
+      {/* Header with Team Info */}
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Shipping & Documentation</h1>
+        <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-2 border border-gray-200">
+          <div className="flex items-center gap-3 rounded-md p-2">
+            <img alt="Project Lead Photo" className="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4HElzaw15rTRlccl6v4z2BfVCOIqarVasQdfuS_-jMR048MQdMyPaiBUdcYBTHzEA6LdOjHN7grLH5_ad4d3j55JMMwUsNTkEseSJ1NMpnibnwZIKCCBPJOORzzKIFlZON2AViDqiPrUZPZlm_-XQ4Hov445VhNA_Ziu2QJkATJ3eJi7xhlfMbCH9auu9tthbM2mh4z1A_liDTcS_03UYBNAlLik6P9jUV726MkdUVfSDjhWvlg6EWJve_oswnerwhMPO3BMiOg"/>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Maria Rodriguez</p>
+              <p className="text-xs text-gray-600">Project Lead</p>
+              <div className="flex items-center gap-2 mt-1">
+                <a className="text-xs text-blue-600 hover:underline flex items-center gap-1" href="mailto:maria.rodriguez@logistics.pro">
+                  <Mail className="w-3 h-3" />
+                  Email
+                </a>
+                <a className="text-xs text-blue-600 hover:underline flex items-center gap-1" href="#">
+                  <MessageSquare className="w-3 h-3" />
+                  Teams
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-2 rounded-md bg-white shadow-sm border border-gray-200">
+            <img alt="Logistics Lead Photo" className="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Rm2hnjNCuCURxfw5y0hD14oX-tmXJ07WMyNW4UiRH-U5DyvdnRL744IjsPgkXqwZ21xgWAOxA3dyLzMT63B1CSDwbjrUHbG9EBDW3JXupbm9nagtJziC2eIn0rFv-ajWGg6N_kpqpXlhAM3uivzvHIwhtYOyeLXL6TDtetsDwkpTlARjkmrs63vmlkLrzYUsQmj9b_UmMkz3RYtQ4dxH50WaxQlEJIknoi_jYzp7VGr29saxfc3ycWnrkZRsnBoa2hxhhjASMBc"/>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Alex Hartman</p>
+              <p className="text-xs text-gray-600">Logistics Lead</p>
+              <div className="flex items-center gap-2 mt-1">
+                <a className="text-xs text-blue-600 hover:underline flex items-center gap-1" href="mailto:alex.hartman@logistics.pro">
+                  <Mail className="w-3 h-3" />
+                  Email
+                </a>
+                <a className="text-xs text-blue-600 hover:underline flex items-center gap-1" href="#">
+                  <MessageSquare className="w-3 h-3" />
+                  Teams
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Timeline */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="relative pt-10 pb-4">
+          <div className="absolute top-0 left-[70%] -translate-x-1/2 flex flex-col items-center">
+            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center">
+              <Truck className="w-4 h-4" />
+            </div>
+            <div className="w-0.5 h-4 bg-blue-600"></div>
+          </div>
+          <div className="absolute top-2 left-0 h-0.5 w-full bg-gray-200">
+            <div className="h-full bg-blue-600" style={{ width: '70%' }}></div>
+          </div>
           <div className="flex justify-between">
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">Packing Deadline</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full bg-blue-600"></div>
+              <p className="font-semibold text-sm text-gray-900 mt-6">Packing Deadline</p>
               <p className="text-xs text-gray-600">15/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                All equipment must be packed and ready for pickup. Responsible: Warehouse Team.
+              </div>
             </div>
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">Shipping Date</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full bg-blue-600"></div>
+              <p className="font-semibold text-sm text-gray-900 mt-6">Shipping Date</p>
               <p className="text-xs text-gray-600">16/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                Courier picks up the shipment. Tracking number to be updated. Responsible: Alex Hartman.
+              </div>
             </div>
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">Expected Delivery</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full bg-blue-600"></div>
+              <p className="font-semibold text-sm text-gray-900 mt-6">Expected Delivery</p>
               <p className="text-xs text-gray-600">20/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                Shipment scheduled to arrive at the destination address. On-site contact will be notified.
+              </div>
             </div>
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">On-Site Date</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full bg-blue-600"></div>
+              <p className="font-semibold text-sm text-gray-900 mt-6">On-Site Date</p>
               <p className="text-xs text-gray-600">21/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                Equipment to be available for setup at the event venue. Responsible: On-site Team.
+              </div>
             </div>
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">Event Dates</p>
-              <p className="text-xs text-gray-600">22 - 24/08/2024</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-gray-300 rounded-full"></div>
+              <p className="font-semibold text-sm text-gray-500 mt-6">Event Dates</p>
+              <p className="text-xs text-gray-400">22 - 24/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                Main event duration. All equipment should be operational.
+              </div>
             </div>
-            <div className="relative w-1/6 text-center">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-0.25rem] w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-              <p className="font-semibold text-sm text-gray-900 mt-4">Return Shipping Date</p>
-              <p className="text-xs text-gray-600">25/08/2024</p>
+            <div className="relative w-1/6 text-center group">
+              <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-gray-300 rounded-full"></div>
+              <p className="font-semibold text-sm text-gray-500 mt-6">Return Shipping Date</p>
+              <p className="text-xs text-gray-400">25/08/2024</p>
+              <div className="invisible absolute z-10 w-48 p-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 -top-full left-1/2 -translate-x-1/2 group-hover:visible group-hover:opacity-100">
+                Equipment to be packed and ready for return shipment. Responsible: On-site Team.
+              </div>
             </div>
           </div>
         </div>
@@ -416,16 +483,16 @@ export function Logistics({ project }: LogisticsProps) {
         {/* Left Column - Shipping Details & Cost Tracking */}
         <div className="lg:col-span-2 space-y-8">
           {/* Shipping Details */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Shipping Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="origin-location">
                   Origin Location
                 </label>
-                <select className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="origin-location">
+                <select className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" id="origin-location">
                   <option>Select Origin Location</option>
-                  <option>Warehouse A</option>
+                  <option selected>Warehouse A</option>
                   <option>Warehouse B</option>
                 </select>
               </div>
@@ -434,7 +501,7 @@ export function Logistics({ project }: LogisticsProps) {
                   Destination Address
                 </label>
                 <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                   id="destination-address" 
                   type="text" 
                   defaultValue="123 Main St, Anytown, USA"
@@ -445,7 +512,7 @@ export function Logistics({ project }: LogisticsProps) {
                   On-site Contact Name
                 </label>
                 <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                   id="onsite-contact-name" 
                   type="text"
                 />
@@ -455,7 +522,7 @@ export function Logistics({ project }: LogisticsProps) {
                   On-site Contact Phone
                 </label>
                 <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                   id="onsite-contact-phone" 
                   type="tel"
                 />
@@ -465,7 +532,7 @@ export function Logistics({ project }: LogisticsProps) {
                   On-site Contact Email
                 </label>
                 <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                   id="onsite-contact-email" 
                   type="email"
                 />
@@ -476,15 +543,49 @@ export function Logistics({ project }: LogisticsProps) {
                 </label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <input 
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                     placeholder="Company" 
                     type="text"
                   />
                   <input 
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                     placeholder="Tracking Number" 
                     type="text"
                   />
+                </div>
+              </div>
+              <div className="md:col-span-2 border-t border-gray-200 pt-4 mt-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Carnet Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="carnet-number">
+                      Carnet Number
+                    </label>
+                    <input 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
+                      id="carnet-number" 
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="carnet-expiry">
+                      Expiry Date
+                    </label>
+                    <input 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
+                      id="carnet-expiry" 
+                      type="date"
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex items-center justify-between pt-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Carnet Document</p>
+                      <p className="text-xs text-gray-500 mt-1">15/07/2024, 3:00 PM</p>
+                    </div>
+                    <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
+                      Upload
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="md:col-span-2">
@@ -492,7 +593,7 @@ export function Logistics({ project }: LogisticsProps) {
                   Special Instructions
                 </label>
                 <textarea 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24" 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent h-24" 
                   id="special-instructions"
                 />
               </div>
@@ -500,36 +601,22 @@ export function Logistics({ project }: LogisticsProps) {
           </div>
 
           {/* Cost Tracking */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Cost Tracking</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="est-shipping-cost">
-                    Estimated Shipping
-                  </label>
-                  <div className="relative">
-                    <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                      id="est-shipping-cost" 
-                      type="text" 
-                      defaultValue="1,250.00"
-                    />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="actual-shipping-cost">
                     Actual Shipping
                   </label>
                   <div className="relative">
                     <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                       id="actual-shipping-cost" 
                       type="text" 
                       defaultValue="1,200.00"
                     />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                   </div>
                 </div>
                 <div>
@@ -538,12 +625,12 @@ export function Logistics({ project }: LogisticsProps) {
                   </label>
                   <div className="relative">
                     <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                       id="customs-duties" 
                       type="text" 
                       defaultValue="170.00"
                     />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                   </div>
                 </div>
                 <div>
@@ -552,12 +639,12 @@ export function Logistics({ project }: LogisticsProps) {
                   </label>
                   <div className="relative">
                     <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                       id="insurance" 
                       type="text" 
                       defaultValue="45.00"
                     />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                   </div>
                 </div>
                 <div>
@@ -566,12 +653,12 @@ export function Logistics({ project }: LogisticsProps) {
                   </label>
                   <div className="relative">
                     <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                       id="local-transport" 
                       type="text" 
                       defaultValue="85.00"
                     />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                   </div>
                 </div>
                 <div>
@@ -580,162 +667,278 @@ export function Logistics({ project }: LogisticsProps) {
                   </label>
                   <div className="relative">
                     <input 
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
                       id="carnet-cost" 
                       type="text" 
                       defaultValue="150.00"
                     />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                   </div>
                 </div>
-                <div className="col-span-2 lg:col-span-4">
-                  <button className="w-full bg-gray-200 text-gray-700 rounded-full px-4 py-2 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm mt-4 flex items-center justify-center gap-2">
-                    <Plus className="h-4 w-4" />
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="other-cost">
+                    Other
+                  </label>
+                  <div className="relative">
+                    <input 
+                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" 
+                      id="other-cost" 
+                      type="text" 
+                      defaultValue=""
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                  </div>
+                </div>
+                <div className="flex items-end">
+                  <button className="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 w-full h-[38px] flex items-center justify-center text-sm font-semibold px-3 py-2">
+                    <Plus className="inline-block mr-1.5 h-4 w-4" />
                     Add Cost
                   </button>
                 </div>
               </div>
-              <hr className="my-4" />
-              <div className="flex justify-between items-center">
-                <p className="font-semibold">Total Logistics Cost:</p>
-                <p className="font-bold text-lg">€1,650.00</p>
+              <hr className="my-4 border-gray-200" />
+              <div className="flex justify-between items-center text-sm">
+                <p className="font-semibold text-gray-600">Total Logistics Cost:</p>
+                <p className="font-bold text-lg text-gray-900">€1,650.00</p>
               </div>
-              <div className="flex justify-between items-center">
-                <p className="font-semibold">Variance from Budget:</p>
+              <div className="flex justify-between items-center text-sm">
+                <p className="font-semibold text-gray-600">Variance from Budget:</p>
                 <p className="font-bold text-lg text-green-600">-€40.00</p>
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="cost-comments">
+                  Comments / Notes
+                </label>
+                <textarea 
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent h-20" 
+                  id="cost-comments" 
+                  placeholder="Add any relevant details about the costs..."
+                />
               </div>
               <div className="mt-4 flex justify-end">
                 <button 
                   onClick={handlePushToROI}
-                  className="bg-blue-600 text-white rounded-full px-4 py-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm flex items-center gap-2"
+                  className="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center gap-2"
                 >
-                  {hasBeenPushedToROI ? 'Update Totals in ROI' : 'Push Totals to ROI'}
+                  Push Totals to ROI Page
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="m5 12 5 5L20 7"></path>
                   </svg>
                 </button>
               </div>
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Push History Log</h3>
+                <div className="relative">
+                  <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white to-transparent pointer-events-none z-20"></div>
+                  <div className="overflow-auto max-h-60 shadow-inner rounded-lg">
+                    <table className="w-full text-sm text-left text-gray-500">
+                      <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-6 py-3" scope="col">User</th>
+                          <th className="px-6 py-3" scope="col">Date & Time</th>
+                          <th className="px-6 py-3 text-right" scope="col">Total Cost Pushed</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr className="bg-white">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Alex Hartman" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Rm2hnjNCuCURxfw5y0hD14oX-tmXJ07WMyNW4UiRH-U5DyvdnRL744IjsPgkXqwZ21xgWAOxA3dyLzMT63B1CSDwbjrUHbG9EBDW3JXupbm9nagtJziC2eIn0rFv-ajWGg6N_kpqpXlhAM3uivzvHIwhtYOyeLXL6TDtetsDwkpTlARjkmrs63vmlkLrzYUsQmj9b_UmMkz3RYtQ4dxH50WaxQlEJIknoi_jYzp7VGr29saxfc3ycWnrkZRsnBoa2hxhhjASMBc"/>
+                              <span>Alex Hartman</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-29 14:32:10</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,650.00</td>
+                        </tr>
+                        <tr className="bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Maria Rodriguez" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4HElzaw15rTRlccl6v4z2BfVCOIqarVasQdfuS_-jMR048MQdMyPaiBUdcYBTHzEA6LdOjHN7grLH5_ad4d3j55JMMwUsNTkEseSJ1NMpnibnwZIKCCBPJOORzzKIFlZON2AViDqiPrUZPZlm_-XQ4Hov445VhNA_Ziu2QJkATJ3eJi7xhlfMbCH9auu9tthbM2mh4z1A_liDTcS_03UYBNAlLik6P9jUV726MkdUVfSDjhWvlg6EWJve_oswnerwhMPO3BMiOg"/>
+                              <span>Maria Rodriguez</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-28 09:15:45</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,610.00</td>
+                        </tr>
+                        <tr className="bg-white">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Alex Hartman" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Rm2hnjNCuCURxfw5y0hD14oX-tmXJ07WMyNW4UiRH-U5DyvdnRL744IjsPgkXqwZ21xgWAOxA3dyLzMT63B1CSDwbjrUHbG9EBDW3JXupbm9nagtJziC2eIn0rFv-ajWGg6N_kpqpXlhAM3uivzvHIwhtYOyeLXL6TDtetsDwkpTlARjkmrs63vmlkLrzYUsQmj9b_UmMkz3RYtQ4dxH50WaxQlEJIknoi_jYzp7VGr29saxfc3ycWnrkZRsnBoa2hxhhjASMBc"/>
+                              <span>Alex Hartman</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-27 11:05:20</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,580.00</td>
+                        </tr>
+                        <tr className="bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Maria Rodriguez" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4HElzaw15rTRlccl6v4z2BfVCOIqarVasQdfuS_-jMR048MQdMyPaiBUdcYBTHzEA6LdOjHN7grLH5_ad4d3j55JMMwUsNTkEseSJ1NMpnibnwZIKCCBPJOORzzKIFlZON2AViDqiPrUZPZlm_-XQ4Hov445VhNA_Ziu2QJkATJ3eJi7xhlfMbCH9auu9tthbM2mh4z1A_liDTcS_03UYBNAlLik6P9jUV726MkdUVfSDjhWvlg6EWJve_oswnerwhMPO3BMiOg"/>
+                              <span>Maria Rodriguez</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-26 16:45:00</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,550.00</td>
+                        </tr>
+                        <tr className="bg-white">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Alex Hartman" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Rm2hnjNCuCURxfw5y0hD14oX-tmXJ07WMyNW4UiRH-U5DyvdnRL744IjsPgkXqwZ21xgWAOxA3dyLzMT63B1CSDwbjrUHbG9EBDW3JXupbm9nagtJziC2eIn0rFv-ajWGg6N_kpqpXlhAM3uivzvHIwhtYOyeLXL6TDtetsDwkpTlARjkmrs63vmlkLrzYUsQmj9b_UmMkz3RYtQ4dxH50WaxQlEJIknoi_jYzp7VGr29saxfc3ycWnrkZRsnBoa2hxhhjASMBc"/>
+                              <span>Alex Hartman</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-25 10:00:05</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,500.00</td>
+                        </tr>
+                        <tr className="bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img alt="Maria Rodriguez" className="h-6 w-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4HElzaw15rTRlccl6v4z2BfVCOIqarVasQdfuS_-jMR048MQdMyPaiBUdcYBTHzEA6LdOjHN7grLH5_ad4d3j55JMMwUsNTkEseSJ1NMpnibnwZIKCCBPJOORzzKIFlZON2AViDqiPrUZPZlm_-XQ4Hov445VhNA_Ziu2QJkATJ3eJi7xhlfMbCH9auu9tthbM2mh4z1A_liDTcS_03UYBNAlLik6P9jUV726MkdUVfSDjhWvlg6EWJve_oswnerwhMPO3BMiOg"/>
+                              <span>Maria Rodriguez</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">2024-07-24 15:20:18</td>
+                          <td className="px-6 py-4 text-right font-medium">€1,480.00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none z-20"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Critical Escalation, Carnet, Document Checklist */}
+        {/* Right Column - Critical Escalation & Document Checklist */}
         <div className="space-y-8">
           {/* Critical Escalation */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Critical Escalation</h2>
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Emergency Contact</h3>
-              <div className="space-y-3">
-                <p className="text-sm text-gray-600">
-                  Select a colleague to be the designated contact for any critical issues that may arise during shipping or on-site.
-                </p>
-                <select className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option>Select Colleague</option>
-                  <option>Sarah Jenkins</option>
-                  <option>Michael Chen</option>
-                  <option>Emily Rodriguez</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Carnet Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Carnet Information</h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="carnet-number">
-                  Carnet Number
-                </label>
-                <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  id="carnet-number" 
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="carnet-expiry">
-                  Expiry Date
-                </label>
-                <input 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  id="carnet-expiry" 
-                  type="date"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Carnet Document</p>
-                  <p className="text-xs text-gray-400 mt-1">15/07/2024, 3:00 PM</p>
+              <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Emergency Contact</h3>
+                    <div className="flex items-center gap-3">
+                      <img alt="Logistics Lead Photo" className="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Rm2hnjNCuCURxfw5y0hD14oX-tmXJ07WMyNW4UiRH-U5DyvdnRL744IjsPgkXqwZ21xgWAOxA3dyLzMT63B1CSDwbjrUHbG9EBDW3JXupbm9nagtJziC2eIn0rFv-ajWGg6N_kpqpXlhAM3uivzvHIwhtYOyeLXL6TDtetsDwkpTlARjkmrs63vmlkLrzYUsQmj9b_UmMkz3RYtQ4dxH50WaxQlEJIknoi_jYzp7VGr29saxfc3ycWnrkZRsnBoa2hxhhjASMBc"/>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Alex Hartman</p>
+                        <p className="text-xs text-gray-600">Logistics Lead</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all text-xs px-3 py-1 flex items-center gap-1">
+                      Edit Guard
+                      <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m6 9 6 6 6-6"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <button className="bg-gray-200 text-gray-700 rounded-full px-4 py-2 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-xs px-3 py-1">
-                  Upload
-                </button>
+                <p className="text-sm text-gray-600 mt-3">This person is the designated contact for issue reporting and escalation for this project.</p>
+                <div className="mt-4 flex items-center space-x-3">
+                  <a className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors" href="#">
+                    <MessageSquare className="h-5 w-5" />
+                  </a>
+                  <a className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors" href="#">
+                    <Package className="h-5 w-5" />
+                  </a>
+                  <a className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors" href="#">
+                    <Phone className="h-5 w-5" />
+                  </a>
+                  <a className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors" href="#">
+                    <Mail className="h-5 w-5" />
+                  </a>
+                </div>
               </div>
+              <button className="w-full rounded-md px-4 py-2 text-sm mt-4 bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-bold border border-red-700">
+                Submit Critical Issue
+              </button>
             </div>
           </div>
 
           {/* Document Checklist */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Document Checklist</h2>
-            <ul className="space-y-4">
-              <li className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Commercial Invoice</p>
-                  <p className="text-xs text-gray-600">Required</p>
-                  <p className="text-xs text-gray-400 mt-1">Today, 2:45 PM</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Document Checklist</h2>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="font-medium text-gray-900 truncate">Commercial Invoice</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <AlertTriangle className="h-3 w-3" />
+                      Required
+                    </span>
+                    <p className="text-xs text-gray-500">Today, 2:45 PM</p>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                <div className="flex gap-3 flex-shrink-0">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Generate
                   </button>
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Upload
                   </button>
                 </div>
               </li>
-              <li className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Packing List</p>
-                  <p className="text-xs text-gray-600">Required</p>
-                  <p className="text-xs text-gray-400 mt-1">Today, 11:10 AM</p>
+              <li className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="font-medium text-gray-900 truncate">Packing List</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="h-3 w-3" />
+                      Submitted
+                    </span>
+                    <p className="text-xs text-gray-500">Today, 11:10 AM</p>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                <div className="flex gap-3 flex-shrink-0">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Generate
                   </button>
-                  <button className="bg-green-100 text-green-700 rounded-full px-3 py-1 hover:bg-green-200 text-xs">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Replace
                   </button>
                 </div>
               </li>
-              <li className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Insurance Certificate</p>
-                  <p className="text-xs text-gray-600">Required</p>
-                  <p className="text-xs text-gray-400 mt-1">Yesterday, 4:20 PM</p>
+              <li className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="font-medium text-gray-900 truncate">Insurance Certificate</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <AlertTriangle className="h-3 w-3" />
+                      Error
+                    </span>
+                    <p className="text-xs text-gray-500">Yesterday, 4:20 PM</p>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                <div className="flex gap-3 flex-shrink-0">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Generate
                   </button>
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Upload
                   </button>
                 </div>
               </li>
-              <li className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Equipment Certificates</p>
-                  <p className="text-xs text-gray-600">Required</p>
-                  <p className="text-xs text-gray-400 mt-1">Yesterday, 9:30 AM</p>
+              <li className="flex items-center justify-between pt-3">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="font-medium text-gray-900 truncate">Equipment Certificates</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="h-3 w-3" />
+                      Submitted
+                    </span>
+                    <p className="text-xs text-gray-500">Yesterday, 9:30 AM</p>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 hover:bg-gray-300 text-xs">
+                <div className="flex gap-3 flex-shrink-0">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Generate
                   </button>
-                  <button className="bg-green-100 text-green-700 rounded-full px-3 py-1 hover:bg-green-200 text-xs">
+                  <button className="bg-white text-gray-600 rounded-md px-3 py-2 text-xs font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 border border-gray-300 shadow-sm transition-all">
                     Replace
                   </button>
                 </div>

@@ -5,12 +5,12 @@ import { z } from 'zod';
 import { 
   AlertCircle, AlertTriangle, Award, BarChart3, Briefcase, Building, 
   Calendar, CalendarDays, Car, CheckCircle, CheckSquare, ChevronLeft, 
-  ChevronRight, Clock, Copy, CreditCard, DollarSign, Download, Edit, Eye, 
-  EyeOff, FileText, FolderOpen, Globe, Heart, Key, Lock, Luggage, 
+  ChevronRight, Clock, Construction, Copy, CreditCard, DollarSign, Download, Edit, Eye, 
+  EyeOff, FileText, FolderOpen, Globe, Hammer, HardHat, Heart, Key, Lock, Luggage, 
   Mail, MessageCircle, MessageSquare, Mountain, Package, Paperclip, Phone, Plane, 
   Plus, Receipt, Save, Scale, Search, Send, Settings, Shield, ShieldCheck, 
   Star, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
-  UserX, Users, Wrench, X, XCircle, Zap
+  UserX, Users, Wrench, X, XCircle, Zap, Zap as Lightning
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -105,7 +105,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
 
   const tabs = [
     { id: 'personal', label: 'Personal Details', icon: User },
-    { id: 'work', label: 'Work & Skills', icon: Briefcase },
+    { id: 'work', label: 'Work Skills', icon: Briefcase },
     { id: 'compliance', label: 'Docs & Compliance', icon: Shield, badge: 2 },
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'availability', label: 'Availability', icon: Calendar },
@@ -351,101 +351,198 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     </div>
   );
 
-  // Work & Skills Tab
+  // Work Skills Tab
   const renderWorkTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        {/* Experience */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Experience</h3>
-          <div className="space-y-6">
-            <div className="border-l-4 border-blue-500 pl-4">
-              <h4 className="font-semibold text-gray-900">Senior Event Technician</h4>
-              <p className="text-sm text-gray-600">CASFID International • 2022 - Present</p>
-              <p className="text-sm text-gray-700 mt-2">Lead technical setup for major events including CES, Mobile World Congress, and Geneva Motor Show. Responsible for equipment deployment and team coordination.</p>
-            </div>
-            <div className="border-l-4 border-gray-300 pl-4">
-              <h4 className="font-semibold text-gray-900">Event Technician</h4>
-              <p className="text-sm text-gray-600">EventTech Solutions • 2020 - 2022</p>
-              <p className="text-sm text-gray-700 mt-2">Provided technical support for corporate events and trade shows across Europe.</p>
-            </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-white shadow rounded-lg p-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Work Skills</h2>
+      </div>
+
+      {/* Primary Roles & Experience */}
+      <div className="bg-white shadow-sm rounded-xl p-8 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center pb-4 border-b border-gray-200">
+          <Briefcase className="text-gray-500 mr-3" />
+          Primary Roles & Experience
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8">
+          <div>
+            <label className="block text-sm font-medium text-gray-600">Primary Role</label>
+            <p className="mt-1 text-base text-gray-900 font-medium">Stage Manager</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600">Secondary Role</label>
+            <p className="mt-1 text-base text-gray-900 font-medium">Lighting Technician</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600">Years of Experience</label>
+            <p className="mt-1 text-base text-gray-900 font-medium">8+ Years</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600">Date Joined CASFID</label>
+            <p className="mt-1 text-base text-gray-900 font-medium">15th March 2021</p>
+          </div>
+          <div className="col-span-1 md:col-span-2">
+            <label className="block text-sm font-medium text-gray-600">Referral Source</label>
+            <p className="mt-1 text-base text-gray-900 font-medium">Existing Crew Member: John Doe</p>
           </div>
         </div>
+        <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
+          <label className="block text-sm font-medium text-gray-600">Bio / Professional Summary</label>
+          <p className="mt-1 text-sm text-gray-700 italic">"Highly organized and proactive Stage Manager with over 8 years of experience in managing large-scale theatre productions and corporate events. Proven ability to lead crews, manage schedules, and ensure seamless show execution. Also proficient in lighting setup and operation."</p>
+        </div>
+      </div>
 
-        {/* Skills Matrix */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Skills Matrix</h3>
-          <div className="space-y-4">
-            {[
-              { skill: 'Audio/Visual Setup', level: 4 },
-              { skill: 'Network Configuration', level: 5 },
-              { skill: 'Equipment Troubleshooting', level: 4 },
-              { skill: 'Team Leadership', level: 3 },
-              { skill: 'Project Management', level: 3 },
-              { skill: 'Client Communication', level: 4 }
-            ].map((item) => (
-              <div key={item.skill} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">{item.skill}</span>
-                <div className="flex items-center space-x-1">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`w-3 h-3 rounded-full ${
-                        level <= item.level ? 'bg-blue-500' : 'bg-gray-200'
-                      }`}
-                    />
-                  ))}
-                  <span className="ml-2 text-sm text-gray-500">{item.level}/5</span>
+      {/* Skills Matrix */}
+      <div className="bg-white shadow-sm rounded-xl p-8 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center pb-4 border-b border-gray-200">
+          <Construction className="text-gray-500 mr-3" />
+          Skills Matrix
+        </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1 bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col items-center justify-center">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills Overview</h4>
+            <div className="w-full max-w-xs h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+              <p className="text-gray-500 text-sm">Chart placeholder</p>
+            </div>
+            <div className="mt-6 w-full space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                  <span className="text-sm font-medium text-gray-700">Technical Skills</span>
                 </div>
+                <span className="text-sm font-semibold text-blue-600">3.5 / 5</span>
               </div>
-            ))}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-indigo-500 mr-2"></span>
+                  <span className="text-sm font-medium text-gray-700">Soft Skills</span>
+                </div>
+                <span className="text-sm font-semibold text-indigo-600">4.5 / 5</span>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-lg text-gray-800 mb-4 pb-3 border-b border-gray-200">Technical Skills</h4>
+              <div className="space-y-0 overflow-hidden rounded-md border border-gray-200">
+                {[
+                  { skill: 'Cashless CS Experience', level: 4 },
+                  { skill: 'Ticketing CS Experience', level: 3 },
+                  { skill: 'Server Experience', level: 2 },
+                  { skill: 'General Troubleshooting', level: 5 }
+                ].map((item, index) => (
+                  <div key={item.skill} className={`flex items-center justify-between py-4 px-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${index !== 3 ? 'border-b border-gray-200' : ''}`}>
+                    <span className="font-medium text-gray-700">{item.skill}</span>
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          className={`w-4 h-4 rounded-full ${
+                            level <= item.level ? 'bg-blue-500' : 'bg-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-lg text-gray-800 mb-4 pb-3 border-b border-gray-200">Soft Skills</h4>
+              <div className="space-y-0 overflow-hidden rounded-md border border-gray-200">
+                {[
+                  { skill: 'Leadership', level: 5 },
+                  { skill: 'Communication', level: 4 },
+                  { skill: 'Problem Solving', level: 5 },
+                  { skill: 'Teamwork', level: 4 }
+                ].map((item, index) => (
+                  <div key={item.skill} className={`flex items-center justify-between py-4 px-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${index !== 3 ? 'border-b border-gray-200' : ''}`}>
+                    <span className="font-medium text-gray-700">{item.skill}</span>
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          className={`w-4 h-4 rounded-full ${
+                            level <= item.level ? 'bg-indigo-500' : 'bg-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="md:col-span-2 mt-2">
+              <h4 className="font-semibold text-lg text-gray-700 mb-4">Skill Level per Category</h4>
+              <div className="flex flex-wrap gap-3">
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-green-100 text-green-800">Senior Experience</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800">Stage Management</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-indigo-100 text-indigo-800">Lighting</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-purple-100 text-purple-800">CASFID Systems Expert</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right Sidebar */}
-      <div className="space-y-8">
-        {/* Certifications */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Certifications</h3>
-          <div className="space-y-4">
-            {[
-              { name: 'Health & Safety Level 2', status: 'Valid', expiry: '2025-03-15', color: 'green' },
-              { name: 'Advanced Rigging', status: 'Valid', expiry: '2024-12-20', color: 'green' },
-              { name: 'Fire Marshal Training', status: 'Expired', expiry: '2023-11-10', color: 'red' }
-            ].map((cert) => (
-              <div key={cert.name} className="p-3 border border-gray-200 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-medium text-gray-900">{cert.name}</h4>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    cert.color === 'green' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {cert.status}
-                  </span>
+      {/* Certifications & Licenses */}
+      <div className="bg-white shadow-sm rounded-xl p-8 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center pb-4 border-b border-gray-200">
+          <Award className="text-gray-500 mr-3" />
+          Certifications & Licenses
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            { name: 'First Aid', expiry: '12 Jun 2025', icon: Heart, color: 'green', status: 'valid' },
+            { name: 'Electrical Safety', expiry: '01 Feb 2024', icon: Zap, color: 'red', status: 'expired' },
+            { name: 'Working at Height', expiry: '20 Oct 2026', icon: Mountain, color: 'green', status: 'valid' },
+            { name: 'Driving License', expiry: '30 Mar 2030', icon: Car, color: 'green', status: 'valid', extra: 'Class: B, C1' },
+            { name: 'Heavy Goods License', expiry: null, icon: Truck, color: 'gray', status: 'not_held' },
+            { name: 'Fork Lift License', expiry: '15 May 2025', icon: HardHat, color: 'green', status: 'valid' },
+            { name: 'Telehandler License', expiry: null, icon: Construction, color: 'gray', status: 'not_held' },
+            { name: 'Other: PASMA', expiry: '01 Dec 2024', icon: FileText, color: 'green', status: 'valid' }
+          ].map((cert) => {
+            const Icon = cert.icon;
+            const isDisabled = cert.status === 'not_held';
+            
+            return (
+              <div key={cert.name} className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200 ${
+                isDisabled 
+                  ? 'bg-gray-50 border-gray-100' 
+                  : 'bg-white border-gray-200 hover:shadow-md hover:border-blue-300'
+              }`}>
+                <div className="flex items-center">
+                  <Icon className={`mr-3 text-2xl ${
+                    cert.color === 'green' ? 'text-green-500' : 
+                    cert.color === 'red' ? 'text-red-500' : 
+                    'text-gray-400'
+                  }`} size={24} />
+                  <div>
+                    <p className={`font-medium ${isDisabled ? 'text-gray-500' : 'text-gray-900'}`}>{cert.name}</p>
+                    <p className={`text-sm ${
+                      cert.status === 'expired' ? 'text-red-500' :
+                      cert.status === 'not_held' ? 'text-gray-400' :
+                      'text-gray-500'
+                    }`}>
+                      {cert.status === 'not_held' ? 'Not Held' : 
+                       cert.extra ? `${cert.extra} | Expires: ${cert.expiry}` : 
+                       cert.status === 'expired' ? `Expired: ${cert.expiry}` :
+                       `Expires: ${cert.expiry}`}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Expires: {cert.expiry}</p>
+                <div className="flex items-center space-x-2">
+                  <button className={`${isDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`} disabled={isDisabled}>
+                    <Eye size={20} />
+                  </button>
+                  <button className={`${isDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`} disabled={isDisabled}>
+                    <Download size={20} />
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Languages */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Languages</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">English</span>
-              <span className="text-sm text-gray-500">Native</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Spanish</span>
-              <span className="text-sm text-gray-500">Conversational</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">French</span>
-              <span className="text-sm text-gray-500">Basic</span>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
