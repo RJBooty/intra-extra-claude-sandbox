@@ -22,7 +22,7 @@ const currentUser = {
 const quickStats = [
   { label: 'Active Projects', value: '12', icon: FolderOpen, color: 'bg-blue-100 text-blue-600' },
   { label: 'Total Clients', value: '48', icon: Users, color: 'bg-green-100 text-green-600' },
-  { label: 'Revenue This Month', value: '$284K', icon: TrendingUp, color: 'bg-purple-100 text-purple-600' },
+  { label: 'Revenue This Month', value: '€284K', icon: TrendingUp, color: 'bg-purple-100 text-purple-600' },
   { label: 'Completion Rate', value: '94%', icon: BarChart3, color: 'bg-orange-100 text-orange-600' }
 ];
 

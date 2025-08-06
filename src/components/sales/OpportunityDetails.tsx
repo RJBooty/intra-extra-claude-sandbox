@@ -110,7 +110,7 @@ export function OpportunityDetails({ opportunity, onClose, onUpdate }: Opportuni
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-green-600" />
-              <span>${opportunity.deal_value.toLocaleString()} {opportunity.currency}</span>
+              <span>€{opportunity.deal_value.toLocaleString()} {opportunity.currency}</span>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-purple-600" />

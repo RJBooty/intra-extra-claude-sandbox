@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
   AlertCircle, AlertTriangle, Award, BarChart3, Briefcase, Building, 
   Calendar, CalendarDays, Car, CheckCircle, CheckSquare, ChevronLeft, 
-  ChevronRight, Clock, CreditCard, DollarSign, Download, Edit, Eye, 
+  ChevronRight, Clock, Copy, CreditCard, DollarSign, Download, Edit, Eye, 
   EyeOff, FileText, FolderOpen, Globe, Heart, Key, Lock, Luggage, 
-  Mail, MessageCircle, MessageSquare, Mountain, Package, Phone, Plane, 
-  Plus, Receipt, Save, Scale, Send, Settings, Shield, ShieldCheck, 
-  Star, Train, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
+  Mail, MessageCircle, MessageSquare, Mountain, Package, Paperclip, Phone, Plane, 
+  Plus, Receipt, Save, Scale, Search, Send, Settings, Shield, ShieldCheck, 
+  Star, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
   UserX, Users, Wrench, X, XCircle, Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,11 +23,90 @@ interface UserProfilePageProps {
 export function UserProfilePage({ onBack }: UserProfilePageProps) {
   const [activeTab, setActiveTab] = useState<'personal' | 'work' | 'compliance' | 'payments' | 'availability' | 'performance' | 'reports' | 'preferences'>('personal');
   const [isLoading, setIsLoading] = useState(false);
+  const [showFinanceQueryModal, setShowFinanceQueryModal] = useState(false);
+  const [financeQueryForm, setFinanceQueryForm] = useState({
+    subject: '',
+    invoice: '',
+    description: '',
+    attachment: null as File | null
+  });
+  const [financeQueryError, setFinanceQueryError] = useState(false);
+  
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [createInvoiceForm, setCreateInvoiceForm] = useState({
+    invoiceNumber: 'INV-2024-007',
+    invoiceDate: new Date().toISOString().split('T')[0],
+    dueDate: '',
+    poNumber: '',
+    currency: 'GBP',
+    project: '',
+    items: [
+      {
+        description: 'On-site Day Rate (Manager)',
+        details: '',
+        category: 'Fee',
+        subCategory: '',
+        quantity: 10,
+        rate: '350.00',
+        amount: 3500.00
+      },
+      {
+        description: 'Flights to Geneva',
+        details: '',
+        category: 'Expense',
+        subCategory: 'Travel',
+        quantity: 1,
+        rate: '225.00',
+        amount: 225.00
+      }
+    ],
+    vatEnabled: true,
+    vatRate: 20
+  });
+  const [createInvoiceError, setCreateInvoiceError] = useState(false);
+
+  // Compliance Tab State
+  const [showDocumentDetail, setShowDocumentDetail] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+
+  // Compliance Tab Handlers
+  const handleSelectDocument = (index: number) => {
+    if (selectedDocuments.includes(index)) {
+      setSelectedDocuments(selectedDocuments.filter(i => i !== index));
+    } else {
+      setSelectedDocuments([...selectedDocuments, index]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]); // All non-disabled documents
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleDeleteDocument = (index: number) => {
+    setDocumentToDelete(index);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    toast.success('Document deleted successfully');
+    setShowDeleteModal(false);
+    setDocumentToDelete(null);
+  };
 
   const tabs = [
     { id: 'personal', label: 'Personal Details', icon: User },
     { id: 'work', label: 'Work & Skills', icon: Briefcase },
-    { id: 'compliance', label: 'Compliance', icon: Shield, badge: 2 },
+    { id: 'compliance', label: 'Docs & Compliance', icon: Shield, badge: 2 },
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'availability', label: 'Availability', icon: Calendar },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
@@ -37,81 +116,234 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
 
   // Personal Details Tab
   const renderPersonalTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Personal Information</h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      {/* Basic Information and Contact Information - Top Row */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+            <User className="w-5 h-5 mr-2 text-gray-500" />
+            Basic Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-              <input type="text" defaultValue="Ava" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <label className="text-xs font-medium text-gray-600">First Name</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Ava</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-              <input type="text" defaultValue="Harper" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <label className="text-xs font-medium text-gray-600">Last Name</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Harper</div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">Preferred Name</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Ava</div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">Date of Birth</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">21/08/92 (32 years old)</div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">Gender</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Female</div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">Nationality</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Australian</div>
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-xs font-medium text-gray-600">Languages Spoken</label>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">English (Native)</span>
+                <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-1 rounded-full">French (Conversational)</span>
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-            <input type="email" defaultValue="ava.harper@casfid.com" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        </div>
+
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+            <Phone className="w-5 h-5 mr-2 text-gray-500" />
+            Contact Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input type="tel" defaultValue="+44 7700 900123" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <label className="text-xs font-medium text-gray-600">Email</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">ava.harper@casid.com</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-              <input type="date" defaultValue="1992-08-15" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <label className="text-xs font-medium text-gray-600">Mobile Phone</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">+61 412 345 678</div>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <textarea defaultValue="123 Main Street, London, SW1A 1AA, United Kingdom" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" rows={3} />
+            <div>
+              <label className="text-xs font-medium text-gray-600">Work Number</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">+61 412 345 678</div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">Working Location</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Remote</div>
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-xs font-medium text-gray-600">Home Address</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm flex justify-between items-center h-[42px]">
+                <span>123 Example St, Sydney, NSW 2090, Australia</span>
+                <button className="text-gray-500 hover:text-gray-700">
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-xs font-medium text-gray-600">Profile Picture</label>
+              <div className="mt-1 flex items-center gap-3 rounded-lg border border-dashed border-gray-300 px-6 py-2">
+                <img 
+                  alt="Profile Picture" 
+                  className="h-8 w-8 rounded-full" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKpfgEPhzk2zztpi63us-yp1m0V4THV4CaYu1yrUGpCbQesgrAK0_3qjeNPZZ3b9p5tkx7BQ8lz5a9zkhDQgKUUg7VquHd0CKMYCSAgD6MXrJf7AlvrlfYsQgIYtjL_4MjGwCOmDL8gvwHBuAZQA1v8aVjiDQw-XD4Ss14pGT5B87m4M5M5-4Qi5TN8temze9tu4LTHnxZBnmIQxqasQph5WHRj-SOiTa750RWffHgcz-aA0lkxKRksF3oiVv2v__Kvvw9vQ2CR7A3" 
+                />
+                <div className="text-left">
+                  <div className="flex text-xs leading-5 text-gray-600">
+                    <label className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 hover:text-indigo-500">
+                      <span>Upload a file</span>
+                      <input className="sr-only" type="file" />
+                    </label>
+                    <p className="pl-1">or drag and drop</p>
+                  </div>
+                  <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-8">
-        {/* Emergency Contact */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Emergency Contact</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-              <input type="text" defaultValue="Sarah Harper" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
-              <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option>Sister</option>
-                <option>Parent</option>
-                <option>Spouse</option>
-                <option>Friend</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input type="tel" defaultValue="+44 7700 900456" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+      {/* About Me and Job Information - Second Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+            <User className="w-5 h-5 mr-2 text-gray-500" />
+            About Me
+          </h3>
+          <div>
+            <label className="text-xs font-medium text-gray-600">Introduction</label>
+            <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 leading-relaxed text-sm h-full">
+              I'm a dedicated and passionate professional with over 8 years of experience in project management and international development. I thrive in collaborative environments and I'm always eager to take on new challenges. I'm excited to be part of this team and contribute to our shared goals. Outside of work, I'm an avid hiker and love exploring new cultures through travel and food.
             </div>
           </div>
         </div>
 
-        {/* Medical Information */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Medical Information</h3>
-          <div className="space-y-4">
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+            <Briefcase className="w-5 h-5 mr-2 text-gray-500" />
+            Job Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
-              <input type="text" defaultValue="Nuts, Shellfish" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <label className="text-xs font-medium text-gray-600">Job Title</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Project Manager</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Medical Conditions</label>
-              <textarea defaultValue="None declared" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" rows={2} />
+              <label className="text-xs font-medium text-gray-600">Department</label>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">International Development</div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Medications</label>
-              <textarea defaultValue="EpiPen (for nut allergy)" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" rows={2} />
+            <div className="col-span-1 md:col-span-2">
+              <label className="text-xs font-medium text-gray-600">Brief Description</label>
+              <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 leading-relaxed text-sm">
+                Manages and oversees international development projects, ensuring they are completed on time, within budget, and to the required quality standards.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Documents - Third Row */}
+      <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+          <FileText className="w-5 h-5 mr-2 text-gray-500" />
+          Documents
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h4 className="font-semibold text-gray-800 flex items-center mb-3 text-base">
+              <FileText className="w-5 h-5 mr-2 text-gray-500" />
+              Passport
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600">Passport Number</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">E12345678</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Expiry Date</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">15/06/2030</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Country of Issue</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Australia</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h4 className="font-semibold text-gray-800 flex items-center mb-3 text-base">
+              <Car className="w-5 h-5 mr-2 text-gray-500" />
+              Driving License
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600">Number</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">987654321</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Country of Issue</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Australia</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Expiry</label>
+                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">21/08/2028</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Emergency & Medical - Fourth Row */}
+      <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+          <Heart className="w-5 h-5 mr-2 text-gray-500" />
+          Emergency & Medical
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <h4 className="font-semibold text-red-800 flex items-center mb-3 text-base">
+              <AlertTriangle className="w-5 h-5 mr-2 text-red-500" />
+              Emergency Information
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
+                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Noah Thompson</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-red-700">Relationship</label>
+                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Partner</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
+                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">+61 487 654 321</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h4 className="font-semibold text-yellow-800 flex items-center mb-3 text-base">
+              <Heart className="w-5 h-5 mr-2 text-yellow-500" />
+              Medical Conditions
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600">Allergies</label>
+                <div className="mt-1 p-2 bg-yellow-100 rounded-md text-red-700 font-medium border border-yellow-200 text-sm">Peanuts (anaphylactic)</div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Dietary Requirements</label>
+                <div className="mt-1 p-2 bg-yellow-100 rounded-md text-gray-800 border border-yellow-200 text-sm">Vegetarian</div>
+              </div>
             </div>
           </div>
         </div>
@@ -219,216 +451,722 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     </div>
   );
 
-  // Compliance Tab
-  const renderComplianceTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="space-y-8">
-        {/* Document Status */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Document Status</h3>
-          <div className="space-y-4">
-            {[
-              { name: 'Passport', status: 'Valid', expiry: '2028-06-15', color: 'green' },
-              { name: 'Work Visa (EU)', status: 'Valid', expiry: '2025-12-31', color: 'green' },
-              { name: 'DBS Check', status: 'Expired', expiry: '2023-09-20', color: 'red' },
-              { name: 'Insurance Certificate', status: 'Valid', expiry: '2024-11-30', color: 'green' }
-            ].map((doc) => (
-              <div key={doc.name} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <h4 className="font-medium text-gray-900">{doc.name}</h4>
-                  <p className="text-sm text-gray-500">Expires: {doc.expiry}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    doc.color === 'green' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {doc.status}
-                  </span>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">
-                    <Upload className="w-4 h-4" />
-                  </button>
+  // Docs & Compliance Tab
+  const renderComplianceTab = () => {
+    if (showDocumentDetail) {
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-lg space-y-8">
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div className="flex justify-between items-start">
+              <div>
+                <button 
+                  className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
+                  onClick={() => setShowDocumentDetail(false)}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Back to All Documents
+                </button>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-purple-500 text-white mr-4">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900">Contractor_Agreement_v3.pdf</h4>
+                    <p className="text-sm text-gray-500">Uploaded by You on 01 Apr 2024</p>
+                  </div>
                 </div>
               </div>
-            ))}
+              <div className="flex items-center space-x-2">
+                <button className="text-gray-500 hover:text-blue-600 p-2 rounded-full bg-white border border-gray-300">
+                  <Download className="w-4 h-4" />
+                </button>
+                <button className="text-gray-500 hover:text-gray-700 p-2 rounded-full bg-white border border-gray-300">
+                  <Package className="w-4 h-4" />
+                </button>
+                <button className="text-gray-500 hover:text-red-600 p-2 rounded-full bg-white border border-gray-300">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center text-sm">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Update Document
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
+                <h5 className="text-lg font-medium text-gray-800 mb-4">Document Preview</h5>
+                <div className="bg-gray-200 h-96 rounded-md flex items-center justify-center">
+                  <p className="text-gray-500">Document preview not available.</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                  <h5 className="text-lg font-medium text-gray-800 mb-4">Details</h5>
+                  <div className="space-y-4 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Status:</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">File Size:</span>
+                      <span className="font-medium text-gray-800">2.1 MB</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Document Type:</span>
+                      <span className="font-medium text-gray-800">Contract</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Signed Date:</span>
+                      <span className="font-medium text-gray-800">02 Apr 2024</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Expiry Date:</span>
+                      <span className="font-medium text-gray-800">31 Mar 2025</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                  <h5 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                    <FileText className="w-4 h-4 mr-2 text-gray-500" />
+                    Admin Notes
+                  </h5>
+                  <div className="space-y-4">
+                    <textarea 
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                      placeholder="Add a note for this document..." 
+                      rows={3}
+                    />
+                    <button className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Note
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      );
+    }
 
-        {/* File Management */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">File Management</h3>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Drag and drop files here or click to browse</p>
-            <button className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
-              Upload Documents
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-lg space-y-8">
+      {/* Mandatory Documents Section */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-gray-800 flex items-center">
+            <Shield className="w-5 h-5 mr-2 text-gray-500" />
+            Mandatory Documents
+          </h3>
+          <div className="flex items-center space-x-3">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-800">Overall Completion</p>
+              <p className="text-xs text-gray-500">3 of 4 documents completed</p>
+            </div>
+            <div className="w-48 bg-gray-200 rounded-full h-2.5">
+              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '75%' }}></div>
+            </div>
+            <span className="text-sm font-semibold text-gray-800">75%</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+            <label className="text-sm font-medium text-green-700 flex items-center">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Contractor Agreement
+            </label>
+            <p className="text-base font-semibold text-gray-900 mt-1">Signed</p>
+            <p className="text-xs text-gray-500 mt-1">Expiry: 31/03/2025</p>
+            <div className="flex items-center space-x-2 mt-2">
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Eye className="w-3 h-3 mr-1" /> View
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Download className="w-3 h-3 mr-1" /> Download
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Upload className="w-3 h-3 mr-1" /> Update Doc
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+            <label className="text-sm font-medium text-red-700 flex items-center">
+              <XCircle className="w-4 h-4 mr-2" />
+              NDA
+            </label>
+            <p className="text-base font-semibold text-gray-900 mt-1">Rejected</p>
+            <p className="text-xs text-gray-500 mt-1">Expired on: 14/03/2024</p>
+            <div className="flex items-center space-x-2 mt-2">
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Eye className="w-3 h-3 mr-1" /> View
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Download className="w-3 h-3 mr-1" /> Download
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Upload className="w-3 h-3 mr-1" /> Update Doc
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+            <label className="text-sm font-medium text-blue-700 flex items-center">
+              <Clock className="w-4 h-4 mr-2" />
+              Travel Insurance
+            </label>
+            <p className="text-base font-semibold text-gray-900 mt-1">Pending Review</p>
+            <p className="text-xs text-gray-500 mt-1">Expiry: 31/12/2028</p>
+            <div className="flex items-center space-x-2 mt-2">
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Eye className="w-3 h-3 mr-1" /> View
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Download className="w-3 h-3 mr-1" /> Download
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Upload className="w-3 h-3 mr-1" /> Update Doc
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+            <label className="text-sm font-medium text-green-700 flex items-center">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Passport
+            </label>
+            <p className="text-base font-semibold text-gray-900 mt-1">Approved</p>
+            <p className="text-xs text-gray-500 mt-1">Expiry: 01/01/2030</p>
+            <div className="flex items-center space-x-2 mt-2">
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Eye className="w-3 h-3 mr-1" /> View
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Download className="w-3 h-3 mr-1" /> Download
+              </button>
+              <button className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center">
+                <Upload className="w-3 h-3 mr-1" /> Update Doc
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="border-t border-gray-200 -mx-6"></div>
+      
+      {/* All Documents Section */}
+      <div className="space-y-4 pt-8">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-gray-800 flex items-center">
+            <FolderOpen className="w-5 h-5 mr-2 text-gray-500" />
+            All Documents
+          </h3>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Package className="w-5 h-5 text-gray-500" />
+              <div className="text-sm text-gray-600 text-right whitespace-nowrap">
+                <span>25MB / 100MB (25%)</span>
+              </div>
+            </div>
+            <div className="w-32 bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '25%' }}></div>
+            </div>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center text-sm whitespace-nowrap">
+              <Upload className="w-4 h-4 mr-2" />
+              Upload New
             </button>
           </div>
         </div>
-      </div>
-
-      <div className="space-y-8">
-        {/* Travel Documents */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Travel Documents</h3>
-          <div className="space-y-4">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-green-900">UK Passport</h4>
-                  <p className="text-sm text-green-700">Valid until June 2028</p>
+        
+        {/* Search and Filter Controls */}
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input 
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64 text-sm" 
+                placeholder="Search documents..." 
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button className="flex items-center text-sm px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+              <Settings className="w-4 h-4 mr-2" />
+              Type
+              <ChevronRight className="w-4 h-4 ml-2 -mr-1" />
+            </button>
+            <button className="flex items-center text-sm px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Sort by: Name (A-Z)
+              <ChevronRight className="w-4 h-4 ml-2 -mr-1" />
+            </button>
+            <label className="flex items-center text-sm text-gray-600">
+              <input className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" type="checkbox" />
+              <span className="ml-2">Show archived</span>
+            </label>
+          </div>
+          <button className="flex items-center text-sm px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+            <Package className="w-4 h-4 mr-2" />
+            Download All
+          </button>
+        </div>
+        
+        {/* Document List Header */}
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-2 flex items-center">
+          <input 
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+            type="checkbox"
+            checked={selectAll}
+            onChange={handleSelectAll}
+          />
+          <label className="ml-3 text-sm font-medium text-gray-700 flex-grow">Document Name & Info</label>
+          <div className="flex items-center space-x-6 text-sm font-medium text-gray-500">
+            <div className="w-32 text-center">Type</div>
+            <div className="w-32 text-center">Upload Date</div>
+            <div className="w-32 text-center">Expiration</div>
+            <div className="w-28 text-center">Status</div>
+            <div className="w-40 text-center">Actions</div>
+          </div>
+        </div>
+        
+        {/* Document List */}
+        <div className="space-y-3 mt-4 overflow-y-auto pr-2" style={{ maxHeight: '40rem' }}>
+          {[
+            {
+              name: 'Contractor_Agreement_v3.pdf',
+              subtitle: 'Signed: 02 Apr 2024',
+              type: 'Contract',
+              uploadDate: '01 Apr 2024',
+              expiration: '31 Mar 2025',
+              status: 'Approved',
+              statusColor: 'bg-green-100 text-green-800',
+              icon: 'gavel',
+              iconBg: 'bg-purple-500'
+            },
+            {
+              name: 'NDA_Agreement_Signed.pdf',
+              subtitle: 'Expired: 14 Mar 2024',
+              type: 'Contract',
+              uploadDate: '15 Mar 2021',
+              expiration: '14 Mar 2024',
+              status: 'Expired',
+              statusColor: 'bg-red-100 text-red-800',
+              icon: 'description',
+              iconBg: 'bg-red-500'
+            },
+            {
+              name: 'Travel_Insurance_Policy.pdf',
+              subtitle: 'Submitted by: User',
+              type: 'Travel',
+              uploadDate: '15 Mar 2021',
+              expiration: '31 Dec 2028',
+              status: 'Pending Review',
+              statusColor: 'bg-blue-100 text-blue-800',
+              icon: 'flight',
+              iconBg: 'bg-blue-500'
+            }
+          ].map((doc, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+              <div className="flex items-center flex-grow">
+                <input 
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-4" 
+                  type="checkbox"
+                  checked={selectedDocuments.includes(index)}
+                  onChange={() => handleSelectDocument(index)}
+                />
+                <div className={`w-10 h-10 flex items-center justify-center rounded-lg flex-shrink-0 mr-4 ${doc.iconBg}`}>
+                  {doc.icon === 'gavel' && <Scale className="w-5 h-5 text-white" />}
+                  {doc.icon === 'description' && <FileText className="w-5 h-5 text-white" />}
+                  {doc.icon === 'flight' && <Plane className="w-5 h-5 text-white" />}
                 </div>
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-gray-900">{doc.name}</p>
+                  <p className="text-sm text-gray-500">{doc.subtitle}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-6">
+                <div className="text-sm text-gray-600 w-32 text-center">{doc.type}</div>
+                <div className="text-sm text-gray-600 w-32 text-center">{doc.uploadDate}</div>
+                <div className={`text-sm w-32 text-center ${doc.status === 'Expired' ? 'text-red-600' : 'text-gray-600'}`}>
+                  {doc.expiration}
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-28 justify-center whitespace-nowrap ${doc.statusColor}`}>
+                  {doc.status}
+                </span>
+                <div className="flex items-center space-x-2 text-gray-500 w-40 justify-center">
+                  <button 
+                    className="hover:text-blue-600"
+                    onClick={() => setShowDocumentDetail(true)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button 
+                    className="hover:text-blue-600"
+                    onClick={() => toast.success('Document downloaded successfully')}
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button className="hover:text-gray-700">
+                    <Package className="w-4 h-4" />
+                  </button>
+                  <button 
+                    className="hover:text-red-600"
+                    onClick={() => handleDeleteDocument(index)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-red-900">US Work Visa</h4>
-                  <p className="text-sm text-red-700">Expired - Renewal required</p>
-                </div>
-                <XCircle className="w-5 h-5 text-red-600" />
-              </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this document? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Compliance Issues */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-red-600 mb-6 flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2" />
-            Compliance Issues (2)
-          </h3>
-          <div className="space-y-4">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h4 className="font-medium text-red-900">DBS Check Expired</h4>
-              <p className="text-sm text-red-700">Required for UK events. Please renew immediately.</p>
-              <button className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm">
-                Renew Now
-              </button>
-            </div>
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <h4 className="font-medium text-amber-900">Insurance Expiring Soon</h4>
-              <p className="text-sm text-amber-700">Expires in 3 months. Consider renewal.</p>
-              <button className="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-sm">
-                Schedule Renewal
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
+};
 
   // Payments Tab
   const renderPaymentsTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="space-y-8">
-        {/* Rate Information */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Rate Information</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Day Rate</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
-                  <input type="text" defaultValue="350" className="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 text-sm" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hourly Rate</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
-                  <input type="text" defaultValue="45" className="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 text-sm" />
-                </div>
-              </div>
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Payments</h1>
+          <p className="mt-1 text-base text-gray-600">Manage your payment methods, rates, and view your transaction history.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowFinanceQueryModal(true)}
+            className="flex items-center gap-2 rounded-md h-10 px-4 text-sm font-semibold text-indigo-600 border border-indigo-600 bg-white hover:bg-indigo-50 transition-colors flex-shrink-0"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Raise Finance Query</span>
+          </button>
+          <button 
+            onClick={() => setShowCreateInvoiceModal(true)}
+            className="flex items-center gap-2 rounded-md h-10 px-4 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create Invoice</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Bank & Invoicing Details */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-5 border-b border-gray-200 flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Bank & Invoicing Details</h2>
+          </div>
+          <button className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex-shrink-0">
+            <span>Edit</span>
+          </button>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Bank Name</p>
+              <p className="text-sm text-gray-900 font-medium">Global Finance Bank</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-              <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option>GBP (£)</option>
-                <option>EUR (€)</option>
-                <option>USD ($)</option>
-              </select>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Full Name on Account</p>
+              <p className="text-sm text-gray-900 font-medium">John Doe</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Account Number</p>
+              <p className="text-sm text-gray-900 font-medium">•••••••••123</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Sort Code</p>
+              <p className="text-sm text-gray-900 font-medium">12-34-56</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">IBAN</p>
+              <p className="text-sm text-gray-900 font-medium">GB29 NWBK 6016 1331 9268 19</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">BIC/SWIFT</p>
+              <p className="text-sm text-gray-900 font-medium">NWBKGB2L</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md col-span-1 md:col-span-2">
+              <p className="text-sm text-gray-600">Their Address</p>
+              <p className="text-sm text-gray-900 font-medium">123 Example Street, London, E1 6AN, United Kingdom</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Name/Company</p>
+              <p className="text-sm text-gray-900 font-medium">Tech Solutions Inc.</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">VAT Number</p>
+              <p className="text-sm text-gray-900 font-medium">GB123456789</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">UTR Number</p>
+              <p className="text-sm text-gray-900 font-medium">9876543210</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">TIN Number</p>
+              <p className="text-sm text-gray-900 font-medium">123-456-789</p>
             </div>
           </div>
-        </div>
-
-        {/* Banking Details */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Banking Details</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-              <input type="text" defaultValue="Barclays Bank" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sort Code</label>
-                <input type="text" defaultValue="20-00-00" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+          <div className="mt-5 p-3 rounded-md bg-yellow-50 border-l-4 border-yellow-400">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-                <input type="text" defaultValue="12345678" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+              <div className="ml-3">
+                <p className="text-sm text-yellow-800">
+                  Please ensure all payment details are accurate. Finance will not be liable for issues resulting from incorrect information.
+                </p>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
-              <input type="text" defaultValue="Ava Harper" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-8">
-        {/* Payment History */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Recent Payments</h3>
-          <div className="space-y-3">
-            {[
-              { event: 'Geneva Motor Show', amount: '£1,750', date: '2024-05-20', status: 'Paid' },
-              { event: 'Mobile World Congress', amount: '£1,400', date: '2024-03-10', status: 'Paid' },
-              { event: 'CES Las Vegas', amount: '£2,100', date: '2024-01-25', status: 'Pending' }
-            ].map((payment) => (
-              <div key={payment.event} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{payment.event}</p>
-                  <p className="text-sm text-gray-500">{payment.date}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">{payment.amount}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    payment.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {payment.status}
-                  </span>
-                </div>
+      {/* Three Column Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Payment Rates */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Payment Rates</h2>
+          </div>
+          <div className="p-5">
+            <p className="text-xs text-gray-600 mb-4">These are guide rates and are not fixed between projects. All invoices must be checked against the agreed project rates.</p>
+            <div className="space-y-2 divide-y divide-gray-100">
+              <div className="flex justify-between items-center py-2">
+                <p className="text-sm text-gray-600">Day Rate</p>
+                <p className="text-sm text-gray-900 font-medium">$500.00</p>
               </div>
-            ))}
+              <div className="flex justify-between items-center py-2">
+                <p className="text-sm text-gray-600">Travel Day</p>
+                <p className="text-sm text-gray-900 font-medium">$250.00</p>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <p className="text-sm text-gray-600">Manager Rate</p>
+                <p className="text-sm text-gray-900 font-medium">$600.00</p>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <p className="text-sm text-gray-600">Office Rate</p>
+                <p className="text-sm text-gray-900 font-medium">$300.00</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Tax Information */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Tax Information</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tax Status</label>
-              <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option>PAYE Employee</option>
-                <option>Self-Employed</option>
-                <option>Contractor</option>
-              </select>
+        {/* Earnings Breakdown */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Earnings Breakdown</h2>
+          </div>
+          <div className="p-5">
+            <div className="relative w-40 h-40 mx-auto">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <circle className="stroke-current text-gray-200" cx="18" cy="18" fill="none" r="15.9155" strokeWidth="3.8"></circle>
+                <circle className="stroke-current text-blue-500" cx="18" cy="18" fill="none" r="15.9155" strokeDasharray="60, 100" strokeDashoffset="0" strokeWidth="3.8"></circle>
+                <circle className="stroke-current text-green-500" cx="18" cy="18" fill="none" r="15.9155" strokeDasharray="25, 100" strokeDashoffset="-60" strokeWidth="3.8"></circle>
+                <circle className="stroke-current text-red-500" cx="18" cy="18" fill="none" r="15.9155" strokeDasharray="15, 100" strokeDashoffset="-85" strokeWidth="3.8"></circle>
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold text-gray-900">$125k</span>
+                <span className="text-xs text-gray-600">Total Earned</span>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">National Insurance Number</label>
-              <input type="text" defaultValue="AB123456C" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">UTR Number</label>
-              <input type="text" defaultValue="1234567890" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
+                  <span className="text-sm text-gray-600">Day Rate</span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">$75,000</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-green-500"></div>
+                  <span className="text-sm text-gray-600">Manager Rate</span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">$31,250</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-red-500"></div>
+                  <span className="text-sm text-gray-600">Other</span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">$18,750</p>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Revenue Overview */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Revenue Overview</h2>
+          </div>
+          <div className="p-5">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-2xl font-bold text-gray-900">$45,200.00</p>
+              <div className="flex items-center gap-1 text-sm font-medium text-green-600">
+                <TrendingUp className="w-4 h-4" />
+                <span>12.5% vs last year</span>
+              </div>
+            </div>
+            <div className="h-32">
+              <div className="h-full flex items-end justify-between gap-1">
+                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => {
+                  const heights = [60, 80, 50, 70, 90, 65, 40, 55, 35, 45, 25, 50];
+                  const isCurrentYear = index < 8;
+                  return (
+                    <div key={month} className="flex flex-col items-center gap-2 w-full">
+                      <div 
+                        className={`w-full rounded-t-md ${isCurrentYear ? 'bg-indigo-600' : 'bg-gray-300'}`} 
+                        style={{ height: `${heights[index]}%` }}
+                      ></div>
+                      <p className="text-xs text-gray-600">{month}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <div className="flex items-center space-x-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-indigo-600"></div>
+                  <span>Current Year</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-gray-300"></div>
+                  <span>Previous Year</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment History */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Payment History</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <input 
+                className="w-full sm:w-48 pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500" 
+                placeholder="Search by project..." 
+                type="text"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+            <button className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+              <Settings className="w-4 h-4" />
+              <span>Filter</span>
+            </button>
+            <button 
+              onClick={() => setShowFinanceQueryModal(true)}
+              className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-indigo-600 border border-indigo-600 bg-white hover:bg-indigo-50 transition-colors flex-shrink-0"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Raise Finance Query</span>
+            </button>
+            <button 
+              onClick={() => setShowCreateInvoiceModal(true)}
+              className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex-shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Invoice</span>
+            </button>
+          </div>
+        </div>
+        <div className="p-0">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice Details</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                  <th className="hidden lg:table-cell px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date Submitted</th>
+                  <th className="hidden lg:table-cell px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date Paid</th>
+                  <th className="hidden sm:table-cell px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {[
+                  { invoice: 'INV-00123', project: 'Project Alpha', amount: '$1,200.00', submitted: 'Aug 1, 2023', paid: 'Aug 15, 2023', status: 'Paid', statusColor: 'bg-blue-50 text-blue-700' },
+                  { invoice: 'INV-00124', project: 'Project Beta', amount: '$800.00', submitted: 'Sep 5, 2023', paid: '-', status: 'Due', statusColor: 'bg-yellow-50 text-yellow-700' },
+                  { invoice: 'INV-00125', project: 'Project Gamma', amount: '$500.00', submitted: 'Sep 15, 2023', paid: '-', status: 'Overdue', statusColor: 'bg-red-50 text-red-700' }
+                ].map((payment, index) => (
+                  <tr key={index} className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0 transition-colors duration-150">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{payment.invoice}</div>
+                      <div className="text-sm text-gray-600">{payment.project}</div>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{payment.amount}</td>
+                    <td className="hidden lg:table-cell px-5 py-4 whitespace-nowrap text-sm text-gray-600">{payment.submitted}</td>
+                    <td className="hidden lg:table-cell px-5 py-4 whitespace-nowrap text-sm text-gray-600">{payment.paid}</td>
+                    <td className="hidden sm:table-cell px-5 py-4 whitespace-nowrap text-sm">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${payment.statusColor}`}>
+                        {payment.status === 'Paid' && <CheckCircle className="w-4 h-4 mr-1.5" />}
+                        {payment.status === 'Due' && <Clock className="w-4 h-4 mr-1.5" />}
+                        {payment.status === 'Overdue' && <AlertCircle className="w-4 h-4 mr-1.5" />}
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 rounded-md h-8 px-3 text-xs font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                          <Download className="w-3 h-3" />
+                          <span>Download</span>
+                        </button>
+                        <button className="flex items-center gap-1.5 rounded-md h-8 px-3 text-xs font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="p-5 border-t border-gray-200 text-center">
+          <a className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors" href="#">
+            View All History
+          </a>
         </div>
       </div>
     </div>
@@ -436,197 +1174,64 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
 
   // Availability Tab
   const renderAvailabilityTab = () => (
-    <div className="grid grid-cols-3 gap-8">
-      <div className="col-span-2">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Calendar View</h2>
-            <div className="flex items-center">
-              <button className="text-gray-500 hover:text-gray-900">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="font-semibold mx-2">May 2024</span>
-              <button className="text-gray-500 hover:text-gray-900">
-                <ChevronRight className="w-5 h-5" />
-              </button>
-              <a className="text-blue-600 text-sm ml-4" href="#">View Year</a>
-            </div>
-          </div>
-          <div className="grid grid-cols-7 text-center text-sm font-medium text-gray-500 mb-2">
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-            <span>Sun</span>
-          </div>
-          <div className="grid grid-cols-7 text-center">
-            <div className="py-2 text-gray-400">29</div>
-            <div className="py-2 text-gray-400">30</div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">1</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">2</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">3</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">4</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">5</span></div>
-            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">6</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">7</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">8</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">9</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">10</span></div>
-            <div className="py-2"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">11</span></div>
-            <div className="py-2"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">12</span></div>
-            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">13</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">14</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-blue-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto ring-2 ring-blue-500">15</span></div>
-            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">16</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">17</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">18</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
-            <div className="py-2 relative"><span className="bg-yellow-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">19</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-yellow-500 rounded-full"></span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">20</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">21</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">22</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">23</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">24</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">25</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">26</span></div>
-            <div className="py-2 relative"><span className="bg-red-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">27</span><span className="absolute bottom-1 right-3.5 h-1.5 w-1.5 bg-red-500 rounded-full"></span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">28</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">29</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">30</span></div>
-            <div className="py-2"><span className="bg-green-200 h-8 w-8 rounded-full flex items-center justify-center mx-auto">31</span></div>
-            <div className="py-2 text-gray-400">1</div>
-            <div className="py-2 text-gray-400">2</div>
-          </div>
-          <div className="flex items-center justify-between mt-4 text-sm">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center"><span className="h-3 w-3 bg-green-400 rounded-full mr-2"></span>Available</div>
-              <div className="flex items-center"><span className="h-3 w-3 bg-red-400 rounded-full mr-2"></span>Booked</div>
-              <div className="flex items-center"><span className="h-3 w-3 bg-blue-400 rounded-full mr-2"></span>Pencilled In</div>
-              <div className="flex items-center"><span className="h-3 w-3 bg-yellow-400 rounded-full mr-2"></span>Personal Holiday</div>
-              <div className="flex items-center"><span className="h-3 w-3 bg-gray-800 rounded-full mr-2"></span>Blackout Date</div>
-            </div>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm flex items-center">
-              <Calendar className="w-4 h-4 mr-1" /> Edit Availability
-            </button>
-          </div>
-        </div>
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold flex items-center mb-4"><AlertTriangle className="text-yellow-500 mr-2" />Scheduling Clashes</h2>
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex">
-            <div className="text-center mr-4">
-              <div className="text-sm text-red-500 font-semibold">MAY</div>
-              <div className="text-2xl font-bold">15</div>
-            </div>
-            <div className="flex-grow">
-              <h3 className="font-semibold">Clash Detected: Project Overlap</h3>
-              <p className="text-sm text-gray-600 mb-2">This individual has two confirmed projects overlapping on this date:</p>
-              <ul className="list-disc list-inside text-sm text-gray-600">
-                <li>Geneva Motor Show (Ends 15 May)</li>
-                <li>New Project Alpha (Starts 15 May)</li>
-              </ul>
-              <a className="text-sm text-blue-600 font-semibold mt-2 inline-block" href="#">Resolve Clash</a>
-            </div>
-          </div>
-        </div>
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold flex items-center mb-4"><Clock className="mr-2" />Upcoming Projects</h2>
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm flex">
-              <div className="text-center mr-4">
-                <div className="text-sm text-red-500 font-semibold">MAY</div>
-                <div className="text-2xl font-bold">06</div>
-              </div>
-              <div className="flex-grow">
-                <h3 className="font-semibold">Geneva Motor Show</h3>
-                <p className="text-sm text-gray-500">06 May - 15 May 2024</p>
-                <span className="mt-1 inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Confirmed</span>
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+      <div className="lg:col-span-3">
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-800">Calendar View</h3>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className="text-lg font-medium text-gray-800">May 2024</span>
+                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+                <button className="text-sm font-medium text-blue-600 hover:text-blue-800">View Year</button>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm flex">
-              <div className="text-center mr-4">
-                <div className="text-sm text-red-500 font-semibold">MAY</div>
-                <div className="text-2xl font-bold">16</div>
+
+            {/* Calendar */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="grid grid-cols-7 gap-px text-center text-xs font-semibold text-gray-500 border-b border-gray-200">
+                <div className="py-2">Mon</div>
+                <div className="py-2">Tue</div>
+                <div className="py-2">Wed</div>
+                <div className="py-2">Thu</div>
+                <div className="py-2">Fri</div>
+                <div className="py-2">Sat</div>
+                <div className="py-2">Sun</div>
               </div>
-              <div className="flex-grow">
-                <h3 className="font-semibold">Project Hold: Paris Olympics</h3>
-                <p className="text-sm text-gray-500">16 May - 19 May 2024</p>
-                <span className="mt-1 inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold">Pencilled in</span>
+              <div className="grid grid-cols-7 gap-1 p-1">
+                {[
+                  { day: 29, status: 'disabled' }, { day: 30, status: 'disabled' }, { day: 1, status: 'available' },
+                  { day: 2, status: 'available' }, { day: 3, status: 'available' }, { day: 4, status: 'blackout' },
+                  { day: 5, status: 'blackout' }, { day: 6, status: 'booked' }, { day: 7, status: 'booked' },
+                  { day: 8, status: 'booked' }, { day: 9, status: 'booked' }, { day: 10, status: 'booked' },
+                  { day: 11, status: 'booked' }, { day: 12, status: 'booked' }, { day: 13, status: 'booked' },
+                  { day: 14, status: 'booked' }, { day: 15, status: 'today-booked' }, { day: 16, status: 'pencilled' },
+                  { day: 17, status: 'pencilled' }, { day: 18, status: 'pencilled' }, { day: 19, status: 'pencilled' },
+                  { day: 20, status: 'available' }, { day: 21, status: 'available' }, { day: 22, status: 'available' }
+                ].map((date, index) => (
+                  <div
+                    key={index}
+                    className={`aspect-square flex items-center justify-center text-sm cursor-pointer rounded ${
+                      date.status === 'disabled' ? 'text-gray-300' :
+                      date.status === 'available' ? 'text-gray-700 hover:bg-green-50' :
+                      date.status === 'blackout' ? 'bg-red-100 text-red-700' :
+                      date.status === 'booked' ? 'bg-blue-100 text-blue-700' :
+                      date.status === 'today-booked' ? 'bg-blue-600 text-white' :
+                      date.status === 'pencilled' ? 'bg-yellow-100 text-yellow-700' :
+                      'text-gray-700'
+                    }`}
+                  >
+                    {date.day}
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <a className="text-blue-600 font-semibold" href="#">View All Upcoming & Past Projects</a>
-          </div>
-        </div>
-      </div>
-      <div className="col-span-1">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold flex items-center mb-4"><Plane className="mr-2" />Travel Preferences</h2>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <label className="text-sm font-medium text-gray-500">Home Airport</label>
-            <p className="font-semibold">LHR - London Heathrow</p>
-          </div>
-          <div className="mt-4">
-            <label className="text-sm font-medium text-gray-500">Preferred Plane Seat</label>
-            <div className="flex items-center space-x-6 mt-2">
-              <label className="flex items-center">
-                <input checked className="form-radio text-blue-600" name="seat" type="radio"/>
-                <span className="ml-2">Aisle</span>
-              </label>
-              <label className="flex items-center">
-                <input className="form-radio text-blue-600" name="seat" type="radio"/>
-                <span className="ml-2">Middle</span>
-              </label>
-              <label className="flex items-center">
-                <input className="form-radio text-blue-600" name="seat" type="radio"/>
-                <span className="ml-2">Window</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow mt-8">
-          <h2 className="text-lg font-semibold flex items-center mb-4"><CreditCard className="mr-2" />Frequent Flyer Numbers</h2>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <label className="text-sm font-medium text-gray-500">British Airways</label>
-            <p className="font-semibold">BA12345678</p>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-lg mt-4">
-            <label className="text-sm font-medium text-gray-500">Virgin Atlantic</label>
-            <p className="font-semibold">VS87654321</p>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow mt-8">
-          <h2 className="text-lg font-semibold flex items-center mb-4"><Train className="mr-2" />Railcards</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">16-25 Railcard</span>
-              <button className="text-gray-400 hover:text-gray-600">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Network Railcard</span>
-              <button className="text-gray-400 hover:text-gray-600">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700" htmlFor="railcard-type">Add Railcard</label>
-            <div className="mt-1 flex rounded-md shadow-sm">
-              <div className="relative flex-grow focus-within:z-10">
-                <select className="form-select block w-full rounded-none rounded-l-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" id="railcard-type" name="railcard-type">
-                  <option>Select type...</option>
-                  <option>26-30 Railcard</option>
-                  <option>Senior Railcard</option>
-                  <option>Family & Friends Railcard</option>
-                </select>
-              </div>
-              <button className="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" type="button">
-                <Plus className="w-4 h-4" />
-                <span>Add</span>
-              </button>
             </div>
           </div>
         </div>
@@ -1149,6 +1754,167 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     }
   };
 
+  const handleFinanceQuerySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFinanceQueryError(false);
+
+    if (!financeQueryForm.subject || !financeQueryForm.description) {
+      setFinanceQueryError(true);
+      return;
+    }
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Finance query submitted successfully!');
+      setShowFinanceQueryModal(false);
+      setFinanceQueryForm({ subject: '', invoice: '', description: '', attachment: null });
+    } catch (error) {
+      setFinanceQueryError(true);
+      toast.error('Failed to submit query');
+    }
+  };
+
+  const handleFinanceQueryFormChange = (field: keyof typeof financeQueryForm, value: string | File | null) => {
+    setFinanceQueryForm(prev => ({ ...prev, [field]: value }));
+    if (financeQueryError) {
+      setFinanceQueryError(false);
+    }
+  };
+
+  const handleFinanceQueryCancel = () => {
+    setShowFinanceQueryModal(false);
+    setFinanceQueryForm({ subject: '', invoice: '', description: '', attachment: null });
+    setFinanceQueryError(false);
+  };
+
+  // Set default due date (30 days from today)
+  useEffect(() => {
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today.setDate(today.getDate() + 30));
+    setCreateInvoiceForm(prev => ({
+      ...prev,
+      dueDate: thirtyDaysFromNow.toISOString().split('T')[0]
+    }));
+  }, []);
+
+  const calculateItemAmount = (quantity: number, rate: string) => {
+    const numRate = parseFloat(rate.replace(/[£$,]/g, '')) || 0;
+    return quantity * numRate;
+  };
+
+  const calculateTotals = () => {
+    const subtotal = createInvoiceForm.items.reduce((sum, item) => sum + item.amount, 0);
+    const vat = createInvoiceForm.vatEnabled ? subtotal * (createInvoiceForm.vatRate / 100) : 0;
+    const total = subtotal + vat;
+    return { subtotal, vat, total };
+  };
+
+  const handleCreateInvoiceFormChange = (field: keyof typeof createInvoiceForm, value: any) => {
+    setCreateInvoiceForm(prev => ({ ...prev, [field]: value }));
+    if (createInvoiceError) {
+      setCreateInvoiceError(false);
+    }
+  };
+
+  const handleItemChange = (index: number, field: string, value: any) => {
+    setCreateInvoiceForm(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      
+      // Recalculate amount if quantity or rate changed
+      if (field === 'quantity' || field === 'rate') {
+        newItems[index].amount = calculateItemAmount(newItems[index].quantity, newItems[index].rate);
+      }
+      
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const addInvoiceItem = () => {
+    setCreateInvoiceForm(prev => ({
+      ...prev,
+      items: [...prev.items, {
+        description: '',
+        details: '',
+        category: 'Fee',
+        subCategory: '',
+        quantity: 1,
+        rate: '0.00',
+        amount: 0
+      }]
+    }));
+  };
+
+  const removeInvoiceItem = (index: number) => {
+    setCreateInvoiceForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const duplicateInvoiceItem = (index: number) => {
+    setCreateInvoiceForm(prev => ({
+      ...prev,
+      items: [...prev.items, { ...prev.items[index] }]
+    }));
+  };
+
+  const validateInvoice = (isDraft = false) => {
+    if (isDraft) return true;
+
+    if (!createInvoiceForm.invoiceNumber || !createInvoiceForm.dueDate || !createInvoiceForm.project) {
+      return false;
+    }
+
+    return createInvoiceForm.items.every(item => 
+      item.description.trim() && item.quantity > 0 && parseFloat(item.rate.replace(/[£$,]/g, '')) > 0
+    );
+  };
+
+  const handleCreateInvoiceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateInvoiceError(false);
+
+    if (!validateInvoice()) {
+      setCreateInvoiceError(true);
+      return;
+    }
+
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSend = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Invoice sent successfully!');
+      setShowConfirmDialog(false);
+      setShowCreateInvoiceModal(false);
+      // Reset form or update UI as needed
+    } catch (error) {
+      toast.error('Failed to send invoice');
+      setCreateInvoiceError(true);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Invoice saved as draft');
+      setShowCreateInvoiceModal(false);
+    } catch (error) {
+      toast.error('Failed to save draft');
+    }
+  };
+
+  const handleCreateInvoiceCancel = () => {
+    setShowCreateInvoiceModal(false);
+    setCreateInvoiceError(false);
+    setShowConfirmDialog(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1247,6 +2013,545 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderTabContent()}
       </div>
+
+      {/* Finance Query Modal */}
+      {showFinanceQueryModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={handleFinanceQueryCancel}></div>
+            </div>
+            
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+              <div className="bg-white">
+                <div className="border-b border-gray-200 px-6 py-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold leading-tight text-gray-900">Contact Finance Team</h2>
+                      <p className="mt-1 text-sm text-gray-600">Raise a query about payments or specific invoices.</p>
+                    </div>
+                    <button
+                      onClick={handleFinanceQueryCancel}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+                
+                <form onSubmit={handleFinanceQuerySubmit} className="p-6">
+                  {financeQueryError && (
+                    <div className="rounded-md border border-red-300 bg-red-50 p-4 mb-6">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <XCircle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-red-800">Submission Failed</h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <p>There was an error submitting your query. Please check the fields and try again.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-6">
+                    <div>
+                      <label htmlFor="subject" className="block text-sm font-medium text-gray-900">Subject</label>
+                      <select
+                        id="subject"
+                        name="subject"
+                        required
+                        value={financeQueryForm.subject}
+                        onChange={(e) => handleFinanceQueryFormChange('subject', e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      >
+                        <option disabled value="">Select a subject</option>
+                        <option value="Payment Issue">Payment Issue</option>
+                        <option value="Invoice Query">Invoice Query</option>
+                        <option value="General Inquiry">General Inquiry</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="invoice" className="block text-sm font-medium text-gray-900">Invoice (if applicable)</label>
+                      <select
+                        id="invoice"
+                        name="invoice"
+                        value={financeQueryForm.invoice}
+                        onChange={(e) => handleFinanceQueryFormChange('invoice', e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      >
+                        <option value="">Select an invoice</option>
+                        <option value="INV-00123">INV-00123</option>
+                        <option value="INV-00124">INV-00124</option>
+                        <option value="INV-00125">INV-00125</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-900">Description</label>
+                      <div className="mt-1">
+                        <textarea
+                          id="description"
+                          name="description"
+                          required
+                          rows={4}
+                          value={financeQueryForm.description}
+                          onChange={(e) => handleFinanceQueryFormChange('description', e.target.value)}
+                          placeholder="Please describe your issue in detail."
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="attachment" className="block text-sm font-medium text-gray-900">Attachment (optional)</label>
+                      <div className="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
+                        <div className="space-y-1 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="flex text-sm text-gray-600">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer rounded-md bg-white font-medium text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:text-blue-500"
+                            >
+                              <span>Upload a file</span>
+                              <input
+                                id="file-upload"
+                                name="file-upload"
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.pdf"
+                                className="sr-only"
+                                onChange={(e) => handleFinanceQueryFormChange('attachment', e.target.files?.[0] || null)}
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                          {financeQueryForm.attachment && (
+                            <p className="text-sm text-gray-900 font-medium">{financeQueryForm.attachment.name}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-6">
+                    <button
+                      type="button"
+                      onClick={handleFinanceQueryCancel}
+                      className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Submit Query
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Invoice Modal */}
+      {showCreateInvoiceModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
+          style={{ zIndex: 9999 }}
+          onClick={handleCreateInvoiceCancel}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Plus className="text-blue-600 mr-2" />
+                Create New Invoice
+              </h2>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 rounded-lg bg-gray-100 p-0.5">
+                  <button className="px-2 py-1 rounded-md text-sm font-medium text-gray-700 bg-white shadow-sm">
+                    <Edit className="w-4 h-4 inline mr-1" />
+                    Edit
+                  </button>
+                  <button className="px-2 py-1 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-200">
+                    <Eye className="w-4 h-4 inline mr-1" />
+                    Preview
+                  </button>
+                </div>
+                <div className="relative">
+                  <button className="text-gray-500 hover:text-gray-700 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200">
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+                <button
+                  onClick={handleCreateInvoiceCancel}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCreateInvoiceSubmit} className="flex flex-col flex-grow min-h-0">
+              <div className="flex-grow overflow-y-auto p-6 space-y-6">
+                {createInvoiceError && (
+                  <div className="rounded-md border border-red-300 bg-red-50 p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <XCircle className="h-5 w-5 text-red-400" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Validation Error</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>Please fill in all required fields and ensure line items are complete.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Invoice Header */}
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="font-semibold text-gray-800">Ava Harper Ltd</p>
+                    <p className="text-sm text-gray-500">123 Tech Avenue, Silicon Roundabout, London, EC1Y 1AB, UK</p>
+                    <p className="text-sm text-gray-500">VAT: GB 123 4567 89</p>
+                  </div>
+                  <div className="text-right">
+                    <h2 className="text-3xl font-bold text-gray-400 uppercase">INVOICE</h2>
+                    <div className="mt-1">
+                      <input 
+                        className="border border-gray-300 rounded-md px-3 py-1 text-right text-sm font-semibold"
+                        type="text"
+                        value={createInvoiceForm.invoiceNumber}
+                        onChange={(e) => handleCreateInvoiceFormChange('invoiceNumber', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bill To and Invoice Details */}
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Bill To:</p>
+                    <p className="font-semibold text-gray-800">IntraCasfid Solutions</p>
+                    <p className="text-sm text-gray-500">456 Corporate Blvd, Business District, London, EC2Y 8AE, UK</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm text-gray-600">Invoice Date:</label>
+                      <input 
+                        type="date"
+                        className="border border-gray-300 rounded-md px-3 py-1 text-sm w-48"
+                        value={createInvoiceForm.invoiceDate}
+                        onChange={(e) => handleCreateInvoiceFormChange('invoiceDate', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm text-gray-600">Due Date:</label>
+                      <input 
+                        type="date"
+                        className="border border-gray-300 rounded-md px-3 py-1 text-sm w-48"
+                        value={createInvoiceForm.dueDate}
+                        onChange={(e) => handleCreateInvoiceFormChange('dueDate', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm text-gray-600">PO Number:</label>
+                      <input 
+                        type="text"
+                        placeholder="Optional"
+                        className="border border-gray-300 rounded-md px-3 py-1 text-sm w-48"
+                        value={createInvoiceForm.poNumber}
+                        onChange={(e) => handleCreateInvoiceFormChange('poNumber', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm text-gray-600">Currency:</label>
+                      <select 
+                        className="border border-gray-300 rounded-md px-3 py-1 text-sm w-48"
+                        value={createInvoiceForm.currency}
+                        onChange={(e) => handleCreateInvoiceFormChange('currency', e.target.value)}
+                      >
+                        <option value="GBP">GBP (£)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Selection */}
+                <div>
+                  <select 
+                    className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                    value={createInvoiceForm.project}
+                    onChange={(e) => handleCreateInvoiceFormChange('project', e.target.value)}
+                  >
+                    <option value="">Select a project to invoice...</option>
+                    <option value="geneva">Geneva Motor Show - Crew</option>
+                    <option value="dubai">Expo 2024 Dubai - Site Manager</option>
+                    <option value="ces">CES Las Vegas - Technician</option>
+                  </select>
+                </div>
+
+                {/* Invoice Items Table */}
+                <div className="overflow-x-auto rounded-lg">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr>
+                        <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider pb-2 w-[30%]">Description</th>
+                        <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider pb-2 w-[20%]">Category</th>
+                        <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider pb-2 w-[15%]">Quantity</th>
+                        <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider pb-2 w-[15%]">Rate</th>
+                        <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider pb-2 w-[15%]">Amount</th>
+                        <th className="pb-2 w-[10%]"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {createInvoiceForm.items.map((item, index) => (
+                        <tr key={index} className="border-b border-gray-200 group">
+                          <td className="py-2 pr-2">
+                            <input 
+                              className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                              type="text"
+                              placeholder="Enter item description"
+                              value={item.description}
+                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                            />
+                            <input 
+                              className="border border-gray-300 rounded px-2 py-1 w-full text-xs text-gray-400 mt-1"
+                              type="text"
+                              placeholder="Add details (e.g. dates worked)"
+                              value={item.details}
+                              onChange={(e) => handleItemChange(index, 'details', e.target.value)}
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <div className="space-y-1">
+                              <select 
+                                className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+                                value={item.category}
+                                onChange={(e) => handleItemChange(index, 'category', e.target.value)}
+                              >
+                                <option value="Fee">Fee</option>
+                                <option value="Expense">Expense</option>
+                              </select>
+                              {item.category === 'Expense' && (
+                                <select 
+                                  className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+                                  value={item.subCategory}
+                                  onChange={(e) => handleItemChange(index, 'subCategory', e.target.value)}
+                                >
+                                  <option value="">Select category...</option>
+                                  <option value="Accommodation">Accommodation</option>
+                                  <option value="Travel">Travel</option>
+                                  <option value="Subsistence">Subsistence</option>
+                                  <option value="Materials">Materials</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2 px-2">
+                            <input 
+                              className="border border-gray-300 rounded px-2 py-1 w-20 text-center text-sm"
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <input 
+                              className="border border-gray-300 rounded px-2 py-1 w-24 text-sm"
+                              type="text"
+                              value={`£${item.rate}`}
+                              onChange={(e) => handleItemChange(index, 'rate', e.target.value.replace('£', ''))}
+                            />
+                          </td>
+                          <td className="py-2 pl-2 text-right font-medium text-gray-900 text-sm">
+                            £{item.amount.toFixed(2)}
+                          </td>
+                          <td className="py-2 pl-2 text-right">
+                            <div className="flex items-center justify-end space-x-1">
+                              <button 
+                                type="button"
+                                className="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => duplicateInvoiceItem(index)}
+                                title="Duplicate Row"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button 
+                                type="button"
+                                className="text-gray-400 hover:text-red-500"
+                                onClick={() => removeInvoiceItem(index)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-gray-300">
+                        <td className="pt-4" colSpan={4}></td>
+                        <td className="pt-4 text-right text-sm text-gray-500 font-medium">Subtotal</td>
+                        <td className="pt-4 text-right font-bold text-gray-900">
+                          £{calculateTotals().subtotal.toFixed(2)}
+                        </td>
+                      </tr>
+                      {createInvoiceForm.vatEnabled && (
+                        <tr>
+                          <td colSpan={4}></td>
+                          <td className="py-1 text-right text-sm text-gray-500 font-medium flex items-center justify-end">
+                            <button 
+                              type="button"
+                              className="text-gray-400 hover:text-red-500 mr-2 p-0.5"
+                              onClick={() => handleCreateInvoiceFormChange('vatEnabled', false)}
+                              title="Remove VAT"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <span>VAT</span>
+                            <input 
+                              className="border border-gray-300 rounded text-sm w-14 text-center p-1 ml-1"
+                              type="number"
+                              value={createInvoiceForm.vatRate}
+                              onChange={(e) => handleCreateInvoiceFormChange('vatRate', parseInt(e.target.value) || 20)}
+                            />
+                            <span>%</span>
+                          </td>
+                          <td className="py-1 text-right font-bold text-gray-900">
+                            £{calculateTotals().vat.toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
+                      {!createInvoiceForm.vatEnabled && (
+                        <tr>
+                          <td className="py-1 text-right" colSpan={5}>
+                            <button 
+                              type="button"
+                              className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-end w-full"
+                              onClick={() => handleCreateInvoiceFormChange('vatEnabled', true)}
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add VAT
+                            </button>
+                          </td>
+                          <td></td>
+                        </tr>
+                      )}
+                      <tr className="border-t border-gray-200">
+                        <td colSpan={4}></td>
+                        <td className="pt-2 text-right text-lg font-bold text-gray-900">Total</td>
+                        <td className="pt-2 text-right text-lg font-bold text-blue-600">
+                          £{calculateTotals().total.toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <button 
+                  type="button"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center"
+                  onClick={addInvoiceItem}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Line Item
+                </button>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <button 
+                  type="button"
+                  className="text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center"
+                >
+                  <Paperclip className="w-4 h-4 mr-1" />
+                  Attach Expense Receipts
+                </button>
+                <div className="flex items-center space-x-3">
+                  <button 
+                    type="button"
+                    onClick={handleSaveDraft}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg flex items-center"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save as Draft
+                  </button>
+                  <button 
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Invoice
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 10000 }}>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 transition-opacity bg-gray-600 bg-opacity-75"></div>
+            
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md z-10">
+              <div className="p-6 text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                  <Send className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="mt-5 text-lg font-medium leading-6 text-gray-900">
+                  Send Invoice Confirmation
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    You are about to send invoice <strong>{createInvoiceForm.invoiceNumber}</strong> for{' '}
+                    <strong>£{calculateTotals().total.toFixed(2)}</strong> to IntraCasfid Solutions.
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Please confirm you want to proceed. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                <button
+                  type="button"
+                  onClick={handleConfirmSend}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Confirm & Send
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

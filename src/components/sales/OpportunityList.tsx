@@ -75,7 +75,7 @@ export function OpportunityList({ opportunities, onOpportunitySelect }: Opportun
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">${opportunity.deal_value.toLocaleString()}</span>
+                      <span className="font-medium">€{opportunity.deal_value.toLocaleString()}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">

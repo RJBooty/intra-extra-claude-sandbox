@@ -235,7 +235,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <DollarSign className="w-4 h-4 text-blue-600" />
               <p className="text-xs text-blue-700 font-medium">Total Crew Cost</p>
             </div>
-            <p className="text-lg font-bold text-blue-900">£{formatNumber(totalCrewCost)}</p>
+            <p className="text-lg font-bold text-blue-900">€{formatNumber(totalCrewCost)}</p>
           </div>
           
           <div className={`p-4 rounded-lg border ${costVsEstimate >= 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
@@ -244,7 +244,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <p className={`text-xs font-medium ${costVsEstimate >= 0 ? 'text-red-700' : 'text-green-700'}`}>Cost vs Estimate</p>
             </div>
             <p className={`text-lg font-bold ${costVsEstimate >= 0 ? 'text-red-900' : 'text-green-900'}`}>
-              {costVsEstimate >= 0 ? '+' : ''}£{formatNumber(costVsEstimate)}
+              {costVsEstimate >= 0 ? '+' : ''}€{formatNumber(costVsEstimate)}
             </p>
           </div>
 
@@ -253,7 +253,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <Calculator className="w-4 h-4 text-gray-600" />
               <p className="text-xs text-gray-600 font-medium">Daily Rates</p>
             </div>
-            <p className="text-lg font-bold text-gray-800">£{formatNumber(totalDailyRates)}</p>
+            <p className="text-lg font-bold text-gray-800">€{formatNumber(totalDailyRates)}</p>
           </div>
 
           <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
@@ -261,7 +261,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <Users className="w-4 h-4 text-gray-600" />
               <p className="text-xs text-gray-600 font-medium">Travel Expenses</p>
             </div>
-            <p className="text-lg font-bold text-gray-800">£{formatNumber(totalTravel)}</p>
+            <p className="text-lg font-bold text-gray-800">€{formatNumber(totalTravel)}</p>
           </div>
 
           <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
@@ -269,7 +269,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <Clock className="w-4 h-4 text-gray-600" />
               <p className="text-xs text-gray-600 font-medium">Accommodation</p>
             </div>
-            <p className="text-lg font-bold text-gray-800">£{formatNumber(totalAccommodation)}</p>
+            <p className="text-lg font-bold text-gray-800">€{formatNumber(totalAccommodation)}</p>
           </div>
 
           <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
@@ -277,7 +277,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
               <DollarSign className="w-4 h-4 text-gray-600" />
               <p className="text-xs text-gray-600 font-medium">Per Diem</p>
             </div>
-            <p className="text-lg font-bold text-gray-800">£{formatNumber(totalPerDiem)}</p>
+            <p className="text-lg font-bold text-gray-800">€{formatNumber(totalPerDiem)}</p>
           </div>
         </div>
       </div>
@@ -344,22 +344,22 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
                       {crew.days}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      £{crew.rate}
+                      €{crew.rate}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      £{formatNumber(crew.subtotal)}
+                      €{formatNumber(crew.subtotal)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      £{formatNumber(crew.travel)}
+                      €{formatNumber(crew.travel)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      £{formatNumber(crew.accommodation)}
+                      €{formatNumber(crew.accommodation)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      £{formatNumber(crew.perDiem)}
+                      €{formatNumber(crew.perDiem)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
-                      £{formatNumber(crew.total)}
+                      €{formatNumber(crew.total)}
                     </td>
                   </tr>
                 ))}
@@ -412,7 +412,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div>
               <h3 className="font-medium text-gray-800 text-base mb-2">Standard Rates by Role/Tier</h3>
-              <p className="text-sm text-gray-500 mb-4">Currency: GBP (£)</p>
+              <p className="text-sm text-gray-500 mb-4">Currency: EUR (€)</p>
               <div className="space-y-4">
                 {(['Lead', 'Senior', 'Junior'] as const).map((role) => (
                   <div key={role}>
@@ -421,7 +421,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">£</span>
+                        <span className="text-gray-500 sm:text-sm">€</span>
                       </div>
                       <input
                         type="text"
@@ -537,7 +537,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div>
               <h3 className="font-medium text-gray-800 text-base mb-2">Standard Hourly Rates by Role/Tier</h3>
-              <p className="text-sm text-gray-500 mb-4">Currency: GBP (£)</p>
+              <p className="text-sm text-gray-500 mb-4">Currency: EUR (€)</p>
               <div className="space-y-4">
                 {(['Lead', 'Senior', 'Junior'] as const).map((role) => (
                   <div key={role}>
@@ -546,7 +546,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">£</span>
+                        <span className="text-gray-500 sm:text-sm">€</span>
                       </div>
                       <input
                         type="text"
@@ -768,7 +768,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
             </label>
             <div className="relative">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                £
+                €
               </span>
               <input
                 type="text"
@@ -791,7 +791,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
             </label>
             <div className="relative">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                £
+                €
               </span>
               <input
                 type="text"
@@ -814,7 +814,7 @@ export function CrewCostsTab({ project }: CrewCostsTabProps) {
             </label>
             <div className="relative">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                £
+                €
               </span>
               <input
                 type="text"

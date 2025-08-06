@@ -46,7 +46,7 @@ export function KanbanColumn({ stage, opportunities, onOpportunitySelect, onOppo
         <div>
           <h3 className="font-semibold text-gray-800">{stage.title}</h3>
           <p className="text-sm text-gray-600">
-            {opportunities.length} deals • ${totalValue.toLocaleString()}
+            {opportunities.length} deals • €{totalValue.toLocaleString()}
           </p>
         </div>
       </div>

@@ -13,7 +13,7 @@ const opportunitySchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   event_name: z.string().min(1, 'Event name is required'),
   deal_value: z.number().min(1, 'Deal value must be greater than 0'),
-  currency: z.string().default('USD'),
+  currency: z.string().default('EUR'),
   stage: z.enum(['Contacted', 'Qualified', 'First Meet Scheduled', 'Proposal Sent', 'Negotiations', 'Contract Signature', 'Kickoff', 'Operations']),
   client_tier: z.enum(['Seed', 'Sapling', 'Canopy', 'Jungle', 'Rainforest']),
   event_type: z.string().min(1, 'Event type is required'),
@@ -70,7 +70,7 @@ export function OpportunityForm({ onClose, onSubmit, opportunity }: OpportunityF
     } : {
       stage: 'Contacted',
       client_tier: 'Sapling',
-      currency: 'USD',
+      currency: 'EUR',
       win_probability: 50,
       is_previous_client: false,
       budget_confirmed: false,
@@ -240,8 +240,8 @@ export function OpportunityForm({ onClose, onSubmit, opportunity }: OpportunityF
                 {...register('currency')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
                 <option value="GBP">GBP</option>
               </select>
             </div>

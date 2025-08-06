@@ -70,7 +70,7 @@ export function PipelineMetrics({ onClose }: PipelineMetricsProps) {
                 <DollarSign className="w-5 h-5 text-green-600" />
                 <span className="text-sm font-medium text-green-900">Total Value</span>
               </div>
-              <p className="text-2xl font-bold text-green-900">${metrics.total_value.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-900">€{metrics.total_value.toLocaleString()}</p>
             </div>
 
             <div className="bg-purple-50 p-4 rounded-lg">
@@ -86,7 +86,7 @@ export function PipelineMetrics({ onClose }: PipelineMetricsProps) {
                 <TrendingUp className="w-5 h-5 text-orange-600" />
                 <span className="text-sm font-medium text-orange-900">Avg Deal Size</span>
               </div>
-              <p className="text-2xl font-bold text-orange-900">${metrics.average_deal_size.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-orange-900">€{metrics.average_deal_size.toLocaleString()}</p>
             </div>
           </div>
 

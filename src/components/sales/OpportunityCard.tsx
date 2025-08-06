@@ -55,7 +55,7 @@ export function OpportunityCard({ opportunity, onClick }: OpportunityCardProps) 
       <div className="flex items-center gap-1 mb-2">
         <DollarSign className="w-4 h-4 text-green-600" />
         <span className="text-sm font-medium text-gray-900">
-          ${opportunity.deal_value.toLocaleString()}
+          €{opportunity.deal_value.toLocaleString()}
         </span>
         <span className="text-xs text-gray-500">
           {opportunity.currency}

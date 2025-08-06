@@ -265,7 +265,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
               <div className="mt-2 text-sm text-gray-600 space-y-1">
                 <p><span className="font-medium">Skills:</span> Cashless, Access Control, Team Lead</p>
                 <p><span className="font-medium">Last event:</span> Similar client (May 2025)</p>
-                <p className="font-semibold text-gray-800">Cost: £350/day | Total: £1,750</p>
+                <p className="font-semibold text-gray-800">Cost: €350/day | Total: €1,750</p>
               </div>
             </div>
 
@@ -285,8 +285,8 @@ export function CrewManagement({ project }: CrewManagementProps) {
               </div>
               <div className="mt-2 text-sm text-gray-600 space-y-1">
                 <p><span className="font-medium">Skills:</span> Cashless, Customer Service</p>
-                <p><span className="font-medium">Travel required:</span> £180</p>
-                <p className="font-semibold text-gray-800">Cost: £300/day | Total: £1,680</p>
+                <p><span className="font-medium">Travel required:</span> €180</p>
+                <p className="font-semibold text-gray-800">Cost: €300/day | Total: €1,680</p>
               </div>
             </div>
           </div>
@@ -932,7 +932,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Budget</span>
-            <span className="font-semibold text-gray-800">£15,000 allocated</span>
+            <span className="font-semibold text-gray-800">€15,000 allocated</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Operations</span>
@@ -1007,7 +1007,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
       address: 'Fifth Avenue at Central Park South',
       dates: 'Aug 15 - Aug 20',
       roomAssignment: 'John Smith (Room 501)',
-      cost: '$1,250.00',
+      cost: '€1,250.00',
       status: 'Booked'
     },
     {
@@ -1016,7 +1016,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
       address: '1535 Broadway, New York',
       dates: 'Aug 15 - Aug 20',
       roomAssignment: 'Sarah Jones, Mike Ross (Sharing Twin Room 812)',
-      cost: '$1,800.00',
+      cost: '€1,800.00',
       status: 'Booked'
     },
     {
@@ -1064,27 +1064,27 @@ export function CrewManagement({ project }: CrewManagementProps) {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start">
             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-blue-700 whitespace-nowrap">Total Crew Cost</p>
-              <p className="text-xl font-bold text-blue-900 mt-1">£12,500</p>
+              <p className="text-xl font-bold text-blue-900 mt-1">€12,500</p>
             </div>
             <div className="bg-red-50 p-3 rounded-lg border border-red-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-red-700 whitespace-nowrap">Cost vs Estimate</p>
-              <p className="text-xl font-bold text-red-900 mt-1">-£2,500</p>
+              <p className="text-xl font-bold text-red-900 mt-1">-€2,500</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-gray-500 whitespace-nowrap">Daily Rates</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">£8,000</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">€8,000</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-gray-500 whitespace-nowrap">Travel Expenses</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">£1,500</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">€1,500</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-gray-500 whitespace-nowrap">Accommodation</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">£2,000</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">€2,000</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 col-span-1 flex flex-col justify-between h-full text-center">
               <p className="text-xs text-gray-500 whitespace-nowrap">Per Diem</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">£1,000</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">€1,000</p>
             </div>
           </div>
         </div>
@@ -1147,12 +1147,12 @@ export function CrewManagement({ project }: CrewManagementProps) {
                     </select>
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap text-center text-sm">5</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£350</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£1,750</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£150</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£250</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£125</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">£2,275</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€350</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€1,750</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€150</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€250</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€125</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">€2,275</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-4 px-4 whitespace-nowrap">
@@ -1183,12 +1183,12 @@ export function CrewManagement({ project }: CrewManagementProps) {
                     </select>
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap text-center text-sm">5</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£300</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£1,500</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£100</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£250</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£125</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">£1,975</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€300</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€1,500</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€100</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€250</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€125</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">€1,975</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-4 px-4 whitespace-nowrap">
@@ -1219,12 +1219,12 @@ export function CrewManagement({ project }: CrewManagementProps) {
                     </select>
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap text-center text-sm">4</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£220</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£880</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£80</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£200</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">£100</td>
-                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">£1,260</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€220</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€880</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€80</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€200</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right text-sm">€100</td>
+                  <td className="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">€1,260</td>
                 </tr>
               </tbody>
             </table>
@@ -1278,7 +1278,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
                   <label className="block text-sm font-medium text-gray-700">Value</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span className="text-gray-500 sm:text-sm">£</span>
+                      <span className="text-gray-500 sm:text-sm">€</span>
                     </div>
                     <input 
                       className="block w-full rounded-md border-gray-300 pl-7 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
@@ -1300,7 +1300,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
                     <label className="block text-sm font-medium text-gray-700">Total</label>
                     <div className="mt-1 relative rounded-md">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">£</span>
+                        <span className="text-gray-500 sm:text-sm">€</span>
                       </div>
                       <input 
                         className="block w-full rounded-md border-gray-300 bg-gray-100 pl-7 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
@@ -2250,7 +2250,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
             </li>
             <li className="flex justify-between items-center">
               Budget 
-              <span className="text-gray-700">£15,000 allocated</span>
+              <span className="text-gray-700">€15,000 allocated</span>
             </li>
             <li className="flex justify-between items-center">
               Operations 
