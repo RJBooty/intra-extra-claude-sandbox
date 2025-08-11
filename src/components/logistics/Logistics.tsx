@@ -38,6 +38,7 @@ export function Logistics({ project }: LogisticsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [hasBeenPushedToROI, setHasBeenPushedToROI] = useState(false);
+  const [showCriticalIssueModal, setShowCriticalIssueModal] = useState(false);
   const [comments, setComments] = useState<Comment[]>([
     {
       id: '1',
@@ -853,7 +854,10 @@ export function Logistics({ project }: LogisticsProps) {
                   </a>
                 </div>
               </div>
-              <button className="w-full rounded-md px-4 py-2 text-sm mt-4 bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-bold border border-red-700">
+              <button 
+                onClick={() => setShowCriticalIssueModal(true)}
+                className="w-full rounded-md px-4 py-2 text-sm mt-4 bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-bold border border-red-700"
+              >
                 Submit Critical Issue
               </button>
             </div>
@@ -1138,6 +1142,223 @@ export function Logistics({ project }: LogisticsProps) {
           </div>
         </div>
       )}
+
+      {/* Critical Issue Modal */}
+      {showCriticalIssueModal && (
+        <CriticalIssueModal 
+          onClose={() => setShowCriticalIssueModal(false)}
+          onSubmit={(formData) => {
+            // Handle form submission here
+            console.log('Critical issue submitted:', formData);
+            toast.success('Critical issue submitted successfully');
+            setShowCriticalIssueModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface CriticalIssueFormData {
+  project: string;
+  subject: string;
+  priority: 'high' | 'medium' | 'low' | '';
+  description: string;
+  attachments: FileList | null;
+}
+
+interface CriticalIssueModalProps {
+  onClose: () => void;
+  onSubmit: (formData: CriticalIssueFormData) => void;
+}
+
+function CriticalIssueModal({ onClose, onSubmit }: CriticalIssueModalProps) {
+  const [formData, setFormData] = useState<CriticalIssueFormData>({
+    project: '',
+    subject: '',
+    priority: '',
+    description: '',
+    attachments: null
+  });
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [projectSearchTerm, setProjectSearchTerm] = useState('');
+
+  const projects = [
+    'Project Alpha',
+    'Project Beta', 
+    'Project Gamma',
+    'Project Delta',
+    'Project Epsilon'
+  ];
+
+  const filteredProjects = projects.filter(project =>
+    project.toLowerCase().includes(projectSearchTerm.toLowerCase())
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  const handleProjectSelect = (project: string) => {
+    setFormData(prev => ({ ...prev, project }));
+    setProjectSearchTerm(project);
+    setShowProjectDropdown(false);
+  };
+
+  const getPriorityDescription = () => {
+    switch (formData.priority) {
+      case 'high':
+        return { 
+          title: 'High Priority',
+          text: 'Immediate impact on operations; requires urgent attention.',
+          className: 'bg-red-50 border-red-500 text-red-900'
+        };
+      case 'medium':
+        return {
+          title: 'Medium Priority', 
+          text: 'Significant but not immediate impact; requires attention soon.',
+          className: 'bg-yellow-50 border-yellow-500 text-yellow-900'
+        };
+      case 'low':
+        return {
+          title: 'Low Priority',
+          text: 'Minor issue with minimal impact; can be addressed in due course.',
+          className: 'bg-green-50 border-green-500 text-green-900'
+        };
+      default:
+        return null;
+    }
+  };
+
+  const priorityDesc = getPriorityDescription();
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 cursor-pointer text-gray-600 hover:text-gray-900"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-center mb-4 text-gray-900">Submit a Critical Issue</h2>
+        <p className="text-center mb-6 text-gray-600">Please provide details about the shipping or documentation problem.</p>
+        
+        <form onSubmit={handleSubmit}>
+          {/* Project Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-600">Project</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={projectSearchTerm}
+                onChange={(e) => {
+                  setProjectSearchTerm(e.target.value);
+                  setShowProjectDropdown(true);
+                }}
+                onFocus={() => setShowProjectDropdown(true)}
+                onBlur={() => setTimeout(() => setShowProjectDropdown(false), 200)}
+                className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50 p-3 pr-10"
+                placeholder="Search and select a project"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <Package className="h-5 w-5 text-gray-400" />
+              </div>
+              {showProjectDropdown && (
+                <ul className="absolute z-10 w-full mt-1 bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredProjects.map((project) => (
+                    <li
+                      key={project}
+                      onMouseDown={() => handleProjectSelect(project)}
+                      className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100"
+                    >
+                      {project}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* Subject */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-600">Subject</label>
+            <input
+              type="text"
+              value={formData.subject}
+              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+              className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50 p-3"
+              placeholder="e.g., Damaged Goods in Shipment #ABC-123"
+            />
+          </div>
+
+          {/* Priority */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-600">Priority Level</label>
+            <select
+              value={formData.priority}
+              onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+              className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50 p-3"
+            >
+              <option value="" disabled>Select a priority level</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          {/* Priority Description */}
+          {priorityDesc && (
+            <div className={`p-4 border-l-4 rounded-md mb-6 ${priorityDesc.className}`}>
+              <p className="font-semibold text-sm">{priorityDesc.title}</p>
+              <p className="text-sm mt-1">{priorityDesc.text}</p>
+            </div>
+          )}
+
+          {/* Description */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-600">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50 h-32 p-3 resize-none"
+              placeholder="Describe the issue in detail, including what happened, when it occurred, and any other relevant information."
+            />
+          </div>
+
+          {/* File Upload */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-600">Attachments</label>
+            <div className="relative flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-md bg-gray-50 hover:border-red-500 transition-colors">
+              <input
+                type="file"
+                multiple
+                onChange={(e) => setFormData(prev => ({ ...prev, attachments: e.target.files }))}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="text-center text-gray-600">
+                <ArrowRight className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p>
+                  <span className="font-semibold text-red-600">Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs">PNG, JPG, PDF up to 10MB</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="mt-8">
+            <button
+              type="submit"
+              className="w-full inline-flex justify-center rounded-md shadow-sm px-4 py-3 text-base font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Submit Issue
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

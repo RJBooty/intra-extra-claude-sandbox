@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, FileText, Download, Edit, X, Save } from 'lucide-react';
+import { Upload, FileText, Download, Edit, X, Save, ArrowLeft, Search, CheckCircle, XCircle, ArrowDown, FileIcon } from 'lucide-react';
 import { Project, Client } from '../../types';
 import { PhaseTracker } from './PhaseTracker';
 import { ProjectMetadata } from './ProjectMetadata';
@@ -62,6 +62,9 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
   const [activeDocumentTab, setActiveDocumentTab] = useState<'proposal' | 'contract' | 'custom'>('proposal');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [onlineVouchers, setOnlineVouchers] = useState(true);
+  const [onlineTopups, setOnlineTopups] = useState(false);
+  const [refundWindow, setRefundWindow] = useState(false);
 
   const {
     register,
@@ -118,277 +121,481 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
     { id: '3', name: 'Exhibition Proposal', description: 'Template for exhibition events' },
   ];
 
+  // Toggle Switch Component
+  const ToggleSwitch = ({ checked, onChange, id }: { checked: boolean; onChange: (checked: boolean) => void; id: string }) => (
+    <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+      <input
+        type="checkbox"
+        id={id}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <label
+        htmlFor={id}
+        className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+          checked ? 'bg-indigo-600' : 'bg-gray-300'
+        }`}
+      >
+        <span
+          className={`block w-6 h-6 rounded-full bg-white border-4 transition-transform duration-200 ease-in-out transform ${
+            checked ? 'translate-x-4 border-indigo-600' : 'translate-x-0 border-gray-300'
+          }`}
+        />
+      </label>
+    </div>
+  );
+
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 flex items-center justify-between p-4 px-6">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold text-gray-800">IntraExtra</h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input 
+              className="bg-gray-100 border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64" 
+              placeholder="Search projects, clients" 
+              type="text"
+            />
+          </div>
+          <img 
+            alt="User avatar" 
+            className="w-10 h-10 rounded-full" 
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_807mcmTdZKRpNArIWY2xjIRGMOOEh-wh6F3vAmai5V7GO-raHbpveGJK4nQqGPMUEWmbBItvu-igxSrV-wyYnmfOkTMJrftMhqagieGFiy3T2YEdjcqDU8vDywpn88zeF9tim0miU3kHfYlxJ44K7Amr6kg5Iy87xQdpUlfk5lUUWPI_1S8zMjSzWISk6RjXpWd9ABCJC1wRKcTA-mwAsJvp6kHL1Wu1KKieXZJPUlLQCJm1o59IP2U_lTSq_iSiWEMK8AoKKPk"
+          />
+        </div>
+      </header>
+
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="w-full p-6">
-          {/* Project Information Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Project Information</h2>
-              <button
+      <main className="flex-1 p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <a className="flex items-center text-gray-500 hover:text-gray-700" href="#">
+              <ArrowLeft className="mr-1 w-4 h-4" /> 
+              Back to Projects
+            </a>
+            <h2 className="text-3xl font-bold text-gray-800 mt-2">Tech Conference 2024</h2>
+            <p className="text-gray-500">USA • Innovate Solutions</p>
+          </div>
+          <button className="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700">
+            Create New Project
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+            {/* Project Information */}
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Project Information</h3>
+              <button 
                 onClick={() => setShowEditForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-lg flex items-center hover:bg-blue-200"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="mr-2 w-4 h-4" /> 
                 Edit Info
               </button>
             </div>
 
-            {/* Project Details Display */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
-                  <p className="text-gray-900">{project.project_id}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
-                  <p className="text-gray-900">{project.client?.name} - {project.client?.company}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Classification</label>
-                  <p className="text-gray-900">{project.client?.classification}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Location (City, Country)</label>
-                  <p className="text-gray-900">{project.event_location}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
-                  <p className="text-gray-900">{project.classification}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Attendance</label>
-                  <p className="text-gray-900">{project.expected_attendance?.toLocaleString()}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Dates</label>
-                  <p className="text-gray-900">
-                    {project.event_start_date && project.event_end_date 
-                      ? `${format(new Date(project.event_start_date), 'dd/MM/yyyy')} to ${format(new Date(project.event_end_date), 'dd/MM/yyyy')}`
-                      : 'Not set'
-                    }
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Project ID</p>
+                <p className="font-semibold text-gray-800">{project.project_id || 'Tech Conference 2024'}</p>
               </div>
-            </div>
-          </div>
-
-          {/* Phase Tracker */}
-          <div className="mb-8">
-            <PhaseTracker
-              currentPhase={project.current_phase}
-              phaseProgress={project.phase_progress}
-            />
-          </div>
-
-          {/* Document Management */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Document Management</h2>
-            
-            {/* Document Tabs */}
-            <div className="border-b border-gray-200 mb-6">
-              <div className="flex gap-8">
-                <button
-                  onClick={() => setActiveDocumentTab('proposal')}
-                  className={`pb-3 pt-4 text-sm font-bold tracking-wide border-b-3 transition-colors ${
-                    activeDocumentTab === 'proposal'
-                      ? 'border-blue-600 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Proposal Templates
-                </button>
-                <button
-                  onClick={() => setActiveDocumentTab('contract')}
-                  className={`pb-3 pt-4 text-sm font-bold tracking-wide border-b-3 transition-colors ${
-                    activeDocumentTab === 'contract'
-                      ? 'border-blue-600 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Contract Templates
-                </button>
-                <button
-                  onClick={() => setActiveDocumentTab('custom')}
-                  className={`pb-3 pt-4 text-sm font-bold tracking-wide border-b-3 transition-colors ${
-                    activeDocumentTab === 'custom'
-                      ? 'border-blue-600 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Upload Custom Documents
-                </button>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Client</p>
+                <p className="font-semibold text-gray-800">
+                  {project.client?.name || 'Innovate Solutions'} - {project.client?.company || 'Innovate Solutions'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Event Classification</p>
+                <p className="font-semibold text-gray-800">{project.client?.classification || 'Canopy'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Event Location (City, Country)</p>
+                <p className="font-semibold text-gray-800">{project.event_location || 'USA'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Event Type</p>
+                <p className="font-semibold text-gray-800">{project.classification || 'Conference'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Expected Attendance</p>
+                <p className="font-semibold text-gray-800">{project.expected_attendance?.toLocaleString() || '1,000'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-bold">Event Dates</p>
+                <p className="font-semibold text-gray-800">20/05/2024 to 20/05/2024</p>
               </div>
             </div>
 
-            {/* Document Content */}
-            {(activeDocumentTab === 'proposal' || activeDocumentTab === 'contract') && (
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
+            {/* Project Phase */}
+            <div className="mt-10">
+              <div className="flex items-center mb-4 space-x-4">
+                <h3 className="text-lg font-bold text-gray-800">Project Phase:</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 bg-blue-600 rounded-full"></div>
+                  <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
+                  <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
+                  <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <p className="font-semibold text-gray-800">Phase 1: Initial Contact</p>
+                  <p className="text-gray-500">25%</p>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '25%' }}></div>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">First client interaction and requirements gathering</p>
+              </div>
+            </div>
+
+            {/* Fees Overview */}
+            <div className="mt-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800">Fees Overview</h3>
+                <button className="bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-lg flex items-center hover:bg-blue-200">
+                  <Edit className="mr-2 w-4 h-4" /> 
+                  Edit Fees
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                  <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Template Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Description</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+                      <th className="px-6 py-3">Fee Category</th>
+                      <th className="px-6 py-3">Fee Type</th>
+                      <th className="px-6 py-3">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {documentTemplates.map((template) => (
-                      <tr key={template.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm text-gray-900">{template.name}</td>
-                        <td className="px-4 py-4 text-sm text-gray-500">{template.description}</td>
-                        <td className="px-4 py-4">
-                          <button className="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">
-                            Use Template
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4 font-semibold text-gray-700 align-top" rowSpan={2}>
+                        Ticketing Fees
+                      </td>
+                      <td className="px-6 py-4">Service Fee (per ticket)</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">$2.50</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4">Processing Fee (per order)</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">3.0%</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4 font-semibold text-gray-700 align-top" rowSpan={4}>
+                        Cashless Fees
+                      </td>
+                      <td className="px-6 py-4">Activation Fee (per wristband)</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">$1.00</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4">Top-Up Fee (online)</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">2.5%</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4">Top-Up Fee (on-site)</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">5.0%</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4">Refund Processing Fee</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">$5.00</td>
+                    </tr>
+                    <tr className="bg-white border-b">
+                      <td className="px-6 py-4 font-semibold text-gray-700 align-top" rowSpan={2}>
+                        Additional Fees
+                      </td>
+                      <td className="px-6 py-4">Mailing Fee</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">Not set</td>
+                    </tr>
+                    <tr className="bg-white">
+                      <td className="px-6 py-4">On-site Support</td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">$1,500 / day</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
-            )}
+            </div>
+          </div>
 
-            {activeDocumentTab === 'custom' && (
-              <div className="space-y-6">
-                {/* File Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-gray-400 transition-colors">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Drag and drop files here</h3>
-                  <p className="text-gray-600 mb-4">Or click to browse your files</p>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={(e) => handleFileUpload(e.target.files)}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-bold cursor-pointer transition-colors"
-                  >
-                    Upload Files
-                  </label>
+          {/* Right Column - Sidebar */}
+          <div className="space-y-8">
+            {/* Summary Overview */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Summary Overview</h3>
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-500 font-bold">Contract Status</p>
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    In-Review
+                  </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-500 font-bold">ROI Status</p>
+                  <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    To Do
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-500 font-bold">Margin Threshold</p>
+                  <div className="flex items-center">
+                    <span className="text-red-500 font-semibold">-5.4%</span>
+                    <ArrowDown className="text-red-500 ml-1 w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                {/* Uploaded Files */}
-                {uploadedFiles.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Uploaded Files</h4>
-                    <div className="space-y-2">
-                      {uploadedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          </div>
-                          <button className="p-2 text-gray-500 hover:text-blue-600 transition-colors">
-                            <Download className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+            {/* Additional Info */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Additional Info</h3>
+              <div className="grid grid-cols-1 gap-4 text-sm">
+                {/* On-site Dates */}
+                <div>
+                  <p className="text-gray-600 font-bold text-base">On-site Dates</p>
+                  <div className="mt-2 grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-gray-500 text-sm mb-1">Start Date & Time</label>
+                      <input 
+                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                        type="datetime-local"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-500 text-sm mb-1">End Date & Time</label>
+                      <input 
+                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                        type="datetime-local"
+                      />
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors">
-                Generate Proposal
-              </button>
-              <button className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-bold transition-colors">
-                Create Contract
-              </button>
+                {/* Show Dates */}
+                <div>
+                  <p className="text-gray-600 font-bold text-base">Show Dates</p>
+                  <div className="mt-2 grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-gray-500 text-sm mb-1">Start Date & Time</label>
+                      <input 
+                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                        type="datetime-local"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-500 text-sm mb-1">End Date & Time</label>
+                      <input 
+                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                        type="datetime-local"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Online Vouchers */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-600 font-bold text-base mb-1">Online Vouchers</p>
+                    <ToggleSwitch
+                      checked={onlineVouchers}
+                      onChange={setOnlineVouchers}
+                      id="toggle-vouchers"
+                    />
+                  </div>
+                  {onlineVouchers && (
+                    <div className="mt-2 grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">Start Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">End Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Online TopUps */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-600 font-bold text-base mb-1">Online TopUps</p>
+                    <ToggleSwitch
+                      checked={onlineTopups}
+                      onChange={setOnlineTopups}
+                      id="toggle-topups"
+                    />
+                  </div>
+                  {onlineTopups && (
+                    <div className="mt-2 grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">Start Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">End Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Refund Window */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-600 font-bold text-base mb-1">Refund Window</p>
+                    <ToggleSwitch
+                      checked={refundWindow}
+                      onChange={setRefundWindow}
+                      id="toggle-refund"
+                    />
+                  </div>
+                  {refundWindow && (
+                    <div className="mt-2 grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">Start Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-500 text-sm mb-1">End Date & Time</label>
+                        <input 
+                          className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800" 
+                          type="datetime-local"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Other Fields */}
+                <div>
+                  <label className="text-gray-600 font-bold text-base">Wristband Order Deadline</label>
+                  <input 
+                    className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800 mt-1" 
+                    type="date"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-gray-600 font-bold text-base">Load in Date</label>
+                    <input 
+                      className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800 mt-1" 
+                      type="date"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-600 font-bold text-base">Load out Date</label>
+                    <input 
+                      className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-800 mt-1" 
+                      type="date"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-gray-600 font-bold text-base">Delivery On-site</p>
+                  <div className="bg-gray-50 p-3 rounded-lg mt-1">
+                    <p className="font-semibold text-gray-800">123 Event St, Las Vegas</p>
+                    <p className="text-gray-600">Contact: Alex Turner</p>
+                    <p className="text-gray-600">+1-555-123-4567</p>
+                    <p className="text-gray-600">alex.turner@example.com</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Documents Hub */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Documents Hub</h3>
+              <div className="space-y-3">
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Contract</span>
+                </a>
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Service Level Agreement</span>
+                </a>
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Scope of Work</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Project x Client Docs */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Project x Client Docs</h3>
+              <div className="space-y-3">
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Project Info Request</span>
+                </a>
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Menus & Products</span>
+                </a>
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">Device Allocation</span>
+                </a>
+                <a className="flex items-center text-blue-600 hover:text-blue-800 font-medium group" href="#">
+                  <FileText className="mr-2 w-5 h-5" />
+                  <span className="group-hover:underline">CASFID Technical Rider</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Back-Office Connections */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Back-Office Connections</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-700">EnterTicket</span>
+                  <CheckCircle className="text-green-500 w-5 h-5" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-700">IDASEvent</span>
+                  <CheckCircle className="text-green-500 w-5 h-5" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-700">CAE</span>
+                  <XCircle className="text-gray-400 w-5 h-5" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-700">Charity</span>
+                  <CheckCircle className="text-green-500 w-5 h-5" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-700">Promotor Panel</span>
+                  <XCircle className="text-gray-400 w-5 h-5" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-          {/* Cashless Fees */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Cashless Fees</h2>
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Fee Type</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Our Fee</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-4 py-3 text-sm text-gray-900">Activation Fee</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">%</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-3 text-sm text-gray-900">Refund Fee</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">2.5%</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-3 text-sm text-gray-900">TopUp Trxn Fee</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">5000</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-3 text-sm text-gray-900">Online Trxn Fee</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">€20</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-3 text-sm text-gray-900">SoftPos Fee</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">€0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Approval Workflow */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Approval Workflow</h2>
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-yellow-800">Margin Threshold Alert</h3>
-                    <p className="text-sm text-yellow-700">
-                      Margins below 50% require approval from Commercial Director
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full text-sm font-medium">
-                    Pending Review
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-green-800">Cost Ratio Check</h3>
-                    <p className="text-sm text-green-700">
-                      Total costs are within recommended 60% of revenue
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-medium">
-                    Approved
-                  </span>
-                </div>
-                
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h3 className="font-medium text-gray-900 mb-2">Approval History</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>• Initial ROI submitted - Pending review</p>
-                    <p>• Awaiting Commercial Director approval</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-      </div>
+      </main>
 
       {/* Edit Form Modal */}
       {showEditForm && (
@@ -396,17 +603,11 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
           project={project}
           onClose={() => setShowEditForm(false)}
           onSave={(updatedProject) => {
-            // Handle project update
             setShowEditForm(false);
             toast.success('Project updated successfully!');
           }}
         />
       )}
-
-      {/* Sidebar */}
-      <div className="w-96 border-l border-gray-200 bg-white overflow-y-auto">
-        <ProjectMetadata project={project} />
-      </div>
     </div>
   );
 }

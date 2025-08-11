@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Info, Calculator, TrendingUp, FileText, Settings, Bell, Zap, Users } from 'lucide-react';
+import { ArrowLeft, Info, Calculator, TrendingUp, FileText, Settings, Bell, Zap, Users, UserCheck } from 'lucide-react';
 import { Project } from '../../types';
 import { CoreInfoPage } from './CoreInfoPage';
 import { ROI3 } from '../roi/ROI3';
@@ -9,6 +9,7 @@ import { Sidebar } from '../layout/Sidebar';
 import { Header } from '../layout/Header';
 import { ProjectNotifications } from './ProjectNotifications';
 import { CrewManagement } from './CrewManagement';
+import { ClientRelations } from './ClientRelations';
 
 interface ProjectViewProps {
   project: Project;
@@ -16,7 +17,7 @@ interface ProjectViewProps {
   onNavigate: (section: string) => void;
 }
 
-type ProjectTab = 'core-info' | 'roi3' | 'logistics' | 'operations' | 'crew' | 'notifications' | 'documents' | 'timeline' | 'settings';
+type ProjectTab = 'core-info' | 'roi3' | 'logistics' | 'operations' | 'crew' | 'client-relations' | 'notifications' | 'documents' | 'timeline' | 'settings';
 
 const projectTabs = [
   { id: 'core-info' as ProjectTab, label: 'Core Info', icon: Info },
@@ -24,6 +25,7 @@ const projectTabs = [
   { id: 'logistics' as ProjectTab, label: 'Logistics', icon: TrendingUp },
   { id: 'operations' as ProjectTab, label: 'Operations', icon: Zap },
   { id: 'crew' as ProjectTab, label: 'Crew', icon: Users },
+  { id: 'client-relations' as ProjectTab, label: 'Client Relations', icon: UserCheck },
   { id: 'notifications' as ProjectTab, label: 'Notifications', icon: Bell },
   { id: 'documents' as ProjectTab, label: 'Documents', icon: FileText },
   { id: 'timeline' as ProjectTab, label: 'Timeline', icon: TrendingUp },
@@ -45,6 +47,8 @@ export function ProjectView({ project, onBack, onNavigate }: ProjectViewProps) {
         return <OperationsPipeline project={project} />;
       case 'crew':
         return <CrewManagement project={project} />;
+      case 'client-relations':
+        return <ClientRelations project={project} />;
       case 'notifications':
         return <ProjectNotifications project={project} />;
       default:
