@@ -74,6 +74,18 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             </button>
             
             <button
+              onClick={() => onNavigate('roi')}
+              className={`flex items-center gap-3 px-3 py-2 transition-colors ${
+                currentView === 'roi' 
+                  ? 'rounded-full bg-[#eaedf1]' 
+                  : 'hover:bg-gray-100 rounded-lg'
+              }`}
+            >
+              <TrendingUp className="w-6 h-6 text-[#101418]" />
+              <p className="text-[#101418] text-sm font-medium leading-normal">ROI</p>
+            </button>
+            
+            <button
               onClick={() => onNavigate('clients')}
               className={`flex items-center gap-3 px-3 py-2 transition-colors ${
                 currentView === 'clients' 

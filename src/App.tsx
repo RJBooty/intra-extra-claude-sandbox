@@ -14,6 +14,7 @@ import { SettingsHoldingPage } from './components/settings/SettingsHoldingPage';
 import { TeamPage } from './components/team/TeamPage';
 import { ProjectsList } from './components/project/ProjectsList';
 import { GuardsPage } from './components/guards/GuardsPage';
+import { ROI3 } from './components/roi/ROI3';
 import { Project } from './types';
 
 type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards';
@@ -98,6 +99,9 @@ function App() {
       } else if (section === 'guards') {
         console.log('Setting activeTab to: guards');
         setActiveTab('guards');
+      } else if (section === 'roi') {
+        console.log('Setting activeTab to: roi');
+        setActiveTab('roi');
       } else {
         console.log('Setting activeTab to: projects (default)');
         // Default fallback
@@ -238,13 +242,8 @@ function App() {
                 {/* Persistent Sidebar */}
                 <Sidebar currentView={activeTab} onNavigate={handleNavigate} />
                 
-                <div className="flex-1 ml-4">
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-2">ROI Analysis</h2>
-                      <p className="text-gray-600">ROI analysis is available in the project view under ROI3 tab.</p>
-                    </div>
-                  </div>
+                <div className="layout-content-container flex flex-col flex-1 ml-4">
+                  <ROI3 project={currentProject} />
                 </div>
               </div>
             </div>

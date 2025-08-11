@@ -6,7 +6,7 @@ import {
   Download, 
   Edit, 
   Plus, 
-  DragIndicator,
+  GripVertical,
   Search,
   X as Close,
   AlertCircle as Warning,
@@ -32,8 +32,8 @@ import {
   Grid3x3,
   Upload,
   PieChart,
-  DonutChart,
-  LineChart,
+  CircleDot,
+  Activity,
   Truck,
   Tag
 } from 'lucide-react';
@@ -507,14 +507,14 @@ export function ROI3({ project }: ROI3Props) {
             </div>
           </div>
           <div className="flex items-start p-3 bg-slate-50 rounded-lg">
-            <DonutChart className="w-5 h-5 text-purple-500 mt-1 mr-3" />
+            <CircleDot className="w-5 h-5 text-purple-500 mt-1 mr-3" />
             <div>
               <p className="font-semibold text-gray-700 text-sm">Operating Margin</p>
               <p className="text-xl font-bold text-gray-900 mt-1">-210.5%</p>
             </div>
           </div>
           <div className="flex items-start p-3 bg-slate-50 rounded-lg">
-            <LineChart className="w-5 h-5 text-purple-500 mt-1 mr-3" />
+            <Activity className="w-5 h-5 text-purple-500 mt-1 mr-3" />
             <div>
               <p className="font-semibold text-gray-700 text-sm">Net Profit Margin</p>
               <p className="text-xl font-bold text-gray-900 mt-1">-257.3%</p>
@@ -634,7 +634,7 @@ export function ROI3({ project }: ROI3Props) {
                 onClick={handleReorderColumns}
                 className="text-sm text-gray-600 font-semibold border border-gray-300 bg-gray-50/50 px-3 py-1.5 rounded-lg hover:bg-gray-100 flex items-center w-full sm:w-auto justify-center transition-colors"
               >
-                {isReorderMode ? <Done className="w-4 h-4 mr-1" /> : <DragIndicator className="w-4 h-4 mr-1" />}
+                {isReorderMode ? <Done className="w-4 h-4 mr-1" /> : <GripVertical className="w-4 h-4 mr-1" />}
                 {isReorderMode ? 'Done' : 'Reorder'}
               </button>
             </div>
@@ -736,15 +736,15 @@ export function ROI3({ project }: ROI3Props) {
             <div className="mt-4 max-h-48 overflow-y-auto space-y-2">
               <div className="p-3 bg-gray-100 rounded-lg cursor-grab active:cursor-grabbing flex justify-between items-center hover:bg-gray-200 transition-colors">
                 <p className="text-sm font-medium text-gray-800">Project Alpha 2020</p>
-                <DragIndicator className="w-4 h-4 text-gray-500" />
+                <GripVertical className="w-4 h-4 text-gray-500" />
               </div>
               <div className="p-3 bg-gray-100 rounded-lg cursor-grab active:cursor-grabbing flex justify-between items-center hover:bg-gray-200 transition-colors">
                 <p className="text-sm font-medium text-gray-800">Project Beta 2019</p>
-                <DragIndicator className="w-4 h-4 text-gray-500" />
+                <GripVertical className="w-4 h-4 text-gray-500" />
               </div>
               <div className="p-3 bg-gray-100 rounded-lg cursor-grab active:cursor-grabbing flex justify-between items-center hover:bg-gray-200 transition-colors">
                 <p className="text-sm font-medium text-gray-800">Project Gamma 2018</p>
-                <DragIndicator className="w-4 h-4 text-gray-500" />
+                <GripVertical className="w-4 h-4 text-gray-500" />
               </div>
             </div>
           </div>
