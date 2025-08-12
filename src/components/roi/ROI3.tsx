@@ -35,9 +35,26 @@ import {
   CircleDot,
   Activity,
   Truck,
-  Tag
+  Tag,
+  ChevronDown,
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
+
+// Add CSS style for row actions
+const styles = `
+  .row-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  tr:hover .row-actions {
+    opacity: 1;
+  }
+`;
 import { Project } from '../../types';
+import { CompareTab } from './CompareTab';
+import { CostsTab } from './CostsTab';
+import { RevenueTab } from './RevenueTab';
 import toast from 'react-hot-toast';
 
 interface ROI3Props {
@@ -51,10 +68,28 @@ export function ROI3({ project }: ROI3Props) {
   const [showPreviousYears, setShowPreviousYears] = useState(true);
   const [showSearchContainer, setShowSearchContainer] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [currentTourStep, setCurrentTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: boolean }>({});
+
+  const toggleCollapse = (section: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Inject CSS styles for row actions
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = styles;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   const tabs = [
     { id: 'overview' as ROITab, label: 'Overview', icon: Calculator },
@@ -63,11 +98,6 @@ export function ROI3({ project }: ROI3Props) {
     { id: 'compare' as ROITab, label: 'Compare', icon: Edit },
     { id: 'scenarios' as ROITab, label: 'Scenarios', icon: Plus },
   ];
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowWhatsNew(true), 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleTogglePreviousYears = () => {
     setShowPreviousYears(!showPreviousYears);
@@ -107,38 +137,6 @@ export function ROI3({ project }: ROI3Props) {
 
   const renderOverviewTab = () => (
     <div className="space-y-8">
-      {/* What's New Notification */}
-      {showWhatsNew && (
-        <div className="fixed top-5 right-5 z-50 transition-all duration-300">
-          <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <Campaign className="w-6 h-6 text-blue-500" />
-              </div>
-              <div className="ml-3 w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900">What's New!</p>
-                <p className="mt-1 text-sm text-gray-500">We've added Scenario Modeling and a Suggestions Box. Check them out!</p>
-                <div className="mt-3 flex">
-                  <button 
-                    onClick={startTour}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    Learn more
-                  </button>
-                </div>
-              </div>
-              <div className="ml-4 flex-shrink-0 flex">
-                <button 
-                  onClick={() => setShowWhatsNew(false)}
-                  className="inline-flex text-gray-400 hover:text-gray-500"
-                >
-                  <Close className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tour Overlay */}
       {showTour && (
@@ -866,35 +864,11 @@ export function ROI3({ project }: ROI3Props) {
       case 'overview':
         return renderOverviewTab();
       case 'revenue':
-        return (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="text-center py-12">
-              <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Revenue Analysis</h3>
-              <p className="text-gray-500">Detailed revenue breakdown and analysis tools.</p>
-            </div>
-          </div>
-        );
+        return <RevenueTab />;
       case 'costs':
-        return (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="text-center py-12">
-              <TrendingDown className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Cost Analysis</h3>
-              <p className="text-gray-500">Detailed cost breakdown and optimization tools.</p>
-            </div>
-          </div>
-        );
+        return <CostsTab />;
       case 'compare':
-        return (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="text-center py-12">
-              <Edit className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Compare Projects</h3>
-              <p className="text-gray-500">Compare ROI across different projects and time periods.</p>
-            </div>
-          </div>
-        );
+        return <CompareTab />;
       case 'scenarios':
         return (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -914,6 +888,7 @@ export function ROI3({ project }: ROI3Props) {
     <div className="flex h-full flex-col bg-slate-50">
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
         <nav className="-mb-px flex space-x-8 px-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -937,11 +912,14 @@ export function ROI3({ project }: ROI3Props) {
             );
           })}
         </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-        {renderTabContent()}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-6">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );

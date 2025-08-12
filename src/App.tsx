@@ -15,6 +15,7 @@ import { TeamPage } from './components/team/TeamPage';
 import { ProjectsList } from './components/project/ProjectsList';
 import { GuardsPage } from './components/guards/GuardsPage';
 import { ROI3 } from './components/roi/ROI3';
+import { ClientsPage } from './components/clients/ClientsPage';
 import { Project } from './types';
 
 type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards';
@@ -153,11 +154,21 @@ function App() {
     if (showProjectDetail && currentProject) {
       console.log('>>> RENDERING PROJECT DETAIL VIEW');
       return (
-        <ProjectView
-          project={currentProject}
-          onBack={() => setShowProjectDetail(false)}
-          onNavigate={handleNavigate}
-        />
+        <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+          <div className="layout-container flex h-full grow flex-col">
+            <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+              {/* Persistent Sidebar */}
+              <Sidebar currentView="projects" onNavigate={handleNavigate} />
+              
+              {/* Project Detail Content */}
+              <ProjectView
+                project={currentProject}
+                onBack={() => setShowProjectDetail(false)}
+                onNavigate={handleNavigate}
+              />
+            </div>
+          </div>
+        </div>
       );
     }
 
@@ -278,6 +289,23 @@ function App() {
                 
                 <div className="layout-content-container flex flex-col flex-1 ml-4">
                   <GuardsPage onNavigate={handleNavigate} />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'clients':
+        console.log('>>> CLIENTS TAB CASE');
+        return (
+          <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+            <div className="layout-container flex h-full grow flex-col">
+              <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+                {/* Persistent Sidebar */}
+                <Sidebar currentView={activeTab} onNavigate={handleNavigate} />
+                
+                <div className="layout-content-container flex flex-col flex-1 ml-4">
+                  <ClientsPage />
                 </div>
               </div>
             </div>

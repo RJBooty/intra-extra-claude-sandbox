@@ -152,8 +152,9 @@ export function OperationsPipeline({ project }: OperationsPipelineProps) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between gap-3 p-4">
+      <div className="max-w-7xl mx-auto w-full px-6">
+        {/* Header */}
+        <div className="flex flex-wrap justify-between gap-3 p-4">
         <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight min-w-72">
           Operations Pipeline
         </p>
@@ -209,9 +210,10 @@ export function OperationsPipeline({ project }: OperationsPipelineProps) {
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
-        {renderTabContent()}
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );

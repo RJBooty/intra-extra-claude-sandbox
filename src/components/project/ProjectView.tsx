@@ -5,8 +5,6 @@ import { CoreInfoPage } from './CoreInfoPage';
 import { ROI3 } from '../roi/ROI3';
 import { Logistics } from '../logistics/Logistics';
 import { OperationsPipeline } from '../operations/OperationsPipeline';
-import { Sidebar } from '../layout/Sidebar';
-import { Header } from '../layout/Header';
 import { ProjectNotifications } from './ProjectNotifications';
 import { CrewManagement } from './CrewManagement';
 import { ClientRelations } from './ClientRelations';
@@ -64,18 +62,7 @@ export function ProjectView({ project, onBack, onNavigate }: ProjectViewProps) {
   };
 
   return (
-    <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
-      <div className="layout-container flex h-full grow flex-col">
-        <Header onSearch={() => {}} onNavigateToDashboard={() => onNavigate('dashboard')} />
-        <div className="gap-1 px-3 flex flex-1 justify-start py-5">
-          {/* Persistent Sidebar */}
-          <Sidebar 
-            currentView="projects" 
-            onNavigate={onNavigate}
-          />
-
-          {/* Project Content */}
-          <div className="layout-content-container flex flex-col flex-1 ml-4">
+    <div className="layout-content-container flex flex-col flex-1 ml-4">
             {/* Project Header - Sticky */}
             <div className="sticky top-0 z-20 border-b border-gray-200 bg-white px-6 py-4 rounded-t-xl shadow-sm">
               <div className="flex items-center justify-between">
@@ -134,9 +121,6 @@ export function ProjectView({ project, onBack, onNavigate }: ProjectViewProps) {
             <div className="flex-1 overflow-y-auto bg-white">
               {renderTabContent()}
             </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

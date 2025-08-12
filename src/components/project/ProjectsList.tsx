@@ -189,7 +189,7 @@ export function ProjectsList({ onNavigate }: ProjectsListProps) {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="p-4">
       {/* Header */}
       <div className="flex flex-wrap justify-between gap-3 p-4">
         <div className="flex min-w-72 flex-col gap-3 flex-1">

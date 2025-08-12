@@ -31,46 +31,45 @@ export function OpportunityCard({ opportunity, onClick }: OpportunityCardProps) 
 
   return (
     <div
-      className="bg-white rounded-lg p-3 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-white rounded-lg p-2 lg:p-3 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
       onClick={onClick}
       draggable
       onDragStart={(e) => e.dataTransfer.setData('text/plain', opportunity.id)}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-gray-900 text-sm leading-tight">
+      <div className="flex items-start justify-between mb-1 lg:mb-2 gap-1">
+        <h4 className="font-medium text-gray-900 text-xs lg:text-sm leading-tight truncate flex-1">
           {opportunity.company_name}
         </h4>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTemperatureColor(opportunity.temperature)}`}>
-          {opportunity.temperature}
+        <span className={`px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-[10px] lg:text-xs font-medium ${getTemperatureColor(opportunity.temperature)}`}>
+          {opportunity.temperature[0]}
         </span>
       </div>
 
       {/* Event Name */}
-      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+      <p className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2 line-clamp-1 lg:line-clamp-2">
         {opportunity.event_name}
       </p>
 
       {/* Deal Value */}
-      <div className="flex items-center gap-1 mb-2">
-        <DollarSign className="w-4 h-4 text-green-600" />
-        <span className="text-sm font-medium text-gray-900">
-          €{opportunity.deal_value.toLocaleString()}
-        </span>
-        <span className="text-xs text-gray-500">
-          {opportunity.currency}
+      <div className="flex items-center gap-1 mb-1 lg:mb-2">
+        <DollarSign className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
+        <span className="text-xs lg:text-sm font-medium text-gray-900">
+          €{opportunity.deal_value > 999999 ? `${(opportunity.deal_value/1000000).toFixed(1)}M` : 
+            opportunity.deal_value > 999 ? `${Math.floor(opportunity.deal_value/1000)}k` : 
+            opportunity.deal_value}
         </span>
       </div>
 
       {/* Event Date */}
       {opportunity.event_date && (
-        <div className="flex items-center gap-1 mb-2">
-          <Calendar className="w-4 h-4 text-blue-600" />
-          <span className="text-xs text-gray-600">
-            {format(new Date(opportunity.event_date), 'MMM dd, yyyy')}
+        <div className="flex items-center gap-1 mb-1 lg:mb-2">
+          <Calendar className="w-3 h-3 lg:w-4 lg:h-4 text-blue-600" />
+          <span className="text-[10px] lg:text-xs text-gray-600">
+            {format(new Date(opportunity.event_date), 'MMM dd')}
           </span>
           {daysUntilEvent !== null && (
-            <span className={`text-xs px-1 py-0.5 rounded ${
+            <span className={`text-[10px] lg:text-xs px-1 py-0.5 rounded ${
               daysUntilEvent < 30 ? 'bg-red-100 text-red-700' :
               daysUntilEvent < 90 ? 'bg-yellow-100 text-yellow-700' :
               'bg-green-100 text-green-700'
@@ -81,13 +80,13 @@ export function OpportunityCard({ opportunity, onClick }: OpportunityCardProps) 
         </div>
       )}
 
-      {/* Lead Score */}
-      <div className="flex items-center gap-1">
-        <Thermometer className="w-4 h-4 text-purple-600" />
-        <span className="text-xs text-gray-600">
+      {/* Lead Score - Hidden on small screens */}
+      <div className="hidden lg:flex items-center gap-1">
+        <Thermometer className="w-3 h-3 text-purple-600" />
+        <span className="text-[10px] text-gray-600">
           Score: {opportunity.lead_score}
         </span>
-        <div className="flex-1 bg-gray-200 rounded-full h-1 ml-2">
+        <div className="flex-1 bg-gray-200 rounded-full h-1 ml-1">
           <div 
             className="bg-purple-600 h-1 rounded-full transition-all"
             style={{ width: `${Math.min(opportunity.lead_score, 100)}%` }}
@@ -95,13 +94,13 @@ export function OpportunityCard({ opportunity, onClick }: OpportunityCardProps) 
         </div>
       </div>
 
-      {/* Client Tier */}
-      <div className="mt-2 flex justify-between items-center">
-        <span className="text-xs text-gray-500">
+      {/* Client Tier & Win % - Simplified for small screens */}
+      <div className="mt-1 lg:mt-2 flex justify-between items-center">
+        <span className="text-[10px] lg:text-xs text-gray-500 truncate">
           {opportunity.client_tier}
         </span>
-        <span className="text-xs text-gray-500">
-          {opportunity.win_probability}% win
+        <span className="text-[10px] lg:text-xs text-gray-500">
+          {opportunity.win_probability}%
         </span>
       </div>
     </div>

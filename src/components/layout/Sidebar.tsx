@@ -1,5 +1,5 @@
 import React from 'react';
-import { House, Folder, Users, Users as UsersThree, Presentation as PresentationChart, TrendingUp, BarChart3, Settings, Section as Security } from 'lucide-react';
+import { House, Folder, Users, Users as UsersThree, Presentation as PresentationChart, BarChart3, Settings, Section as Security } from 'lucide-react';
 
 interface SidebarProps {
   currentView: string;
@@ -71,18 +71,6 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             >
               <Folder className="w-6 h-6 text-[#101418]" />
               <p className="text-[#101418] text-sm font-medium leading-normal">Projects</p>
-            </button>
-            
-            <button
-              onClick={() => onNavigate('roi')}
-              className={`flex items-center gap-3 px-3 py-2 transition-colors ${
-                currentView === 'roi' 
-                  ? 'rounded-full bg-[#eaedf1]' 
-                  : 'hover:bg-gray-100 rounded-lg'
-              }`}
-            >
-              <TrendingUp className="w-6 h-6 text-[#101418]" />
-              <p className="text-[#101418] text-sm font-medium leading-normal">ROI</p>
             </button>
             
             <button

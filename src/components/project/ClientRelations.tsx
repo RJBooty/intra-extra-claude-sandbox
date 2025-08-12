@@ -64,7 +64,8 @@ export function ClientRelations({ project }: ClientRelationsProps) {
   return (
     <div className="bg-white">
       {/* Sub-tabs Navigation */}
-      <div className="border-b px-6">
+      <div className="border-b">
+        <div className="max-w-7xl mx-auto px-6">
         <nav className="-mb-px flex space-x-6">
           {clientRelationsTabs.map((tab) => {
             const Icon = tab.icon;
@@ -89,11 +90,14 @@ export function ClientRelations({ project }: ClientRelationsProps) {
             );
           })}
         </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
       <div className="flex-1">
-        {renderTabContent()}
+        <div className="max-w-7xl mx-auto px-6">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );

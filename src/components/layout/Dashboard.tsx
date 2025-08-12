@@ -198,11 +198,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   // Show project detail view
   if (currentView === 'project-detail' && selectedProject) {
     return (
-      <ProjectView
-        project={selectedProject}
-        onBack={() => setCurrentView('projects')}
-        onNavigate={onNavigate}
-      />
+      <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+        <div className="layout-container flex h-full grow flex-col">
+          <Header onSearch={() => {}} onNavigateToDashboard={() => setCurrentView('home')} />
+          <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+            {/* Persistent Sidebar */}
+            <Sidebar currentView="projects" onNavigate={onNavigate} />
+            
+            {/* Project Detail Content */}
+            <ProjectView
+              project={selectedProject}
+              onBack={() => setCurrentView('projects')}
+              onNavigate={onNavigate}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 

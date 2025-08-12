@@ -1182,7 +1182,7 @@ export function GuardsPage({ onNavigate }: GuardsPageProps) {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="p-4">
         {/* Header */}
         <header className="mb-4 flex justify-between items-center">
           <div className="flex items-center">

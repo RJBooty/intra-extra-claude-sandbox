@@ -37,22 +37,20 @@ export function KanbanColumn({ stage, opportunities, onOpportunitySelect, onOppo
 
   return (
     <div
-      className={`flex flex-col w-80 ${stage.color} rounded-lg p-3 h-full`}
+      className={`flex flex-col w-full ${stage.color} rounded-lg p-3 h-full`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="font-semibold text-gray-800">{stage.title}</h3>
-          <p className="text-sm text-gray-600">
-            {opportunities.length} deals • €{totalValue.toLocaleString()}
-          </p>
-        </div>
+      <div className="flex flex-col mb-3">
+        <h3 className="font-semibold text-gray-800 text-sm lg:text-base truncate">{stage.title}</h3>
+        <p className="text-xs lg:text-sm text-gray-600">
+          {opportunities.length} • €{totalValue > 999 ? `${Math.floor(totalValue/1000)}k` : totalValue}
+        </p>
       </div>
 
       {/* Cards */}
-      <div className="flex-1 space-y-2 overflow-y-auto">
+      <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
         {opportunities.map(opportunity => (
           <OpportunityCard
             key={opportunity.id}
@@ -62,8 +60,8 @@ export function KanbanColumn({ stage, opportunities, onOpportunitySelect, onOppo
         ))}
         
         {opportunities.length === 0 && (
-          <div className="text-center text-gray-500 text-sm py-8">
-            No opportunities in this stage
+          <div className="text-center text-gray-500 text-xs lg:text-sm py-4 lg:py-8">
+            No opportunities
           </div>
         )}
       </div>

@@ -1558,7 +1558,8 @@ export function CrewManagement({ project }: CrewManagementProps) {
   return (
     <div className="flex h-full">
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Project: {project?.project_id || '[Event Name]'}</h1>
@@ -2464,6 +2465,7 @@ export function CrewManagement({ project }: CrewManagementProps) {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
   );
 }

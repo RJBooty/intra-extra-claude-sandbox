@@ -7,6 +7,22 @@
     box-sizing: border-box;
   }
   
+  /* Global 80% zoom effect using CSS zoom property */
+  html {
+    /* Standard zoom property - works in Chrome, Edge, Safari */
+    zoom: 0.8;
+  }
+  
+  /* Firefox support using transform */
+  @-moz-document url-prefix() {
+    html {
+      transform: scale(0.8);
+      transform-origin: top left;
+      width: 125%; /* 100% / 0.8 = 125% */
+      height: 125%;
+    }
+  }
+  
   body {
     font-family: Inter, "Noto Sans", sans-serif;
     line-height: 1.5;

@@ -25,15 +25,16 @@ export function KanbanBoard({ opportunities, onOpportunitySelect, onOpportunityU
   };
 
   return (
-    <div className="flex gap-4 p-4 h-full overflow-x-auto">
+    <div className="flex gap-2 p-4 h-full overflow-x-auto">
       {stages.map(stage => (
-        <KanbanColumn
-          key={stage.id}
-          stage={stage}
-          opportunities={getOpportunitiesByStage(stage.id)}
-          onOpportunitySelect={onOpportunitySelect}
-          onOpportunityUpdate={onOpportunityUpdate}
-        />
+        <div key={stage.id} className="flex-1 min-w-0">
+          <KanbanColumn
+            stage={stage}
+            opportunities={getOpportunitiesByStage(stage.id)}
+            onOpportunitySelect={onOpportunitySelect}
+            onOpportunityUpdate={onOpportunityUpdate}
+          />
+        </div>
       ))}
     </div>
   );
