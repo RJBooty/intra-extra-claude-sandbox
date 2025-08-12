@@ -463,7 +463,7 @@ export function GuardsPage({ onNavigate }: GuardsPageProps) {
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center">
             <AlertTriangle className="text-red-500 mr-3 w-8 h-8" />
-            Critical Escalation Frame
+            Critical Escalation & Incidents
           </h1>
           <p className="text-gray-600 mt-1">Dashboard for monitoring and managing active service incidents.</p>
         </div>
@@ -1024,7 +1024,7 @@ export function GuardsPage({ onNavigate }: GuardsPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Current On-Call Personnel */}
         <div className="lg:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Current On-Call Personnel</h3>
+          <h3 className="text-3xl font-bold text-gray-800 mb-4">Guards Dashboard</h3>
           <div className="space-y-4 max-h-[33rem] overflow-y-auto pr-2 scrollbar-thin">
             {onCallPersonnel.map((person) => (
               <div key={person.id} className="bg-white border border-gray-200 rounded-lg p-4 flex-shrink-0">
@@ -1245,18 +1245,6 @@ export function GuardsPage({ onNavigate }: GuardsPageProps) {
           </div>
         </header>
 
-        {/* Report New Incident Button */}
-        {activeTab === 'critical-requests' && (
-          <div className="mb-8">
-            <button 
-              onClick={handleReportIncident}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-sm transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl shadow-red-500/20 w-auto transform hover:-translate-y-0.5"
-            >
-              <AlertTriangle className="w-5 h-5 mr-2" />
-              REPORT NEW INCIDENT
-            </button>
-          </div>
-        )}
 
         {/* Content */}
         <div className="bg-white rounded-lg shadow-sm">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search as MagnifyingGlass, ChevronDown as CaretDown } from 'lucide-react';
+import { Search as MagnifyingGlass, ChevronDown as CaretDown, Plus } from 'lucide-react';
 import { ProjectView } from './ProjectView';
 import { Project } from '../../types';
 
@@ -119,9 +119,10 @@ const mockProjects: Project[] = [
 
 interface ProjectsListProps {
   onNavigate: (section: string) => void;
+  onProjectSelect?: (project: Project) => void;
 }
 
-export function ProjectsList({ onNavigate }: ProjectsListProps) {
+export function ProjectsList({ onNavigate, onProjectSelect }: ProjectsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -173,7 +174,11 @@ export function ProjectsList({ onNavigate }: ProjectsListProps) {
       updated_at: project.dateCreated
     };
     
-    setSelectedProject(projectData);
+    if (onProjectSelect) {
+      onProjectSelect(projectData);
+    } else {
+      setSelectedProject(projectData);
+    }
   };
 
   // Show project detail view
@@ -198,8 +203,9 @@ export function ProjectsList({ onNavigate }: ProjectsListProps) {
         </div>
         <button
           onClick={() => onNavigate('new-project')}
-          className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-[#b2cbe5] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#a5c1db] transition-colors"
+          className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-[#b2cbe5] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#a5c1db] transition-colors gap-2"
         >
+          <Plus className="w-4 h-4" />
           <span className="truncate">Create New Project</span>
         </button>
       </div>

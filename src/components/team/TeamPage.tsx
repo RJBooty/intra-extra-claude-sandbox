@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 interface TeamPageProps {
   onNavigate: (section: string) => void;
@@ -313,12 +313,11 @@ export function TeamPage({ onNavigate }: TeamPageProps) {
               Bulk Update
             </button>
             <button 
-              className="font-bold flex items-center px-4 py-2 rounded-xl" 
-              style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
               onClick={() => setShowAddStaffModal(true)}
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-[#b2cbe5] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#a5c1db] transition-colors gap-2"
             >
-              <span className="material-icons mr-2">add</span>
-              Add New Staff
+              <Plus className="w-4 h-4" />
+              <span className="truncate">Add New Staff</span>
             </button>
           </div>
         </div>

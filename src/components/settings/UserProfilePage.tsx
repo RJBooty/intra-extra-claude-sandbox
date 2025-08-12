@@ -1218,19 +1218,19 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <div className="space-y-2 divide-y divide-gray-100">
               <div className="flex justify-between items-center py-2">
                 <p className="text-sm text-gray-600">Day Rate</p>
-                <p className="text-sm text-gray-900 font-medium">$500.00</p>
+                <p className="text-sm text-gray-900 font-medium">€500.00</p>
               </div>
               <div className="flex justify-between items-center py-2">
                 <p className="text-sm text-gray-600">Travel Day</p>
-                <p className="text-sm text-gray-900 font-medium">$250.00</p>
+                <p className="text-sm text-gray-900 font-medium">€250.00</p>
               </div>
               <div className="flex justify-between items-center py-2">
                 <p className="text-sm text-gray-600">Manager Rate</p>
-                <p className="text-sm text-gray-900 font-medium">$600.00</p>
+                <p className="text-sm text-gray-900 font-medium">€600.00</p>
               </div>
               <div className="flex justify-between items-center py-2">
                 <p className="text-sm text-gray-600">Office Rate</p>
-                <p className="text-sm text-gray-900 font-medium">$300.00</p>
+                <p className="text-sm text-gray-900 font-medium">€300.00</p>
               </div>
             </div>
           </div>
@@ -1250,7 +1250,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                 <circle className="stroke-current text-red-500" cx="18" cy="18" fill="none" r="15.9155" strokeDasharray="15, 100" strokeDashoffset="-85" strokeWidth="3.8"></circle>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-gray-900">$125k</span>
+                <span className="text-2xl font-bold text-gray-900">€125k</span>
                 <span className="text-xs text-gray-600">Total Earned</span>
               </div>
             </div>
@@ -1260,21 +1260,21 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                   <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
                   <span className="text-sm text-gray-600">Day Rate</span>
                 </div>
-                <p className="text-sm font-medium text-gray-900">$75,000</p>
+                <p className="text-sm font-medium text-gray-900">€75,000</p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm bg-green-500"></div>
                   <span className="text-sm text-gray-600">Manager Rate</span>
                 </div>
-                <p className="text-sm font-medium text-gray-900">$31,250</p>
+                <p className="text-sm font-medium text-gray-900">€31,250</p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm bg-red-500"></div>
                   <span className="text-sm text-gray-600">Other</span>
                 </div>
-                <p className="text-sm font-medium text-gray-900">$18,750</p>
+                <p className="text-sm font-medium text-gray-900">€18,750</p>
               </div>
             </div>
           </div>
@@ -1287,7 +1287,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           </div>
           <div className="p-5">
             <div className="flex justify-between items-center mb-4">
-              <p className="text-2xl font-bold text-gray-900">$45,200.00</p>
+              <p className="text-2xl font-bold text-gray-900">€45,200.00</p>
               <div className="flex items-center gap-1 text-sm font-medium text-green-600">
                 <TrendingUp className="w-4 h-4" />
                 <span>12.5% vs last year</span>
@@ -1376,9 +1376,9 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               </thead>
               <tbody className="bg-white">
                 {[
-                  { invoice: 'INV-00123', project: 'Project Alpha', amount: '$1,200.00', submitted: 'Aug 1, 2023', paid: 'Aug 15, 2023', status: 'Paid', statusColor: 'bg-blue-50 text-blue-700' },
-                  { invoice: 'INV-00124', project: 'Project Beta', amount: '$800.00', submitted: 'Sep 5, 2023', paid: '-', status: 'Due', statusColor: 'bg-yellow-50 text-yellow-700' },
-                  { invoice: 'INV-00125', project: 'Project Gamma', amount: '$500.00', submitted: 'Sep 15, 2023', paid: '-', status: 'Overdue', statusColor: 'bg-red-50 text-red-700' }
+                  { invoice: 'INV-00123', project: 'Project Alpha', amount: '€1,200.00', submitted: 'Aug 1, 2023', paid: 'Aug 15, 2023', status: 'Paid', statusColor: 'bg-blue-50 text-blue-700' },
+                  { invoice: 'INV-00124', project: 'Project Beta', amount: '€800.00', submitted: 'Sep 5, 2023', paid: '-', status: 'Due', statusColor: 'bg-yellow-50 text-yellow-700' },
+                  { invoice: 'INV-00125', project: 'Project Gamma', amount: '€500.00', submitted: 'Sep 15, 2023', paid: '-', status: 'Overdue', statusColor: 'bg-red-50 text-red-700' }
                 ].map((payment, index) => (
                   <tr key={index} className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0 transition-colors duration-150">
                     <td className="px-5 py-4 whitespace-nowrap">
@@ -2552,7 +2552,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   }, []);
 
   const calculateItemAmount = (quantity: number, rate: string) => {
-    const numRate = parseFloat(rate.replace(/[£$,]/g, '')) || 0;
+    const numRate = parseFloat(rate.replace(/[£$€,]/g, '')) || 0;
     return quantity * numRate;
   };
 
@@ -2621,7 +2621,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     }
 
     return createInvoiceForm.items.every(item => 
-      item.description.trim() && item.quantity > 0 && parseFloat(item.rate.replace(/[£$,]/g, '')) > 0
+      item.description.trim() && item.quantity > 0 && parseFloat(item.rate.replace(/[£$€,]/g, '')) > 0
     );
   };
 
@@ -3063,8 +3063,6 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                         value={createInvoiceForm.currency}
                         onChange={(e) => handleCreateInvoiceFormChange('currency', e.target.value)}
                       >
-                        <option value="GBP">GBP (£)</option>
-                        <option value="USD">USD ($)</option>
                         <option value="EUR">EUR (€)</option>
                       </select>
                     </div>

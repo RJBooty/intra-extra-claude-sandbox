@@ -106,17 +106,17 @@ export function SalesPipeline() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowMetrics(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 px-4 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
             >
               <BarChart3 className="w-4 h-4" />
-              Metrics
+              Metrics Summary
             </button>
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-[#b2cbe5] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#a5c1db] transition-colors gap-2"
             >
               <Plus className="w-4 h-4" />
-              New Opportunity
+              <span className="truncate">New Opportunity</span>
             </button>
           </div>
         </div>

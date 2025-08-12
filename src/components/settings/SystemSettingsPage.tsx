@@ -46,7 +46,7 @@ export function SystemSettingsPage({ onBack }: SystemSettingsPageProps) {
   ]);
 
   const [formData, setFormData] = useState({
-    currency: 'USD - United States Dollar',
+    currency: 'EUR - Euro',
     measurement: 'Metric (kg, cm)',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: '24-hour (e.g., 15:00)',
@@ -200,7 +200,7 @@ export function SystemSettingsPage({ onBack }: SystemSettingsPageProps) {
                         value={formData.currency}
                         onChange={(e) => handleInputChange('currency', e.target.value)}
                       >
-                        <option>USD - United States Dollar</option>
+                        <option>EUR - Euro</option>
                         <option>EUR - Euro</option>
                         <option>GBP - British Pound</option>
                         <option>JPY - Japanese Yen</option>

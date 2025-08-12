@@ -591,7 +591,7 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3 font-semibold text-gray-700 align-top" rowSpan={2}>Ticketing Fees</td>
                       <td className="px-4 py-3">Service Fee (per ticket)</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">$2.50</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">€2.50</td>
                     </tr>
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3">Processing Fee (per order)</td>
@@ -600,7 +600,7 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3 font-semibold text-gray-700 align-top" rowSpan={4}>Cashless Fees</td>
                       <td className="px-4 py-3">Activation Fee (per wristband)</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">$1.00</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">€1.00</td>
                     </tr>
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3">Top-Up Fee (online)</td>
@@ -612,7 +612,7 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
                     </tr>
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3">Refund Processing Fee</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">$5.00</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">€5.00</td>
                     </tr>
                     <tr className="bg-white border-b">
                       <td className="px-4 py-3 font-semibold text-gray-700 align-top" rowSpan={2}>Additional Fees</td>
@@ -621,7 +621,7 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
                     </tr>
                     <tr className="bg-white">
                       <td className="px-4 py-3">On-site Support</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">$1,500 / day</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800 text-right">€1,500 / day</td>
                     </tr>
                   </tbody>
                 </table>

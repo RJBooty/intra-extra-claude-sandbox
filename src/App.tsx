@@ -18,7 +18,7 @@ import { ROI3 } from './components/roi/ROI3';
 import { ClientsPage } from './components/clients/ClientsPage';
 import { Project } from './types';
 
-type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards';
+type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards' | 'new-project' | 'team';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,6 +38,11 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleProjectCreated = (project: Project) => {
+    setCurrentProject(project);
+    setShowProjectDetail(true);
+  };
+
+  const handleProjectSelect = (project: Project) => {
     setCurrentProject(project);
     setShowProjectDetail(true);
   };
@@ -184,7 +189,7 @@ function App() {
             <Sidebar currentView="projects" onNavigate={handleNavigate} />
             
             <div className="layout-content-container flex flex-col flex-1 ml-4">
-              <ProjectsList onNavigate={handleNavigate} />
+              <ProjectsList onNavigate={handleNavigate} onProjectSelect={handleProjectSelect} />
             </div>
             </div>
           </div>

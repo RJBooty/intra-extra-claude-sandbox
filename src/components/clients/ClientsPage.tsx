@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Columns, ChevronUpDown } from 'lucide-react';
 import { CreateClientModal } from './CreateClientModal';
+import { ClientProfile } from './ClientProfile';
 
 type ClientStatus = 'Active' | 'Prospect' | 'On Hold' | 'Inactive';
 type FilterType = 'all' | 'high-value' | 'new' | 'at-risk' | 'inactive';
@@ -14,6 +15,16 @@ interface Client {
   assignedTo: string;
   status: ClientStatus;
   value?: number;
+  email: string;
+  phone: string;
+  address: string;
+  website?: string;
+  linkedin?: string;
+  instagram?: string;
+  twitter?: string;
+  lastActive: string;
+  avatar?: string;
+  about: string;
 }
 
 interface ColumnConfig {
@@ -28,6 +39,7 @@ export function ClientsPage() {
   const [showColumnsDropdown, setShowColumnsDropdown] = useState(false);
   const [saveAsDefault, setSaveAsDefault] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -44,12 +56,22 @@ export function ClientsPage() {
   const [clients] = useState<Client[]>([
     {
       id: '1',
-      name: 'Innovate Solutions',
+      name: 'Vibe Events Co',
       dateAdded: '2023-11-15',
       primaryContact: 'John Doe',
       country: 'USA',
       assignedTo: 'Alex Bennett',
       status: 'Active',
+      email: 'vibeevents@email.com',
+      phone: '+1-555-987-6543',
+      address: '123 Festival Grounds, Anytown, USA',
+      website: 'vibeevents.com',
+      linkedin: 'linkedin.com/company/vibeevents',
+      instagram: 'instagram.com/vibeevents',
+      twitter: 'twitter.com/vibeevents',
+      lastActive: '2d ago',
+      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBg2clo-WxfcRw8LIMTPld4TnO84G2-sE9ARwyXnkz6soHGvLG-i6Wt19GhMdhxQOuAFvry7oSgE3k368_Jd4FuG1e1FdoMRY_h_uCjMSLNPr-vA_HOxpTl8WozlUyDoJchBA-5TSmFy0hl5Pr16qngvnMQTAb1rgMAtiNut3-vr8yOMe-K8wuyqRfBtugMKjdQcqnNRZtW4t6L83a5De8wQtkN_X7T0CxvFxqvCWOdabqxhCLvaQpPl301yKkgK3pK30pHLjDEhAFh',
+      about: 'Vibe Events Co is a valued client known for organizing vibrant and memorable music festivals. They have a strong focus on creating immersive experiences for attendees, blending diverse musical genres with engaging visual and interactive elements. Their events are characterized by high energy and a commitment to delivering top-tier entertainment.'
     },
     {
       id: '2',
@@ -59,6 +81,11 @@ export function ClientsPage() {
       country: 'UK',
       assignedTo: 'Sophia Carter',
       status: 'Active',
+      email: 'contact@harmony-events.com',
+      phone: '+44-123-456-7890',
+      address: '456 Music Lane, London, UK',
+      lastActive: '1w ago',
+      about: 'Harmony Events specializes in creating harmonious and well-coordinated events with a focus on music and entertainment.'
     },
     {
       id: '3',
@@ -68,6 +95,11 @@ export function ClientsPage() {
       country: 'Spain',
       assignedTo: 'Ethan Davis',
       status: 'Prospect',
+      email: 'mike.johnson@globalsports.com',
+      phone: '+34-987-654-3210',
+      address: '789 Sports Plaza, Madrid, Spain',
+      lastActive: '3d ago',
+      about: 'Global Sports Inc. is a leading sports event management company specializing in international tournaments and competitions.'
     },
     {
       id: '4',
@@ -189,8 +221,18 @@ export function ClientsPage() {
     }
   });
 
+  // Show client profile if a client is selected
+  if (selectedClient) {
+    return (
+      <ClientProfile 
+        client={selectedClient} 
+        onBack={() => setSelectedClient(null)} 
+      />
+    );
+  }
+
   return (
-    <div className="p-8">
+    <div className="p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -199,10 +241,10 @@ export function ClientsPage() {
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-100 hover:bg-blue-200 text-gray-900 font-bold flex items-center px-4 py-2 rounded-xl border border-gray-300"
+          className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-[#b2cbe5] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#a5c1db] transition-colors gap-2"
         >
-          <span className="material-icons mr-2">add</span>
-          Create New Client
+          <Plus className="w-4 h-4" />
+          <span className="truncate">Create New Client</span>
         </button>
       </div>
 
@@ -327,7 +369,7 @@ export function ClientsPage() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filteredClients.map(client => (
-              <tr key={client.id} className="hover:bg-gray-50">
+              <tr key={client.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedClient(client)}>
                 {columns.filter(col => col.visible).map(column => (
                   <td key={column.id} className="px-6 py-4 whitespace-nowrap text-sm">
                     {column.id === 'name' && (
