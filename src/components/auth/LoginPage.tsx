@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Lock, Mail, User, AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { auth } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
@@ -66,18 +67,25 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         return;
       }
 
-      // Production authentication would go here
+      // Production authentication with Supabase
       console.log('🔐 Login attempt:', { email: data.email });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data: authData, error } = await auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       
-      // Mock authentication logic
-      if (data.email === 'tyson@casfid.com' && data.password === 'admin123') {
-        toast.success('Welcome back, Bob the Builder!');
+      if (error) {
+        console.error('Authentication error:', error);
+        toast.error(error.message || 'Invalid credentials');
+        return;
+      }
+      
+      if (authData.user) {
+        toast.success('Welcome back!');
         onLogin();
       } else {
-        toast.error('Invalid credentials');
+        toast.error('Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -98,15 +106,30 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         return;
       }
 
-      // Production signup would go here
+      // Production signup with Supabase
       console.log('📝 Signup attempt:', { name: data.name, email: data.email });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { data: authData, error } = await auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+          }
+        }
+      });
       
-      toast.success('Account created! Awaiting approval from James Tyson (tyson@casfid.com)');
-      setIsSignup(false);
-      signupForm.reset();
+      if (error) {
+        console.error('Signup error:', error);
+        toast.error(error.message || 'Signup failed');
+        return;
+      }
+      
+      if (authData.user) {
+        toast.success('Account created! Please check your email to verify your account.');
+        setIsSignup(false);
+        signupForm.reset();
+      }
     } catch (error) {
       console.error('Signup error:', error);
       toast.error('Signup failed. Please try again.');
