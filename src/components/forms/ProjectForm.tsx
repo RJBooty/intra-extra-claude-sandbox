@@ -9,9 +9,11 @@ import { Client, Project } from '../../types';
 import { getClients, createProject } from '../../lib/supabase';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ClientForm } from './ClientForm';
+import { generateProjectCode, validateProjectCode } from '../../lib/projectCode';
 
 const projectSchema = z.object({
   project_id: z.string().min(1, 'Project ID is required'),
+  project_code: z.string().optional(),
   client_id: z.string().min(1, 'Client selection is required'),
   event_location: z.string().min(1, 'Event location is required'),
   event_start_date: z.string().min(1, 'Start date is required'),
@@ -31,6 +33,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState<string>('');
 
   const {
     register,
@@ -38,6 +41,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -46,10 +50,23 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
   });
 
   const watchedFields = watch();
+  const eventLocation = watch('event_location');
 
   useEffect(() => {
     loadClients();
   }, []);
+
+  useEffect(() => {
+    // Generate project code when location changes
+    const generateCode = async () => {
+      if (eventLocation && eventLocation.trim() !== '') {
+        const code = await generateProjectCode(eventLocation);
+        setGeneratedCode(code);
+        setValue('project_code', code);
+      }
+    };
+    generateCode();
+  }, [eventLocation, setValue]);
 
   const loadClients = async () => {
     try {
@@ -71,6 +88,11 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
   const onSubmit = async (data: ProjectFormData) => {
     setIsSubmitting(true);
     try {
+      // Ensure project code is set
+      if (!data.project_code) {
+        data.project_code = await generateProjectCode(data.event_location);
+      }
+
       const projectData = {
         ...data,
         current_phase: 1,
@@ -81,6 +103,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
       const newProject = await createProject(projectData);
       toast.success('Project created successfully!');
       reset();
+      setGeneratedCode('');
       onProjectCreated?.(newProject);
     } catch (error) {
       console.error('Error creating project:', error);
@@ -94,7 +117,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
     console.log('✅ New client created, adding to list:', newClient);
     setClients(prev => [newClient, ...prev]);
     // Auto-select the newly created client
-    // setValue('client_id', newClient.id); // This function doesn't exist, need to use register
+    setValue('client_id', newClient.id);
     toast.success(`Client "${newClient.company}" added and selected`);
   };
 
@@ -125,8 +148,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
               type="button"
               onClick={() => {
                 const newId = generateProjectId();
-                // Need to use setValue from useForm hook
-                // setValue('project_id', newId);
+                setValue('project_id', newId);
               }}
               className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors text-sm font-medium"
             >
@@ -189,6 +211,43 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
           {errors.event_location && (
             <p className="text-red-600 text-sm mt-1">{errors.event_location.message}</p>
           )}
+        </label>
+      </div>
+
+      {/* Project Code */}
+      <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+        <label className="flex flex-col min-w-40 flex-1">
+          <p className="text-[#101418] text-base font-medium leading-normal pb-2">
+            Project Code (Auto-generated)
+          </p>
+          <div className="flex gap-2">
+            <input
+              {...register('project_code')}
+              value={generatedCode}
+              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#101418] focus:outline-0 focus:ring-0 border border-[#d4dbe2] bg-gray-100 focus:border-blue-500 h-14 placeholder:text-[#5c728a] p-[15px] text-base font-normal leading-normal"
+              placeholder="Enter location first to generate code"
+            />
+            <button
+              type="button"
+              onClick={async () => {
+                if (eventLocation) {
+                  const code = await generateProjectCode(eventLocation);
+                  setGeneratedCode(code);
+                  setValue('project_code', code);
+                  toast.success('New project code generated');
+                } else {
+                  toast.error('Please enter event location first');
+                }
+              }}
+              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors text-sm font-medium"
+              disabled={!eventLocation}
+            >
+              Regenerate
+            </button>
+          </div>
+          <p className="text-[#5c728a] text-sm mt-1">
+            Format: REGION-#### (e.g., UK-0001). Can be edited if needed.
+          </p>
         </label>
       </div>
 

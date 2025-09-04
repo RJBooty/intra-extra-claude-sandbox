@@ -12,6 +12,7 @@ export interface Client {
 export interface Project {
   id: string;
   project_id: string;
+  project_code: string;  // Unique Project Identification Code (e.g., UK-0001)
   client_id: string;
   client?: Client;
   event_location: string;

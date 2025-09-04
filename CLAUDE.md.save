@@ -1,0 +1,133 @@
+Sure! Here’s the exact markdown content you should paste into your CLAUDE.md file inside your project folder (intra-extra-claude-sandbox). This is based on your detailed guide, refined for clarity and structure:
+
+⸻
+
+
+# CLAUDE.md — IntraExtra Platform Guide
+
+## 1. Project Overview  
+IntraExtra is a CRM and project management platform for CASFID International, focusing on RFID access control, cashless payments, and ticketing.  
+Built with React 18 (frontend) and Supabase (PostgreSQL backend).  
+The ROI module drives financial data flow across modules like logistics, crew, and operations.
+
+## 2. Repository Structure
+
+intraextra/
+├── src/
+│   ├── components/   # UI modules: auth, client, crew, guards, logistics, operations, project, roi, sales, team
+│   ├── lib/          # Utility functions
+│   ├── hooks/        # Custom React hooks
+│   └── types/        # TypeScript definitions
+├── public/           # Static assets
+└── supabase/         # Database schemas and migrations
+
+## 3. Key Commands
+- `npm run dev` — start the development server  
+- `npm test` — run the test suite  
+- `npm run build` — generate a production build  
+
+## 4. Code Style & Permissions
+- Use ES modules (`import`/`export`)  
+- Name variables and functions using `camelCase`  
+- Destructure imports and props (`import { foo } from 'bar'`)  
+- Use `usePermissions('module', 'action')` to conditionally render components
+
+## 5. Workflow & Commit Conventions
+- Branch naming: `feature/TICKET-123-description`  
+- Commit messages: `feat(module): description`  
+
+## 6. Module Integration Logic  
+### ROI as source of truth  
+- Lock ROI → distribute estimates to operational modules  
+- Modules return actuals → update ROI  
+
+### Common Tasks  
+**Adding a field**  
+1. Add Supabase migration in `/supabase/`  
+2. Update TypeScript type in `/src/types/`  
+3. Update UI components and permission settings  
+4. Update permissions matrix if applicable  
+
+**Adding a new module tab in UI**  
+```typescript
+// In ProjectView.tsx:
+const tabs = [
+  { id: 'core', label: 'Core Info', component: CoreInfo },
+  { id: 'roi', label: 'ROI', component: ROI3 },
+  { id: 'newModule', label: 'New Module', component: NewModule }
+];
+
+7. Business Rules
+	•	Only Master/Senior can lock ROI
+	•	Estimates become read-only after locking
+	•	Actuals can be entered post-lock
+	•	ROI is financial source of truth
+
+8. Project Phases & Client Tiers
+	•	Phases: Discover → Build → Prepare → Deliver → Roundup
+	•	Client Tiers: Seed → Sapling → Canopy → Jungle → Rainforest
+
+9. External Integrations
+	•	Microsoft Graph: Teams, SharePoint, Outlook sync
+	•	Jira/JUE: Ticketing and work orders
+	•	QuickBooks: Invoice and reporting from ROI actuals
+
+10. Testing Approach
+	•	Permission tests across user tiers (e.g., Master vs External)
+	•	Data flow tests: lock ROI → enter actuals → verify ROI updates
+
+11. Troubleshooting Tips
+
+Common Issue	Fix Strategy
+Data not syncing	Check locking status and foreign key relationships
+Permission denied	Validate user role and permission matrix
+Inaccurate financial calc	Trace cost flow through ROI actual values
+
+12. Claude Usage Tips
+	•	Run: /clear to refresh context and ensure CLAUDE.md is reloaded
+	•	Start prompts with: “Think step-by-step…” for structured output
+	•	Keep instructions concise: CLAUDE.md should be clear and contextual
+
+13. Support & Contacts
+	•	Permissions matrix: intraextra_permissions_matrix_complete.csv
+	•	Platform Owner: James Tyson (tyson@casfid.com)
+	•	Do not modify legacy files without review or owner consultation
+
+---
+
+###  Why This Format Works
+
+- **Structured & concise** — easy for Claude Code to parse and apply.
+- **Modular sections** — clear divisions such as commands, workflow, testing help Claude stay context-aware.
+- **Actionable examples** — code snippets and steps make it easy for Claude to act.
+- **Claude system rules** — directories, conventions, and restrictions are clearly spelled out. ([turn0search0](#cite), [turn0search2](#cite))
+
+---
+
+### Next Steps
+
+1. Paste this into `CLAUDE.md` using a terminal editor:
+   ```bash
+   cd ~/Documents/intra-extra-claude-sandbox
+   nano CLAUDE.md
+
+(Paste, then Ctrl+O, Enter, Ctrl+X to save and exit.)
+	2.	Commit and push:
+
+git add CLAUDE.md
+git commit -m "Add project-specific CLAUDE.md"
+git push
+
+
+	3.	Open Claude:
+
+claude
+
+Then run /clear to reload the context.
+
+	4.	Ask Claude a sanity-check question:
+“Summarize the key project rules from CLAUDE.md.”
+
+⸻
+
+Let me know when you’re ready, and we can test a prompt or integrate @claude automation next!

@@ -1,259 +1,270 @@
 /*
-  # Platform Configuration System
+  Platform Configuration System (Supabase-safe)
 
-  1. New Tables
-    - `platform_fields` - Core configurable fields
-    - `field_options` - Individual options for each field
-    - `field_change_log` - Complete audit trail
-    - `field_usage_tracking` - Track field usage across platform
-
-  2. Security
-    - Enable RLS on all new tables
-    - Add Master-level access policies
-    - Audit trail policies for transparency
-
-  3. Changes
-    - Add role_level to users table for Master access control
-    - Create indexes for performance
-    - Set up proper foreign key relationships
+  Creates:
+    - platform_user_roles (stores app roles for auth.users)
+    - helper functions: get_role_level(uuid), is_master(uuid), set_updated_at()
+    - platform_fields, field_options, field_change_log, field_usage_tracking
+  Notes:
+    - References auth.users, not public.users
+    - RLS enabled on all tables
+    - Master-level manage policies, read for authenticated
 */
 
--- Add role_level to users table if it doesn't exist
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'users' AND column_name = 'role_level'
-  ) THEN
-    ALTER TABLE users ADD COLUMN role_level text DEFAULT 'user' 
-      CHECK (role_level IN ('master', 'senior', 'mid', 'external', 'hr', 'admin', 'user'));
-  END IF;
-END $$;
+-- Extensions
+create extension if not exists pgcrypto;
 
--- Create platform_fields table
-CREATE TABLE IF NOT EXISTS platform_fields (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  field_name text NOT NULL,
-  field_type text NOT NULL CHECK (field_type IN ('dropdown', 'multiselect', 'radio', 'checkbox', 'tags')),
-  module text NOT NULL,
-  section text NOT NULL,
-  component text,
-  data_attribute text,
-  is_required boolean DEFAULT false,
-  default_value text,
-  is_locked boolean DEFAULT false,
-  is_active boolean DEFAULT true,
-  usage_count integer DEFAULT 0,
-  sort_order integer DEFAULT 0,
-  validation_rules jsonb DEFAULT '{}',
-  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+-- App roles storage (instead of altering auth.users)
+create table if not exists platform_user_roles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role_level text default 'user'
+    check (role_level in ('master','senior','mid','external','hr','admin','user')),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
--- Create field_options table
-CREATE TABLE IF NOT EXISTS field_options (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  field_id uuid NOT NULL REFERENCES platform_fields(id) ON DELETE CASCADE,
-  option_value text NOT NULL,
-  option_label text NOT NULL,
-  sort_order integer DEFAULT 0,
-  is_active boolean DEFAULT true,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
+-- Role helpers
+create or replace function get_role_level(p_user_id uuid)
+returns text
+language sql
+stable
+as $$
+  select coalesce(
+    (select role_level from platform_user_roles where user_id = p_user_id),
+    'user'
+  )
+$$;
 
--- Create field_change_log table
-CREATE TABLE IF NOT EXISTS field_change_log (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  field_id uuid REFERENCES platform_fields(id) ON DELETE CASCADE,
-  action text NOT NULL CHECK (action IN ('CREATED', 'MODIFIED', 'REMOVED', 'RESTORED', 'OPTION_ADDED', 'OPTION_REMOVED', 'OPTION_MODIFIED')),
+create or replace function is_master(p_user_id uuid)
+returns boolean
+language sql
+stable
+as $$
+  select get_role_level(p_user_id) = 'master'
+$$;
+
+-- Core configuration tables
+create table if not exists platform_fields (
+  id uuid primary key default gen_random_uuid(),
+
+  -- high-level grouping
+  module text not null,              -- e.g. 'CRM', 'Projects', 'Operations'
+  section text not null,             -- finer grouping, e.g. 'Project Form'
+
+  -- identity
+  field_key text not null,           -- unique key within a module+section
+  display_name text not null,        -- human label
+  description text default null,
+
+  -- nature of field
+  data_type text not null            -- 'text','number','date','datetime','boolean','select','multiselect','tag','json','currency','percent'
+    check (data_type in ('text','number','date','datetime','boolean','select','multiselect','tag','json','currency','percent')),
+  required boolean not null default false,
+  default_value text default null,
+
+  -- flags
+  is_system boolean not null default false,          -- built-in by dev
+  is_system_locked boolean not null default false,   -- cannot be edited at all
+  is_custom boolean not null default false,          -- admin-created
+
+  -- options meta
+  has_options boolean not null default false,
+
+  -- audit
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint platform_fields_module_section_key_uk unique (module, section, field_key)
+);
+create index if not exists idx_platform_fields_module_section
+  on platform_fields(module, section);
+create index if not exists idx_platform_fields_key
+  on platform_fields(field_key);
+
+-- Options for select/multiselect/tag fields
+create table if not exists field_options (
+  id uuid primary key default gen_random_uuid(),
+  field_id uuid not null references platform_fields(id) on delete cascade,
+
+  option_value text not null,
+  option_label text not null,
+
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint field_options_field_value_uk unique (field_id, option_value)
+);
+create index if not exists idx_field_options_field_id
+  on field_options(field_id);
+
+-- Complete audit trail of field changes
+create table if not exists field_change_log (
+  id uuid primary key default gen_random_uuid(),
+  field_id uuid not null references platform_fields(id) on delete cascade,
+
+  changed_by uuid references auth.users(id) on delete set null,
+  change_type text not null
+    check (change_type in ('create','update','delete','lock','unlock','option_add','option_update','option_delete')),
   old_value jsonb,
   new_value jsonb,
-  change_description text,
-  version_number integer DEFAULT 1,
-  changed_by uuid REFERENCES users(id) ON DELETE SET NULL,
-  changed_at timestamptz DEFAULT now()
+
+  changed_at timestamptz not null default now()
 );
+create index if not exists idx_field_change_log_field_id
+  on field_change_log(field_id);
+create index if not exists idx_field_change_log_changed_at
+  on field_change_log(changed_at);
 
--- Create field_usage_tracking table
-CREATE TABLE IF NOT EXISTS field_usage_tracking (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  field_id uuid NOT NULL REFERENCES platform_fields(id) ON DELETE CASCADE,
-  table_name text NOT NULL,
-  column_name text NOT NULL,
-  record_count integer DEFAULT 0,
-  last_updated timestamptz DEFAULT now()
+-- Usage tracking for analytics and safe deletes
+create table if not exists field_usage_tracking (
+  id uuid primary key default gen_random_uuid(),
+  field_id uuid not null references platform_fields(id) on delete cascade,
+
+  used_in_module text not null,      -- where it is used (e.g. 'Projects')
+  used_in_table text not null,       -- physical table name
+  used_in_column text not null,      -- column name
+
+  usage_count integer not null default 0,  -- cached counter
+  last_detected_at timestamptz not null default now()
 );
+create index if not exists idx_field_usage_field_id
+  on field_usage_tracking(field_id);
+create index if not exists idx_field_usage_location
+  on field_usage_tracking(used_in_module, used_in_table, used_in_column);
 
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_platform_fields_module ON platform_fields(module);
-CREATE INDEX IF NOT EXISTS idx_platform_fields_section ON platform_fields(section);
-CREATE INDEX IF NOT EXISTS idx_platform_fields_active ON platform_fields(is_active);
-CREATE INDEX IF NOT EXISTS idx_field_options_field_id ON field_options(field_id);
-CREATE INDEX IF NOT EXISTS idx_field_options_active ON field_options(is_active);
-CREATE INDEX IF NOT EXISTS idx_field_change_log_field_id ON field_change_log(field_id);
-CREATE INDEX IF NOT EXISTS idx_field_change_log_changed_at ON field_change_log(changed_at);
-CREATE INDEX IF NOT EXISTS idx_field_usage_tracking_field_id ON field_usage_tracking(field_id);
+-- RLS
+alter table platform_fields        enable row level security;
+alter table field_options          enable row level security;
+alter table field_change_log       enable row level security;
+alter table field_usage_tracking   enable row level security;
+alter table platform_user_roles    enable row level security;
 
--- Enable Row Level Security
-ALTER TABLE platform_fields ENABLE ROW LEVEL SECURITY;
-ALTER TABLE field_options ENABLE ROW LEVEL SECURITY;
-ALTER TABLE field_change_log ENABLE ROW LEVEL SECURITY;
-ALTER TABLE field_usage_tracking ENABLE ROW LEVEL SECURITY;
+-- Policies (duplicate-safe: catch duplicate_object)
+do $$
+begin
+  begin
+    create policy platform_fields_select_auth
+      on platform_fields for select
+      to authenticated using (true);
+  exception when duplicate_object then null;
+  end;
 
--- Platform Fields Policies (Master-level access only)
-CREATE POLICY "Master users can manage platform fields"
-  ON platform_fields
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+  begin
+    create policy field_options_select_auth
+      on field_options for select
+      to authenticated using (true);
+  exception when duplicate_object then null;
+  end;
 
-CREATE POLICY "Master users can read platform fields"
-  ON platform_fields
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+  begin
+    create policy field_change_log_select_auth
+      on field_change_log for select
+      to authenticated using (true);
+  exception when duplicate_object then null;
+  end;
 
--- Field Options Policies
-CREATE POLICY "Master users can manage field options"
-  ON field_options
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+  begin
+    create policy field_usage_tracking_select_auth
+      on field_usage_tracking for select
+      to authenticated using (true);
+  exception when duplicate_object then null;
+  end;
 
-CREATE POLICY "Master users can read field options"
-  ON field_options
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+  begin
+    create policy platform_user_roles_select_self_or_master
+      on platform_user_roles for select
+      to authenticated
+      using (user_id = auth.uid() or is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
+end$$;
 
--- Field Change Log Policies (Read-only for transparency)
-CREATE POLICY "Master users can read field change log"
-  ON field_change_log
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+-- Manage rights: only master can insert/update/delete in config tables
+do $$
+begin
+  begin
+    create policy platform_fields_manage_master
+      on platform_fields for all
+      to authenticated
+      using (is_master(auth.uid()))
+      with check (is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
 
-CREATE POLICY "System can create field change log"
-  ON field_change_log
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
+  begin
+    create policy field_options_manage_master
+      on field_options for all
+      to authenticated
+      using (is_master(auth.uid()))
+      with check (is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
 
--- Field Usage Tracking Policies
-CREATE POLICY "Master users can read field usage tracking"
-  ON field_usage_tracking
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role_level = 'master'
-    )
-  );
+  begin
+    create policy field_change_log_insert_master
+      on field_change_log for insert
+      to authenticated
+      with check (is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
 
-CREATE POLICY "System can manage field usage tracking"
-  ON field_usage_tracking
-  FOR ALL
-  TO authenticated
-  USING (true);
+  begin
+    create policy field_usage_tracking_manage_master
+      on field_usage_tracking for all
+      to authenticated
+      using (is_master(auth.uid()))
+      with check (is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
 
--- Insert sample data for testing
-INSERT INTO platform_fields (field_name, field_type, module, section, is_locked, created_by) VALUES
-  ('Project Status', 'dropdown', 'Projects', 'Project Info', true, (SELECT id FROM users WHERE email = 'tyson@casfid.com' LIMIT 1)),
-  ('Client Classification', 'dropdown', 'Clients', 'Client Details', true, (SELECT id FROM users WHERE email = 'tyson@casfid.com' LIMIT 1)),
-  ('Deal Stage', 'dropdown', 'Pipeline', 'Deal Details', true, (SELECT id FROM users WHERE email = 'tyson@casfid.com' LIMIT 1)),
-  ('User Role', 'dropdown', 'Team', 'User Management', true, (SELECT id FROM users WHERE email = 'tyson@casfid.com' LIMIT 1))
-ON CONFLICT DO NOTHING;
+  begin
+    create policy platform_user_roles_manage_master
+      on platform_user_roles for all
+      to authenticated
+      using (is_master(auth.uid()))
+      with check (is_master(auth.uid()));
+  exception when duplicate_object then null;
+  end;
+end$$;
 
--- Insert sample options
-DO $$
-DECLARE
-  project_status_id uuid;
-  client_class_id uuid;
-  deal_stage_id uuid;
-  user_role_id uuid;
-BEGIN
-  -- Get field IDs
-  SELECT id INTO project_status_id FROM platform_fields WHERE field_name = 'Project Status' LIMIT 1;
-  SELECT id INTO client_class_id FROM platform_fields WHERE field_name = 'Client Classification' LIMIT 1;
-  SELECT id INTO deal_stage_id FROM platform_fields WHERE field_name = 'Deal Stage' LIMIT 1;
-  SELECT id INTO user_role_id FROM platform_fields WHERE field_name = 'User Role' LIMIT 1;
+-- Helpful triggers to keep updated_at fresh
+create or replace function set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
 
-  -- Insert options for Project Status
-  IF project_status_id IS NOT NULL THEN
-    INSERT INTO field_options (field_id, option_value, option_label, sort_order) VALUES
-      (project_status_id, 'active', 'Active', 1),
-      (project_status_id, 'completed', 'Completed', 2),
-      (project_status_id, 'on_hold', 'On Hold', 3),
-      (project_status_id, 'cancelled', 'Cancelled', 4)
-    ON CONFLICT DO NOTHING;
-  END IF;
+do $$
+begin
+  if not exists (select 1 from pg_trigger where tgname = 'trg_platform_fields_updated_at') then
+    create trigger trg_platform_fields_updated_at
+      before update on platform_fields
+      for each row
+      execute procedure set_updated_at();
+  end if;
 
-  -- Insert options for Client Classification
-  IF client_class_id IS NOT NULL THEN
-    INSERT INTO field_options (field_id, option_value, option_label, sort_order) VALUES
-      (client_class_id, 'canopy', 'Canopy', 1),
-      (client_class_id, 'direct', 'Direct', 2),
-      (client_class_id, 'partner', 'Partner', 3),
-      (client_class_id, 'vendor', 'Vendor', 4)
-    ON CONFLICT DO NOTHING;
-  END IF;
+  if not exists (select 1 from pg_trigger where tgname = 'trg_field_options_updated_at') then
+    create trigger trg_field_options_updated_at
+      before update on field_options
+      for each row
+      execute procedure set_updated_at();
+  end if;
 
-  -- Insert options for Deal Stage
-  IF deal_stage_id IS NOT NULL THEN
-    INSERT INTO field_options (field_id, option_value, option_label, sort_order) VALUES
-      (deal_stage_id, 'contacted', 'Contacted', 1),
-      (deal_stage_id, 'qualified', 'Qualified', 2),
-      (deal_stage_id, 'proposal_sent', 'Proposal Sent', 3),
-      (deal_stage_id, 'negotiations', 'Negotiations', 4),
-      (deal_stage_id, 'contract_signature', 'Contract Signature', 5),
-      (deal_stage_id, 'kickoff', 'Kickoff', 6),
-      (deal_stage_id, 'operations', 'Operations', 7)
-    ON CONFLICT DO NOTHING;
-  END IF;
-
-  -- Insert options for User Role
-  IF user_role_id IS NOT NULL THEN
-    INSERT INTO field_options (field_id, option_value, option_label, sort_order) VALUES
-      (user_role_id, 'master', 'Master User', 1),
-      (user_role_id, 'senior', 'Senior User', 2),
-      (user_role_id, 'mid', 'Mid User', 3),
-      (user_role_id, 'external', 'External User', 4),
-      (user_role_id, 'hr', 'HR User', 5),
-      (user_role_id, 'admin', 'Admin', 6)
-    ON CONFLICT DO NOTHING;
-  END IF;
-END $$;
+  if not exists (select 1 from pg_trigger where tgname = 'trg_platform_user_roles_updated_at') then
+    create trigger trg_platform_user_roles_updated_at
+      before update on platform_user_roles
+      for each row
+      execute procedure set_updated_at();
+  end if;
+end$$;

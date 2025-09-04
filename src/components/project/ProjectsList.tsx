@@ -6,6 +6,7 @@ import { Project } from '../../types';
 interface Project {
   id: string;
   name: string;
+  code: string;
   dateCreated: string;
   eventDate: string;
   client: string;
@@ -18,6 +19,7 @@ const mockProjects: Project[] = [
   {
     id: '1',
     name: 'Tech Conference 2024',
+    code: 'US-0001',
     dateCreated: '2023-11-15',
     eventDate: '2024-05-20',
     client: 'Innovate Solutions',
@@ -28,6 +30,7 @@ const mockProjects: Project[] = [
   {
     id: '2',
     name: 'Music Festival 2024',
+    code: 'UK-0001',
     dateCreated: '2023-12-01',
     eventDate: '2024-07-10',
     client: 'Harmony Events',
@@ -38,6 +41,7 @@ const mockProjects: Project[] = [
   {
     id: '3',
     name: 'Sports Tournament 2024',
+    code: 'ES-0001',
     dateCreated: '2024-01-10',
     eventDate: '2024-09-05',
     client: 'Global Sports Inc.',
@@ -48,6 +52,7 @@ const mockProjects: Project[] = [
   {
     id: '4',
     name: 'Corporate Summit 2024',
+    code: 'DE-0001',
     dateCreated: '2024-02-20',
     eventDate: '2024-11-15',
     client: 'Business Leaders Group',
@@ -58,6 +63,7 @@ const mockProjects: Project[] = [
   {
     id: '5',
     name: 'Art Exhibition 2024',
+    code: 'FR-0001',
     dateCreated: '2024-03-05',
     eventDate: '2024-12-01',
     client: 'Creative Arts Society',
@@ -68,6 +74,7 @@ const mockProjects: Project[] = [
   {
     id: '6',
     name: 'Film Festival 2024',
+    code: 'IT-0001',
     dateCreated: '2024-04-15',
     eventDate: '2025-01-10',
     client: 'Cinema World',
@@ -78,6 +85,7 @@ const mockProjects: Project[] = [
   {
     id: '7',
     name: 'Food & Wine Expo 2024',
+    code: 'AU-0001',
     dateCreated: '2024-05-01',
     eventDate: '2025-02-20',
     client: 'Taste of the World',
@@ -88,6 +96,7 @@ const mockProjects: Project[] = [
   {
     id: '8',
     name: 'Fashion Show 2024',
+    code: 'JP-0001',
     dateCreated: '2024-06-10',
     eventDate: '2025-03-05',
     client: 'Style & Glamour',
@@ -98,6 +107,7 @@ const mockProjects: Project[] = [
   {
     id: '9',
     name: 'Gaming Convention 2024',
+    code: 'INTL-0001',
     dateCreated: '2024-07-20',
     eventDate: '2025-04-15',
     client: 'Game On Inc.',
@@ -108,6 +118,7 @@ const mockProjects: Project[] = [
   {
     id: '10',
     name: 'Travel & Adventure Fair 2024',
+    code: 'BR-0001',
     dateCreated: '2024-08-05',
     eventDate: '2025-05-01',
     client: 'Wanderlust Explorers',
@@ -152,6 +163,7 @@ export function ProjectsList({ onNavigate, onProjectSelect }: ProjectsListProps)
     const projectData: Project = {
       id: project.id,
       project_id: project.name,
+      project_code: project.code,
       client_id: '1',
       client: {
         id: '1',
@@ -282,7 +294,7 @@ export function ProjectsList({ onNavigate, onProjectSelect }: ProjectsListProps)
                   onClick={() => handleProjectSelect(project)}
                 >
                   <td className="h-[72px] px-4 py-2 w-[400px] text-[#101418] text-sm font-normal leading-normal">
-                    {project.name}
+                    {project.name} - <span className="text-[#5c728a] font-medium">{project.code}</span>
                   </td>
                   <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c728a] text-sm font-normal leading-normal">
                     {project.dateCreated}

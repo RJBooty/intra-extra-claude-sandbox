@@ -1,209 +1,243 @@
 /*
-  # ROI Analysis Module Database Schema
+  ROI Analysis Module (Supabase-safe)
 
-  1. New Tables
-    - `roi_calculations` - Main ROI calculation records
-    - `revenue_streams` - Individual revenue line items
-    - `cost_streams` - Individual cost line items
-    - `roi_templates` - Reusable calculation templates
-    - `roi_scenarios` - Scenario modeling data
+  Creates:
+    - roi_calculations
+    - revenue_streams
+    - cost_streams
+    - roi_templates
+    - roi_scenarios
 
-  2. Security
-    - Enable RLS on all tables
-    - Add policies for authenticated users
-    - Proper foreign key constraints
+  Notes:
+    - Uses gen_random_uuid() (pgcrypto) for IDs
+    - References auth.users for created_by / approved_by
+    - Soft-creates a minimal projects table if missing
+    - Enables RLS with permissive policies for authenticated
 */
 
--- ROI Calculations table
-CREATE TABLE IF NOT EXISTS roi_calculations (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  project_id uuid NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  calculation_type text NOT NULL DEFAULT 'quick' CHECK (calculation_type IN ('quick', 'detailed', 'comprehensive')),
-  version integer NOT NULL DEFAULT 1,
-  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'approved')),
-  
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Extensions
+-- ─────────────────────────────────────────────────────────────────────────────
+create extension if not exists pgcrypto;
+
+-- Ensure a projects table exists (id only if you don’t already have one)
+create table if not exists projects (
+  id uuid primary key default gen_random_uuid()
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ROI Calculations
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists roi_calculations (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references projects(id) on delete cascade,
+
+  calculation_type text not null default 'quick'
+    check (calculation_type in ('quick','detailed','comprehensive')),
+  version integer not null default 1,
+  status text not null default 'draft'
+    check (status in ('draft','submitted','approved')),
+
   -- Revenue totals
-  total_revenue_estimate numeric NOT NULL DEFAULT 0,
-  total_revenue_forecast numeric NOT NULL DEFAULT 0,
-  total_revenue_actual numeric NOT NULL DEFAULT 0,
-  
+  total_revenue_estimate numeric not null default 0,
+  total_revenue_forecast numeric not null default 0,
+  total_revenue_actual   numeric not null default 0,
+
   -- Cost totals
-  total_costs_estimate numeric NOT NULL DEFAULT 0,
-  total_costs_forecast numeric NOT NULL DEFAULT 0,
-  total_costs_actual numeric NOT NULL DEFAULT 0,
-  
+  total_costs_estimate numeric not null default 0,
+  total_costs_forecast numeric not null default 0,
+  total_costs_actual   numeric not null default 0,
+
   -- Calculated metrics
-  margin_percentage numeric NOT NULL DEFAULT 0,
-  roi_percentage numeric NOT NULL DEFAULT 0,
-  
-  -- Approval tracking
-  approved_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  margin_percentage numeric not null default 0,
+  roi_percentage    numeric not null default 0,
+
+  -- Approvals & audit
+  approved_by uuid references auth.users(id) on delete set null,
   approved_at timestamptz,
-  
-  created_by uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-ALTER TABLE roi_calculations ENABLE ROW LEVEL SECURITY;
+alter table roi_calculations enable row level security;
 
-CREATE POLICY "Authenticated users can read ROI calculations"
-  ON roi_calculations
-  FOR SELECT
-  TO authenticated
-  USING (true);
+create policy roi_calculations_select_auth
+  on roi_calculations for select
+  to authenticated using (true);
 
-CREATE POLICY "Authenticated users can manage ROI calculations"
-  ON roi_calculations
-  FOR ALL
-  TO authenticated
-  USING (true);
+create policy roi_calculations_all_auth
+  on roi_calculations for all
+  to authenticated using (true);
 
--- Revenue Streams table
-CREATE TABLE IF NOT EXISTS revenue_streams (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  roi_calculation_id uuid NOT NULL REFERENCES roi_calculations(id) ON DELETE CASCADE,
-  category text NOT NULL CHECK (category IN ('ticketing_mains', 'ticketing_addons', 'cashless', 'access_accreditation', 'wristbands_devices', 'plans_insurance', 'insights_data', 'commercial_modules')),
-  item_name text NOT NULL,
-  unit_price numeric NOT NULL DEFAULT 0,
-  quantity integer NOT NULL DEFAULT 0,
-  fee_percentage numeric NOT NULL DEFAULT 0,
-  performance_percentage numeric NOT NULL DEFAULT 100,
-  
-  -- Calculated values
-  estimate_value numeric NOT NULL DEFAULT 0,
-  forecast_value numeric NOT NULL DEFAULT 0,
-  actual_value numeric NOT NULL DEFAULT 0,
-  
-  enabled boolean DEFAULT true,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Revenue Streams
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists revenue_streams (
+  id uuid primary key default gen_random_uuid(),
+  roi_calculation_id uuid not null references roi_calculations(id) on delete cascade,
+
+  category text not null check (
+    category in (
+      'ticketing_mains','ticketing_addons','cashless','access_accreditation',
+      'wristbands_devices','plans_insurance','insights_data','commercial_modules'
+    )
+  ),
+  item_name text not null,
+  unit_price numeric not null default 0,
+  quantity integer not null default 0,
+  fee_percentage numeric not null default 0,
+  performance_percentage numeric not null default 100,
+
+  estimate_value  numeric not null default 0,
+  forecast_value  numeric not null default 0,
+  actual_value    numeric not null default 0,
+
+  enabled boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-ALTER TABLE revenue_streams ENABLE ROW LEVEL SECURITY;
+alter table revenue_streams enable row level security;
 
-CREATE POLICY "Authenticated users can read revenue streams"
-  ON revenue_streams
-  FOR SELECT
-  TO authenticated
-  USING (true);
+create policy revenue_streams_select_auth
+  on revenue_streams for select
+  to authenticated using (true);
 
-CREATE POLICY "Authenticated users can manage revenue streams"
-  ON revenue_streams
-  FOR ALL
-  TO authenticated
-  USING (true);
+create policy revenue_streams_all_auth
+  on revenue_streams for all
+  to authenticated using (true);
 
--- Cost Streams table
-CREATE TABLE IF NOT EXISTS cost_streams (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  roi_calculation_id uuid NOT NULL REFERENCES roi_calculations(id) ON DELETE CASCADE,
-  category text NOT NULL CHECK (category IN ('hardware', 'staffing', 'logistics', 'development', 'misc')),
-  item_name text NOT NULL,
-  unit_cost numeric NOT NULL DEFAULT 0,
-  quantity integer NOT NULL DEFAULT 0,
-  days integer DEFAULT 1,
-  
-  -- Calculated values
-  estimate_value numeric NOT NULL DEFAULT 0,
-  forecast_value numeric NOT NULL DEFAULT 0,
-  actual_value numeric NOT NULL DEFAULT 0,
-  
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Cost Streams
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists cost_streams (
+  id uuid primary key default gen_random_uuid(),
+  roi_calculation_id uuid not null references roi_calculations(id) on delete cascade,
+
+  category text not null check (category in ('hardware','staffing','logistics','development','misc')),
+  item_name text not null,
+  unit_cost numeric not null default 0,
+  quantity integer not null default 0,
+  days integer default 1,
+
+  estimate_value  numeric not null default 0,
+  forecast_value  numeric not null default 0,
+  actual_value    numeric not null default 0,
+
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-ALTER TABLE cost_streams ENABLE ROW LEVEL SECURITY;
+alter table cost_streams enable row level security;
 
-CREATE POLICY "Authenticated users can read cost streams"
-  ON cost_streams
-  FOR SELECT
-  TO authenticated
-  USING (true);
+create policy cost_streams_select_auth
+  on cost_streams for select
+  to authenticated using (true);
 
-CREATE POLICY "Authenticated users can manage cost streams"
-  ON cost_streams
-  FOR ALL
-  TO authenticated
-  USING (true);
+create policy cost_streams_all_auth
+  on cost_streams for all
+  to authenticated using (true);
 
--- ROI Templates table
-CREATE TABLE IF NOT EXISTS roi_templates (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  template_name text NOT NULL,
-  event_type text NOT NULL,
-  event_size text NOT NULL,
-  revenue_presets jsonb NOT NULL DEFAULT '{}',
-  cost_presets jsonb NOT NULL DEFAULT '{}',
-  is_custom boolean DEFAULT false,
-  created_by uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at timestamptz DEFAULT now()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ROI Templates
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists roi_templates (
+  id uuid primary key default gen_random_uuid(),
+  template_name text not null,
+  event_type text not null,
+  event_size text not null,
+  revenue_presets jsonb not null default '{}'::jsonb,
+  cost_presets    jsonb not null default '{}'::jsonb,
+  is_custom boolean default false,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  constraint roi_templates_template_name_uk unique (template_name)
 );
 
-ALTER TABLE roi_templates ENABLE ROW LEVEL SECURITY;
+alter table roi_templates enable row level security;
 
-CREATE POLICY "Authenticated users can read ROI templates"
-  ON roi_templates
-  FOR SELECT
-  TO authenticated
-  USING (true);
+create policy roi_templates_select_auth
+  on roi_templates for select
+  to authenticated using (true);
 
-CREATE POLICY "Authenticated users can manage ROI templates"
-  ON roi_templates
-  FOR ALL
-  TO authenticated
-  USING (true);
+create policy roi_templates_all_auth
+  on roi_templates for all
+  to authenticated using (true);
 
--- ROI Scenarios table
-CREATE TABLE IF NOT EXISTS roi_scenarios (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  roi_calculation_id uuid NOT NULL REFERENCES roi_calculations(id) ON DELETE CASCADE,
-  scenario_type text NOT NULL CHECK (scenario_type IN ('best', 'expected', 'worst')),
-  attendance_variance numeric DEFAULT 0,
-  adoption_rate_variance numeric DEFAULT 0,
-  weather_impact numeric DEFAULT 0,
-  technical_issues_allowance numeric DEFAULT 0,
-  currency_fluctuation numeric DEFAULT 0,
-  created_at timestamptz DEFAULT now()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ROI Scenarios
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists roi_scenarios (
+  id uuid primary key default gen_random_uuid(),
+  roi_calculation_id uuid not null references roi_calculations(id) on delete cascade,
+
+  scenario_type text not null check (scenario_type in ('best','expected','worst')),
+  attendance_variance        numeric default 0,
+  adoption_rate_variance     numeric default 0,
+  weather_impact             numeric default 0,
+  technical_issues_allowance numeric default 0,
+  currency_fluctuation       numeric default 0,
+
+  created_at timestamptz default now()
 );
 
-ALTER TABLE roi_scenarios ENABLE ROW LEVEL SECURITY;
+alter table roi_scenarios enable row level security;
 
-CREATE POLICY "Authenticated users can read ROI scenarios"
-  ON roi_scenarios
-  FOR SELECT
-  TO authenticated
-  USING (true);
+create policy roi_scenarios_select_auth
+  on roi_scenarios for select
+  to authenticated using (true);
 
-CREATE POLICY "Authenticated users can manage ROI scenarios"
-  ON roi_scenarios
-  FOR ALL
-  TO authenticated
-  USING (true);
+create policy roi_scenarios_all_auth
+  on roi_scenarios for all
+  to authenticated using (true);
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_roi_calculations_project_id ON roi_calculations(project_id);
-CREATE INDEX IF NOT EXISTS idx_roi_calculations_status ON roi_calculations(status);
-CREATE INDEX IF NOT EXISTS idx_revenue_streams_calculation_id ON revenue_streams(roi_calculation_id);
-CREATE INDEX IF NOT EXISTS idx_cost_streams_calculation_id ON cost_streams(roi_calculation_id);
-CREATE INDEX IF NOT EXISTS idx_roi_scenarios_calculation_id ON roi_scenarios(roi_calculation_id);
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Indexes
+-- ─────────────────────────────────────────────────────────────────────────────
+create index if not exists idx_roi_calculations_project_id on roi_calculations(project_id);
+create index if not exists idx_roi_calculations_status     on roi_calculations(status);
+create index if not exists idx_revenue_streams_calc_id     on revenue_streams(roi_calculation_id);
+create index if not exists idx_cost_streams_calc_id        on cost_streams(roi_calculation_id);
+create index if not exists idx_roi_scenarios_calc_id       on roi_scenarios(roi_calculation_id);
 
--- Insert default ROI templates
-INSERT INTO roi_templates (template_name, event_type, event_size, revenue_presets, cost_presets, created_by) VALUES
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Seed ROI Templates (safe: no created_by, unique constraint guards duplicates)
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into roi_templates (template_name, event_type, event_size, revenue_presets, cost_presets)
+values
   (
     'Conference Template - Small',
     'Conference',
     'Small (500-1000)',
-    '{"ticketing_mains": [{"name": "General Admission", "price": 50, "capacity": 800, "fee": 10, "performance": 85}], "cashless": [{"name": "Transaction Fee", "price": 0.25, "transactions": 5000, "fee": 100, "performance": 90}]}',
-    '{"hardware": [{"name": "Scanners", "cost": 50, "quantity": 5, "days": 3}], "staffing": [{"name": "Technical Support", "cost": 200, "quantity": 2, "days": 3}]}',
-    '550e8400-e29b-41d4-a716-446655440001'
+    '{
+      "ticketing_mains": [
+        {"name":"General Admission","price":50,"capacity":800,"fee":10,"performance":85}
+      ],
+      "cashless": [
+        {"name":"Transaction Fee","price":0.25,"transactions":5000,"fee":100,"performance":90}
+      ]
+    }'::jsonb,
+    '{
+      "hardware":[{"name":"Scanners","cost":50,"quantity":5,"days":3}],
+      "staffing":[{"name":"Technical Support","cost":200,"quantity":2,"days":3}]
+    }'::jsonb
   ),
   (
     'Festival Template - Medium',
     'Festival',
     'Medium (1000-5000)',
-    '{"ticketing_mains": [{"name": "General Admission", "price": 75, "capacity": 3000, "fee": 10, "performance": 90}], "wristbands_devices": [{"name": "Generic Wristbands", "price": 2, "quantity": 3500, "fee": 100, "performance": 95}]}',
-    '{"hardware": [{"name": "Wristbands", "cost": 1.5, "quantity": 3500, "days": 1}], "staffing": [{"name": "Event Crew", "cost": 150, "quantity": 8, "days": 4}]}',
-    '550e8400-e29b-41d4-a716-446655440001'
+    '{
+      "ticketing_mains": [
+        {"name":"General Admission","price":75,"capacity":3000,"fee":10,"performance":90}
+      ],
+      "wristbands_devices": [
+        {"name":"Generic Wristbands","price":2,"quantity":3500,"fee":100,"performance":95}
+      ]
+    }'::jsonb,
+    '{
+      "hardware":[{"name":"Wristbands","cost":1.5,"quantity":3500,"days":1}],
+      "staffing":[{"name":"Event Crew","cost":150,"quantity":8,"days":4}]
+    }'::jsonb
   )
-ON CONFLICT DO NOTHING;
+on conflict (template_name) do nothing;

@@ -75,7 +75,9 @@ export function ProjectView({ project, onBack, onNavigate }: ProjectViewProps) {
                   Back to Projects
                 </button>
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900">{project.project_id}</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {project.project_id} - <span className="text-xl text-gray-600">{project.project_code}</span>
+                  </h1>
                   <p className="text-gray-600">{project.event_location} • {project.client?.company}</p>
                 </div>
                 </div>
