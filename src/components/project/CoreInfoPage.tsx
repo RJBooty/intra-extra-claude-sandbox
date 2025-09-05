@@ -37,8 +37,10 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
             <a className="flex items-center text-gray-500 hover:text-gray-700" href="#">
               <ArrowLeft className="mr-1 w-4 h-4" /> Back to Projects
             </a>
-            <h2 className="text-3xl font-bold text-gray-800 mt-2">Tech Conference 2024</h2>
-            <p className="text-gray-500">USA • Innovate Solutions</p>
+            <h2 className="text-3xl font-bold text-gray-800 mt-2">
+              {project.project_id} - <span className="text-2xl text-gray-600">{project.project_code}</span>
+            </h2>
+            <p className="text-gray-500">{project.event_location} • {project.client?.company}</p>
           </div>
           <button className="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700">
             Create New Project
@@ -58,31 +60,37 @@ export function CoreInfoPage({ project }: CoreInfoPageProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <div>
                   <p className="text-sm text-gray-500">Project ID</p>
-                  <p className="font-semibold text-gray-800">Tech Conference 2024</p>
+                  <p className="font-semibold text-gray-800">{project.project_id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Project Code</p>
+                  <p className="font-semibold text-gray-800">{project.project_code}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Client</p>
-                  <p className="font-semibold text-gray-800">Innovate Solutions - Innovate Solutions</p>
+                  <p className="font-semibold text-gray-800">{project.client?.name} - {project.client?.company}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Event Classification</p>
-                  <p className="font-semibold text-gray-800">(Canopy)</p>
+                  <p className="font-semibold text-gray-800">({project.client?.classification || 'Canopy'})</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Event Location (City, Country)</p>
-                  <p className="font-semibold text-gray-800">USA</p>
+                  <p className="font-semibold text-gray-800">{project.event_location}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Event Type</p>
-                  <p className="font-semibold text-gray-800">Conference</p>
+                  <p className="font-semibold text-gray-800">{project.event_type}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Expected Attendance</p>
-                  <p className="font-semibold text-gray-800">1,000</p>
+                  <p className="font-semibold text-gray-800">{project.expected_attendance?.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Event Dates</p>
-                  <p className="font-semibold text-gray-800">20/05/2024 to 20/05/2024</p>
+                  <p className="font-semibold text-gray-800">
+                    {project.event_start_date ? new Date(project.event_start_date).toLocaleDateString() : ''} to {project.event_end_date ? new Date(project.event_end_date).toLocaleDateString() : ''}
+                  </p>
                 </div>
               </div>
 
