@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X } from 'lucide-react';
 import { Client } from '../../types';
-import { createClient } from '../../lib/supabase';
+import { createClientRecord } from '../../lib/supabase';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -42,7 +42,7 @@ export function ClientForm({ onClose, onClientCreated }: ClientFormProps) {
     setIsSubmitting(true);
     try {
       console.log('👤 Creating new client:', data);
-      const newClient = await createClient(data);
+      const newClient = await createClientRecord(data);
       console.log('✅ Client created successfully:', newClient);
       
       toast.success('Client created successfully!');

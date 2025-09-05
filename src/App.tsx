@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { auth } from './lib/supabase';
 import { LoginPage } from './components/auth/LoginPage';
 import { Dashboard } from './components/layout/Dashboard';
 import { Header } from './components/layout/Header';
@@ -12,24 +13,59 @@ import { Toast } from './components/ui/Toast';
 import { Sidebar } from './components/layout/Sidebar';
 import { SettingsHoldingPage } from './components/settings/SettingsHoldingPage';
 import { TeamPage } from './components/team/TeamPage';
+import { UserProfilePage } from './components/settings/UserProfilePage';
 import { ProjectsList } from './components/project/ProjectsList';
+import { AuthStatus } from './components/debug/AuthStatus';
 import { GuardsPage } from './components/guards/GuardsPage';
 import { ROI3 } from './components/roi/ROI3';
 import { ClientsPage } from './components/clients/ClientsPage';
 import { Project } from './types';
 
-type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards' | 'new-project' | 'team';
+type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards' | 'new-project' | 'team' | 'user-profile';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const isDevelopment = import.meta.env.DEV;
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
-  // Development bypass for authentication
-  React.useEffect(() => {
-    if (isDevelopment) {
-      setIsAuthenticated(true);
-    }
-  }, [isDevelopment]);
+  // Real authentication checking
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await auth.getCurrentUser();
+        
+        if (currentUser) {
+          setUser(currentUser);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = auth.onAuthStateChange((authUser) => {
+      if (authUser) {
+        setUser(authUser);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   const [currentView, setCurrentView] = useState<'dashboard' | 'app'>('dashboard');
   const [activeTab, setActiveTab] = useState<TabId>('projects');
@@ -60,7 +96,7 @@ function App() {
     console.log('Before navigation - showProjectDetail:', showProjectDetail);
     console.log('Before navigation - currentProject:', currentProject?.id || 'null');
     
-    console.log('🧭 Navigation requested:', section);
+    console.log('Navigation requested:', section);
     
     if (section === 'dashboard') {
       console.log('>>> DASHBOARD NAVIGATION PATH');
@@ -75,7 +111,7 @@ function App() {
       setCurrentProject(null);
     } else if (section === 'projects') {
       console.log('>>> PROJECTS NAVIGATION PATH');
-      console.log('🎯 Projects navigation - setting view to app with projects tab');
+      console.log('Projects navigation - setting view to app with projects tab');
       // Use batch state update to prevent timing issues
       setCurrentView('app');
       setActiveTab('projects');
@@ -99,9 +135,12 @@ function App() {
       } else if (section === 'reports') {
         console.log('Setting activeTab to: analytics');
         setActiveTab('analytics');
-      } else if (section === 'settings') {
+      } else if (section === 'settings' || section === 'settings/profile') {
         console.log('Setting activeTab to: settings');
         setActiveTab('settings');
+      } else if (section === 'user-profile') {
+        console.log('Setting activeTab to: user-profile');
+        setActiveTab('user-profile');
       } else if (section === 'guards') {
         console.log('Setting activeTab to: guards');
         setActiveTab('guards');
@@ -119,38 +158,55 @@ function App() {
     }
     
     // Log state after navigation (will show in next render)
-    // Remove setTimeout to prevent confusion in logs
     console.log('Navigation state changes queued');
     console.log('=== END HANDLE NAVIGATE ===');
     
-    console.log('🎯 Navigation completed:', { 
+    console.log('Navigation completed:', { 
       currentView,
       activeTab,
       showProjectDetail: section === 'new-project'
     });
   };
 
+  // Show loading while checking authentication
+  if (isLoading) {
+    console.log('App: Still loading authentication...');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading IntraExtra...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+    return <LoginPage onLogin={() => {
+      // onLogin will be handled automatically by the auth state listener
+      console.log('Login callback triggered');
+    }} />;
   }
 
   // Show dashboard view
   if (currentView === 'dashboard') {
-    console.log('🎯 RENDERING DASHBOARD VIEW');
-    console.log('currentView:', currentView);
-    console.log('activeTab:', activeTab);
+    console.log('App: RENDERING DASHBOARD VIEW');
+    console.log('App: currentView:', currentView);
+    console.log('App: activeTab:', activeTab);
+    console.log('App: isAuthenticated:', isAuthenticated);
+    console.log('App: user:', user);
     return <Dashboard onNavigate={handleNavigate} />;
   }
 
-  console.log('🎯 RENDERING APP VIEW');
+  console.log('RENDERING APP VIEW');
   console.log('currentView:', currentView);
   console.log('activeTab:', activeTab);
   console.log('showProjectDetail:', showProjectDetail);
 
   // Show main application view
   const renderTabContent = () => {
-    console.log('🎯 RENDER TAB CONTENT CALLED');
+    console.log('RENDER TAB CONTENT CALLED');
     console.log('activeTab:', activeTab);
     console.log('showProjectDetail:', showProjectDetail);
     console.log('currentProject:', currentProject?.id || 'null');
@@ -300,6 +356,23 @@ function App() {
           </div>
         );
       
+      case 'user-profile':
+        console.log('>>> USER PROFILE TAB CASE');
+        return (
+          <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+            <div className="layout-container flex h-full grow flex-col">
+              <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+                {/* Persistent Sidebar */}
+                <Sidebar currentView={activeTab} onNavigate={handleNavigate} />
+                
+                <div className="layout-content-container flex flex-col flex-1 ml-4">
+                  <UserProfilePage onBack={() => handleNavigate('settings')} />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
       case 'clients':
         console.log('>>> CLIENTS TAB CASE');
         return (
@@ -347,10 +420,11 @@ function App() {
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+      <AuthStatus />
       <Toast />
       
       <div className="layout-container flex h-full grow flex-col">
-        <Header onSearch={handleSearch} onNavigateToDashboard={() => setCurrentView('dashboard')} />
+        <Header onSearch={handleSearch} onNavigateToDashboard={() => setCurrentView('dashboard')} onNavigate={handleNavigate} />
         
         <div className="flex-1 overflow-hidden">
           {renderTabContent()}

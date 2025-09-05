@@ -1,16 +1,27 @@
-import React from 'react';
-import { Settings, Wrench, User, Bell, Shield, Database, Palette, Globe, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Wrench, User, Bell, Shield, Database, Palette, Globe, Users, Crown } from 'lucide-react';
 import { ProfileSettingsPage } from './ProfileSettingsPage';
 import { SystemSettingsPage } from './SystemSettingsPage';
 import { UserProfilePage } from './UserProfilePage';
 import { TeamPage } from '../team/TeamPage';
+import { RoleManagement } from '../admin/RoleManagement';
+import { userService, UserWithRole } from '../../lib/userService';
 
 interface SettingsHoldingPageProps {
   onNavigate: (section: string) => void;
 }
 
 export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
-  const [currentPage, setCurrentPage] = React.useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields'>('main');
+  const [currentPage, setCurrentPage] = useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields' | 'role-management'>('main');
+  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const profile = await userService.getCurrentUserProfile();
+      setCurrentUser(profile);
+    };
+    loadCurrentUser();
+  }, []);
 
   if (currentPage === 'profile') {
     return <ProfileSettingsPage onBack={() => setCurrentPage('main')} />;
@@ -26,6 +37,10 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
 
   if (currentPage === 'user-profile') {
     return <UserProfilePage onBack={() => setCurrentPage('main')} />;
+  }
+
+  if (currentPage === 'role-management') {
+    return <RoleManagement onBack={() => setCurrentPage('main')} />;
   }
 
   const settingsCategories = [
@@ -72,6 +87,17 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
       onClick: () => setCurrentPage('system')
     }
   ];
+
+  // Add Role Management for Master users
+  if (currentUser?.role?.role_type === 'Master') {
+    settingsCategories.push({
+      icon: Crown,
+      title: 'Role Management',
+      description: 'Manage user roles and permissions across the platform',
+      status: 'Available',
+      onClick: () => setCurrentPage('role-management')
+    });
+  }
 
   return (
     <div className="flex h-full">

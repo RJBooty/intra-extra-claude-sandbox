@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { TeamsIcon, SlackIcon, WhatsAppIcon, EmailIcon } from '../icons/BrandIcons';
+import { userService, UserWithRole } from '../../lib/userService';
 
 interface UserProfilePageProps {
   onBack: () => void;
@@ -25,6 +26,9 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   const [activeTab, setActiveTab] = useState<'personal' | 'work' | 'compliance' | 'payments' | 'availability' | 'performance' | 'reports' | 'preferences'>('personal');
   const [isLoading, setIsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserWithRole | null>(null);
+  const [userError, setUserError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [showFinanceQueryModal, setShowFinanceQueryModal] = useState(false);
   const [financeQueryForm, setFinanceQueryForm] = useState({
     subject: '',
@@ -96,6 +100,116 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     }
   };
 
+  // Fetch user profile data on component mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        setUserError(null);
+        const profile = await userService.getCurrentUserProfile();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        setUserError(error instanceof Error ? error.message : 'Failed to load user profile');
+        toast.error('Failed to load user profile. Using fallback data.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // Avatar Upload Handler
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (JPG, PNG, GIF)');
+      return;
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      toast.error('File size must be less than 10MB');
+      return;
+    }
+
+    try {
+      setAvatarUploading(true);
+      toast.loading('Uploading profile picture...');
+
+      // Convert file to base64 data URL for persistent storage
+      const imageUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      let cloudUploadFailed = false;
+      
+      // Update the user profile with the new avatar URL
+      // Since we're using fallback profiles, we'll update the current user state
+      if (userProfile) {
+        const updatedProfile = {
+          ...userProfile,
+          avatar_url: imageUrl,
+          updated_at: new Date().toISOString()
+        };
+        setUserProfile(updatedProfile);
+        
+        // Store the avatar URL in localStorage for persistence across sessions
+        const storageKey = `avatar_${userProfile.email}`;
+        localStorage.setItem(storageKey, imageUrl);
+        
+        // Try to upload to Supabase storage if possible
+        try {
+          const avatarUrl = await userService.updateAvatar(file);
+          if (avatarUrl) {
+            // Update with the actual Supabase URL
+            const finalProfile = { ...updatedProfile, avatar_url: avatarUrl };
+            setUserProfile(finalProfile);
+            // Update localStorage with the real URL
+            localStorage.setItem(storageKey, avatarUrl);
+            console.log('Successfully uploaded to Supabase storage');
+          }
+        } catch (uploadError) {
+          console.warn('Supabase upload failed, using local preview:', uploadError);
+          cloudUploadFailed = true;
+          // This is not a critical error - the local preview still works
+          // We'll show a less alarming message to the user
+          if (uploadError && typeof uploadError === 'object' && 'message' in uploadError) {
+            console.warn('Cloud storage unavailable:', (uploadError as any).message);
+          }
+        }
+      }
+
+      toast.dismiss();
+      const successMessage = cloudUploadFailed 
+        ? 'Profile picture updated successfully! (Local storage only - cloud storage unavailable)'
+        : 'Profile picture updated successfully!';
+      toast.success(successMessage);
+      
+      // Force other components to refresh by dispatching a custom event
+      if (userProfile) {
+        window.dispatchEvent(new CustomEvent('userProfileUpdated', { detail: userProfile }));
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast.dismiss();
+      toast.error('Failed to update profile picture');
+    } finally {
+      setAvatarUploading(false);
+      // Reset the input so the same file can be uploaded again if needed
+      event.target.value = '';
+    }
+  };
+
   // Compliance Tab Handlers
   const handleSelectDocument = (index: number) => {
     if (selectedDocuments.includes(index)) {
@@ -149,15 +263,21 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-gray-600">First Name</label>
-              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Ava</div>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
+                {userProfile?.first_name || ""}
+              </div>
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600">Last Name</label>
-              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Harper</div>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
+                {userProfile?.last_name || ""}
+              </div>
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600">Preferred Name</label>
-              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Ava</div>
+              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
+                {userProfile?.display_name || userProfile?.first_name || ""}
+              </div>
             </div>
             <EditableField
               label="Date of Birth"
@@ -192,7 +312,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <EditableField
               label="Email"
-              value="ava.harper@casid.com"
+              value={userProfile?.email || ""}
               type="email"
             />
             <EditableField
@@ -224,14 +344,20 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               <div className="mt-1 flex items-center gap-3 rounded-lg border border-dashed border-gray-300 px-6 py-2">
                 <img 
                   alt="Profile Picture" 
-                  className="h-8 w-8 rounded-full" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKpfgEPhzk2zztpi63us-yp1m0V4THV4CaYu1yrUGpCbQesgrAK0_3qjeNPZZ3b9p5tkx7BQ8lz5a9zkhDQgKUUg7VquHd0CKMYCSAgD6MXrJf7AlvrlfYsQgIYtjL_4MjGwCOmDL8gvwHBuAZQA1v8aVjiDQw-XD4Ss14pGT5B87m4M5M5-4Qi5TN8temze9tu4LTHnxZBnmIQxqasQph5WHRj-SOiTa750RWffHgcz-aA0lkxKRksF3oiVv2v__Kvvw9vQ2CR7A3" 
+                  className="h-8 w-8 rounded-full object-cover" 
+                  src={userProfile?.avatar_url || "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop"}
                 />
                 <div className="text-left">
                   <div className="flex text-xs leading-5 text-gray-600">
                     <label className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 hover:text-indigo-500">
-                      <span>Upload a file</span>
-                      <input className="sr-only" type="file" />
+                      <span>{avatarUploading ? 'Uploading...' : 'Upload a file'}</span>
+                      <input 
+                        className="sr-only" 
+                        type="file" 
+                        accept="image/jpeg,image/jpg,image/png,image/gif"
+                        onChange={handleAvatarUpload}
+                        disabled={avatarUploading}
+                      />
                     </label>
                     <p className="pl-1">or drag and drop</p>
                   </div>
@@ -1811,7 +1937,9 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                           ))}
                         </div>
                       </div>
-                      <blockquote className="italic text-gray-600">"Ava was an absolute star. Proactive, professional, and a pleasure to work with. Our client was extremely impressed."</blockquote>
+                      <blockquote className="italic text-gray-600">
+                        "{userProfile?.first_name || 'This team member'} was an absolute star. Proactive, professional, and a pleasure to work with. Our client was extremely impressed."
+                      </blockquote>
                     </div>
                     <div>
                       <div className="flex items-center mb-1">
@@ -2668,6 +2796,15 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     setShowConfirmDialog(false);
   };
 
+  // Show loading state while fetching user data
+  if (isLoading && !userProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -2684,22 +2821,33 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               </button>
               <div className="flex items-center space-x-4">
                 <img 
-                  src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop"
+                  src={userProfile?.avatar_url || "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop"}
                   alt="Profile"
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Ava Harper</h1>
+                  <h1 className="text-xl font-bold text-gray-900">
+                    {userProfile?.display_name || userProfile?.first_name && userProfile?.last_name 
+                      ? `${userProfile.first_name} ${userProfile.last_name}` 
+                      : userProfile?.email || 'User'}
+                  </h1>
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center text-yellow-400">
                       {[...Array(4)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
                       <Star className="w-4 h-4 text-gray-300" />
                     </div>
-                    <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">Active</span>
-                    <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded-full flex items-center">
-                      <AlertTriangle className="w-3 h-3 mr-1" />
-                      Issues
+                    <span className={`text-sm px-2 py-1 rounded-full ${
+                      userProfile?.is_active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {userProfile?.is_active ? 'Active' : 'Inactive'}
                     </span>
+                    {userProfile?.role && (
+                      <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {userProfile.role.role_type}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3003,7 +3151,11 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                 {/* Invoice Header */}
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="font-semibold text-gray-800">Ava Harper Ltd</p>
+                    <p className="font-semibold text-gray-800">
+                      {userProfile?.display_name || userProfile?.first_name && userProfile?.last_name 
+                        ? `${userProfile.first_name} ${userProfile.last_name}` 
+                        : userProfile?.email || 'User'} Ltd
+                    </p>
                     <p className="text-sm text-gray-500">123 Tech Avenue, Silicon Roundabout, London, EC1Y 1AB, UK</p>
                     <p className="text-sm text-gray-500">VAT: GB 123 4567 89</p>
                   </div>

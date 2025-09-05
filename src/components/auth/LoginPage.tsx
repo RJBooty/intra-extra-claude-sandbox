@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Lock, Mail, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, AlertCircle, Briefcase, Building } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { auth } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { auth } from '../../lib/supabase';
 
 const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -13,8 +13,11 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Valid email is required'),
+  jobTitle: z.string().optional(),
+  department: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Password confirmation is required'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -35,9 +38,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Development mode bypass
-  const isDevelopment = import.meta.env.DEV;
-
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -49,8 +49,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
+      jobTitle: '',
+      department: '',
       password: '',
       confirmPassword: '',
     },
@@ -59,37 +62,31 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Development bypass
-      if (isDevelopment) {
-        console.log('🔧 Development mode: Bypassing authentication');
-        toast.success('Logged in successfully (Development Mode)');
-        onLogin();
+      console.log('🔐 Attempting login with Supabase:', { email: data.email });
+      
+      const { data: authData, error } = await auth.signIn(data.email, data.password);
+      
+      if (error) {
+        console.error('Login error:', error);
+        
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Please check your email and confirm your account');
+        } else {
+          toast.error(`Login failed: ${error.message}`);
+        }
         return;
       }
 
-      // Production authentication with Supabase
-      console.log('🔐 Login attempt:', { email: data.email });
-      
-      const { data: authData, error } = await auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-      
-      if (error) {
-        console.error('Authentication error:', error);
-        toast.error(error.message || 'Invalid credentials');
-        return;
-      }
-      
       if (authData.user) {
-        toast.success('Welcome back!');
+        console.log('✅ Login successful:', authData.user.email);
+        toast.success(`Welcome back, ${authData.user.email}!`);
         onLogin();
-      } else {
-        toast.error('Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
+      console.error('Unexpected login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -98,41 +95,52 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const handleSignup = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
-      // Development bypass
-      if (isDevelopment) {
-        console.log('🔧 Development mode: Bypassing signup approval');
-        toast.success('Account created and approved (Development Mode)');
-        onLogin();
-        return;
-      }
-
-      // Production signup with Supabase
-      console.log('📝 Signup attempt:', { name: data.name, email: data.email });
-      
-      const { data: authData, error } = await auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-          }
-        }
+      console.log('📝 Attempting signup with Supabase:', { 
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email 
       });
+      
+      const { data: authData, error } = await auth.signUp(
+        data.email, 
+        data.password,
+        { 
+          first_name: data.firstName,
+          last_name: data.lastName,
+          display_name: `${data.firstName} ${data.lastName}`,
+          job_title: data.jobTitle,
+          department: data.department
+        }
+      );
       
       if (error) {
         console.error('Signup error:', error);
-        toast.error(error.message || 'Signup failed');
+        
+        if (error.message.includes('already registered')) {
+          toast.error('This email is already registered. Try logging in instead.');
+        } else {
+          toast.error(`Signup failed: ${error.message}`);
+        }
         return;
       }
-      
+
       if (authData.user) {
-        toast.success('Account created! Please check your email to verify your account.');
-        setIsSignup(false);
-        signupForm.reset();
+        if (authData.user.email_confirmed_at) {
+          // User is immediately confirmed
+          console.log('✅ Signup successful and confirmed:', authData.user.email);
+          toast.success('Account created successfully! You are now logged in.');
+          onLogin();
+        } else {
+          // User needs to confirm email
+          console.log('📧 Signup successful, email confirmation required:', authData.user.email);
+          toast.success('Account created! Please check your email to confirm your account before logging in.');
+          setIsSignup(false);
+          signupForm.reset();
+        }
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      toast.error('Signup failed. Please try again.');
+      console.error('Unexpected signup error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -160,228 +168,251 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           </p>
         </div>
 
-        {/* Development Mode Banner */}
-        {isDevelopment && (
-          <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-600" />
-              <p className="text-sm text-yellow-800">
-                Development Mode: Authentication bypassed
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Auth Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           {isSignup ? (
             /* Signup Form */
             <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-6">
-              {/* Name Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    {...signupForm.register('name')}
-                    type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your full name"
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      {...signupForm.register('firstName')}
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="First name"
+                    />
+                  </div>
+                  {signupForm.formState.errors.firstName && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {signupForm.formState.errors.firstName.message}
+                    </p>
+                  )}
                 </div>
-                {signupForm.formState.errors.name && (
-                  <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.name.message}</p>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      {...signupForm.register('lastName')}
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Last name"
+                    />
+                  </div>
+                  {signupForm.formState.errors.lastName && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {signupForm.formState.errors.lastName.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Email Field */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Job Title (Optional)
+                  </label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      {...signupForm.register('jobTitle')}
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Your role"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Department (Optional)
+                  </label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      {...signupForm.register('department')}
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Your department"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     {...signupForm.register('email')}
                     type="email"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter your email"
                   />
                 </div>
                 {signupForm.formState.errors.email && (
-                  <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.email.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {signupForm.formState.errors.email.message}
+                  </p>
                 )}
               </div>
 
-              {/* Password Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     {...signupForm.register('password')}
                     type={showPassword ? 'text' : 'password'}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Create a password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {signupForm.formState.errors.password && (
-                  <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {signupForm.formState.errors.password.message}
+                  </p>
                 )}
               </div>
 
-              {/* Confirm Password Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     {...signupForm.register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {signupForm.formState.errors.confirmPassword && (
-                  <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {signupForm.formState.errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 
-              {/* Approval Notice */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Account Approval Required:</strong> Your account will be reviewed and approved by James Tyson (tyson@casfid.com) before you can access the platform.
-                </p>
-              </div>
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {isLoading && <LoadingSpinner size="sm" />}
-                Create Account
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span className="ml-2">Creating Account...</span>
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </button>
             </form>
           ) : (
             /* Login Form */
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
-              {/* Email Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     {...loginForm.register('email')}
                     type="email"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter your email"
                   />
                 </div>
                 {loginForm.formState.errors.email && (
-                  <p className="text-red-600 text-sm mt-1">{loginForm.formState.errors.email.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {loginForm.formState.errors.email.message}
+                  </p>
                 )}
               </div>
 
-              {/* Password Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     {...loginForm.register('password')}
                     type={showPassword ? 'text' : 'password'}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {loginForm.formState.errors.password && (
-                  <p className="text-red-600 text-sm mt-1">{loginForm.formState.errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {loginForm.formState.errors.password.message}
+                  </p>
                 )}
               </div>
 
-              {/* Forgot Password */}
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Forgot your password?
-                </button>
-              </div>
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {isLoading && <LoadingSpinner size="sm" />}
-                Sign In
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span className="ml-2">Signing In...</span>
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </button>
             </form>
           )}
 
-          {/* Toggle Mode */}
+          {/* Toggle between login and signup */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              {isSignup ? 'Already have an account?' : "Don't have an account?"}
-              <button
-                onClick={toggleMode}
-                className="ml-1 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                {isSignup ? 'Sign in' : 'Sign up'}
-              </button>
-            </p>
+            <button
+              onClick={toggleMode}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {isSignup 
+                ? 'Already have an account? Sign in' 
+                : "Don't have an account? Sign up"
+              }
+            </button>
           </div>
-
-          {/* Development Info */}
-          {isDevelopment && (
-            <div className="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-xs text-gray-600 text-center">
-                Development Mode: Any credentials will work, or use tyson@casfid.com / admin123
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            © 2025 IntraExtra. All rights reserved.
-          </p>
         </div>
       </div>
     </div>

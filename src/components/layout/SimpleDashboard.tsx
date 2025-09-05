@@ -4,12 +4,13 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { userService, UserWithRole } from '../../lib/userService';
 import { auth } from '../../lib/supabase';
+import '../../utils/setupUserProfile'; // Import for browser console access
+import '../../utils/createUserProfile'; // Import direct creation method
+import { UserSwitcher } from '../debug/UserSwitcher';
 
-interface HomeDashboardProps {
+interface SimpleDashboardProps {
   onNavigate: (section: string) => void;
 }
-
-// Real user data will be loaded from authentication/user service
 
 const quickStats = [
   { label: 'Active Projects', value: '12', icon: FolderOpen, color: 'bg-blue-100 text-blue-600' },
@@ -25,8 +26,11 @@ const recentActivity = [
   { action: 'Sent proposal to client', project: 'Art Exhibition 2024', time: '2 days ago' }
 ];
 
-export function HomeDashboard({ onNavigate }: HomeDashboardProps) {
+export function SimpleDashboard({ onNavigate }: SimpleDashboardProps) {
+  console.log('SimpleDashboard rendering...');
+  
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
 
   // Load current user profile
   useEffect(() => {
@@ -35,11 +39,12 @@ export function HomeDashboard({ onNavigate }: HomeDashboardProps) {
         const profile = await userService.getCurrentUserProfile();
         setCurrentUser(profile);
       } catch (error) {
-        console.error('Failed to load user profile:', error);
+        console.error('SimpleDashboard: Failed to load user profile:', error);
         // Create fallback user data from auth if profile tables don't exist
         try {
           const authUser = await auth.getCurrentUser();
           if (authUser) {
+            console.log('SimpleDashboard: Using fallback auth user data');
             const fallbackUser: UserWithRole = {
               id: authUser.id,
               email: authUser.email || 'user@example.com',
@@ -65,21 +70,31 @@ export function HomeDashboard({ onNavigate }: HomeDashboardProps) {
             setCurrentUser(fallbackUser);
           }
         } catch (authError) {
-          console.error('Failed to load auth user:', authError);
+          console.error('SimpleDashboard: Failed to load auth user:', authError);
         }
+      } finally {
+        setUserLoading(false);
       }
     };
 
     loadUserProfile();
-  }, []);
 
-  // Debug: Remove loading screen for now
-  console.log('HomeDashboard: currentUser:', currentUser);
+    // Listen for profile updates
+    const handleProfileUpdate = (event: any) => {
+      console.log('SimpleDashboard: Profile updated, refreshing...');
+      loadUserProfile();
+    };
+
+    window.addEventListener('userProfileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+    };
+  }, []);
   
-  const displayName = currentUser?.display_name || `${currentUser?.first_name || ''} ${currentUser?.last_name || ''}`.trim() || 'User';
-  const firstName = currentUser?.first_name || displayName.split(' ')[0] || 'User';
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
+      <UserSwitcher />
       <div className="layout-container flex h-full grow flex-col">
         <Header onSearch={() => {}} onNavigateToDashboard={() => onNavigate('dashboard')} onNavigate={onNavigate} />
         <div className="gap-1 px-3 flex flex-1 justify-start py-5">
@@ -94,51 +109,85 @@ export function HomeDashboard({ onNavigate }: HomeDashboardProps) {
             {/* Welcome Header */}
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <div className="flex min-w-72 flex-col gap-3">
-                <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight">
-                  Welcome back, {firstName}! (HomeDashboard)
-                </p>
-                <p className="text-[#5c728a] text-sm font-normal leading-normal">
-                  Here's what's happening with your projects today - Loading fixed
-                </p>
+                {userLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-10 bg-gray-200 rounded w-64 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-96"></div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight">
+                      Welcome back, {currentUser?.display_name || currentUser?.first_name || 'User'}!
+                    </p>
+                    <p className="text-[#5c728a] text-sm font-normal leading-normal">
+                      Here's what's happening with your projects today
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
             {/* User Profile Card */}
             <div className="px-4 py-3">
               <div className="bg-white rounded-xl border border-[#d4dbe2] p-6">
-                <div className="flex items-center gap-6">
-                  <div
-                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20"
-                    style={{ 
-                      backgroundImage: currentUser.avatar_url 
-                        ? `url("${currentUser.avatar_url}")`
-                        : `url("https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop")`
-                    }}
-                  />
-                  <div className="flex-1">
-                    <h2 className="text-[#101418] text-xl font-bold leading-tight mb-2">
-                      {displayName}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4 text-[#5c728a]" />
-                        <span className="text-[#5c728a] text-sm">{currentUser.job_title || currentUser.role?.role_type || 'Team Member'}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-[#5c728a]" />
-                        <span className="text-[#5c728a] text-sm">{currentUser.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-[#5c728a]" />
-                        <span className="text-[#5c728a] text-sm">{currentUser.department || 'IntraExtra Team'}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-[#5c728a]" />
-                        <span className="text-[#5c728a] text-sm">Joined {new Date(currentUser.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                {userLoading ? (
+                  <div className="flex items-center gap-6 animate-pulse">
+                    <div className="rounded-full size-20 bg-gray-200" />
+                    <div className="flex-1">
+                      <div className="h-6 bg-gray-200 rounded w-48 mb-3"></div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                        <div className="h-4 bg-gray-200 rounded w-40"></div>
+                        <div className="h-4 bg-gray-200 rounded w-36"></div>
+                        <div className="h-4 bg-gray-200 rounded w-28"></div>
                       </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-6">
+                    <div
+                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20"
+                      style={{ 
+                        backgroundImage: currentUser?.avatar_url 
+                          ? `url("${currentUser.avatar_url}")` 
+                          : `url("https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop")`
+                      }}
+                    />
+                    <div className="flex-1">
+                      <h2 className="text-[#101418] text-xl font-bold leading-tight mb-2">
+                        {currentUser?.display_name || `${currentUser?.first_name || ''} ${currentUser?.last_name || ''}`.trim() || 'User'}
+                      </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#5c728a]" />
+                        <span className="text-[#5c728a] text-sm">
+                          {currentUser?.job_title || currentUser?.role?.role_type || 'Team Member'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-[#5c728a]" />
+                        <span className="text-[#5c728a] text-sm">
+                          {userLoading ? 'Loading...' : currentUser?.email || 'Email not available'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-[#5c728a]" />
+                        <span className="text-[#5c728a] text-sm">
+                          {currentUser?.department || 'IntraExtra Team'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#5c728a]" />
+                        <span className="text-[#5c728a] text-sm">
+                          {currentUser?.start_date 
+                            ? `Joined ${new Date(currentUser.start_date).toLocaleDateString()}`
+                            : 'Joined Recently'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+                )}
               </div>
             </div>
 
