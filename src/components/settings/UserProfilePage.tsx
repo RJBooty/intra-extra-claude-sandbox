@@ -195,6 +195,9 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
         : 'Profile picture updated successfully!';
       toast.success(successMessage);
       
+      // Clear userService cache to ensure fresh profile data on next load
+      userService.clearCache();
+      
       // Force other components to refresh by dispatching a custom event
       if (userProfile) {
         window.dispatchEvent(new CustomEvent('userProfileUpdated', { detail: userProfile }));

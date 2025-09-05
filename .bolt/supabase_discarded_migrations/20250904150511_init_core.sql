@@ -16,13 +16,13 @@ alter table projects enable row level security;
 -- Minimal permissive policies while you iterate (tighten later)
 do $$
 begin
-  if not exists (select 1 from pg_policies where polname = 'projects_select_all') then
+  if not exists (select 1 from pg_policies where policyname = 'projects_select_all') then
     create policy projects_select_all on projects for select using (true);
   end if;
-  if not exists (select 1 from pg_policies where polname = 'projects_insert_auth') then
+  if not exists (select 1 from pg_policies where policyname = 'projects_insert_auth') then
     create policy projects_insert_auth on projects for insert with check (auth.role() = 'authenticated');
   end if;
-  if not exists (select 1 from pg_policies where polname = 'projects_update_owner') then
+  if not exists (select 1 from pg_policies where policyname = 'projects_update_owner') then
     create policy projects_update_owner on projects for update using (auth.uid() = created_by);
   end if;
 end$$;

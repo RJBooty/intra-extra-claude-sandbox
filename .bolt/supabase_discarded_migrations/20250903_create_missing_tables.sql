@@ -107,29 +107,89 @@ ALTER TABLE public.opportunities ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for anonymous access (for development)
 -- In production, these should be more restrictive
-CREATE POLICY "Enable read access for all users" ON public.clients
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  -- Clients policies
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'clients' 
+    AND policyname = 'Enable read access for all users'
+  ) THEN
+    CREATE POLICY "Enable read access for all users" ON public.clients
+      FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Enable insert for all users" ON public.clients
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'clients' 
+    AND policyname = 'Enable insert for all users'
+  ) THEN
+    CREATE POLICY "Enable insert for all users" ON public.clients
+      FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Enable update for all users" ON public.clients
-  FOR UPDATE USING (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'clients' 
+    AND policyname = 'Enable update for all users'
+  ) THEN
+    CREATE POLICY "Enable update for all users" ON public.clients
+      FOR UPDATE USING (true);
+  END IF;
 
-CREATE POLICY "Enable read access for all users" ON public.projects
-  FOR SELECT USING (true);
+  -- Projects policies
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Enable read access for all users'
+  ) THEN
+    CREATE POLICY "Enable read access for all users" ON public.projects
+      FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Enable insert for all users" ON public.projects
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Enable insert for all users'
+  ) THEN
+    CREATE POLICY "Enable insert for all users" ON public.projects
+      FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Enable update for all users" ON public.projects
-  FOR UPDATE USING (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Enable update for all users'
+  ) THEN
+    CREATE POLICY "Enable update for all users" ON public.projects
+      FOR UPDATE USING (true);
+  END IF;
 
-CREATE POLICY "Enable read access for all users" ON public.opportunities
-  FOR SELECT USING (true);
+  -- Opportunities policies  
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'opportunities' 
+    AND policyname = 'Enable read access for all users'
+  ) THEN
+    CREATE POLICY "Enable read access for all users" ON public.opportunities
+      FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Enable insert for all users" ON public.opportunities
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'opportunities' 
+    AND policyname = 'Enable insert for all users'
+  ) THEN
+    CREATE POLICY "Enable insert for all users" ON public.opportunities
+      FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Enable update for all users" ON public.opportunities
-  FOR UPDATE USING (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'opportunities' 
+    AND policyname = 'Enable update for all users'
+  ) THEN
+    CREATE POLICY "Enable update for all users" ON public.opportunities
+      FOR UPDATE USING (true);
+  END IF;
+END $$;
