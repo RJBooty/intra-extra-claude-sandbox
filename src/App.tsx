@@ -27,12 +27,22 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [appError, setAppError] = useState<string | null>(null);
 
-  // Real authentication checking
+  // Real authentication checking with timeout
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await auth.getCurrentUser();
+        console.log('Checking authentication...');
+        
+        // Add timeout to prevent hanging
+        const authPromise = auth.getCurrentUser();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout after 5 seconds')), 5000)
+        );
+        
+        const currentUser = await Promise.race([authPromise, timeoutPromise]);
+        console.log('Current user:', currentUser);
         
         if (currentUser) {
           setUser(currentUser);
@@ -42,29 +52,41 @@ function App() {
         }
       } catch (error) {
         console.error('Error checking auth:', error);
+        setAppError(`Authentication error: ${error.message}`);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = auth.onAuthStateChange((authUser) => {
-      if (authUser) {
-        setUser(authUser);
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
+    checkAuth().catch(error => {
+      console.error('Failed to check auth:', error);
+      setAppError(`Failed to initialize auth: ${error.message}`);
       setIsLoading(false);
     });
 
-    return () => {
-      subscription?.unsubscribe();
-    };
+    // Listen for auth state changes
+    try {
+      const { data: { subscription } } = auth.onAuthStateChange((authUser) => {
+        console.log('Auth state changed:', authUser);
+        if (authUser) {
+          setUser(authUser);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+        setIsLoading(false);
+      });
+
+      return () => {
+        subscription?.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Failed to set up auth listener:', error);
+      setAppError(`Failed to set up auth listener: ${error.message}`);
+      setIsLoading(false);
+    }
   }, []);
 
   const [currentView, setCurrentView] = useState<'dashboard' | 'app'>('dashboard');
@@ -72,6 +94,9 @@ function App() {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Add a failsafe debug log - now all variables are initialized
+  console.log('App render state:', { isLoading, appError, isAuthenticated, currentView, activeTab });
 
   const handleProjectCreated = (project: Project) => {
     setCurrentProject(project);
@@ -168,6 +193,27 @@ function App() {
     });
   };
 
+  // Show error if there was an app error
+  if (appError) {
+    console.error('App error:', appError);
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong className="font-bold">Application Error</strong>
+            <p className="block sm:inline mt-2">{appError}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading while checking authentication
   if (isLoading) {
     console.log('App: Still loading authentication...');
@@ -176,6 +222,16 @@ function App() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading IntraExtra...</p>
+          <button 
+            onClick={() => {
+              setIsLoading(false);
+              setIsAuthenticated(false);
+              setAppError(null);
+            }}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Skip Auth (Development)
+          </button>
         </div>
       </div>
     );
@@ -418,20 +474,41 @@ function App() {
     }
   };
 
-  return (
-    <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
-      <AuthStatus />
-      <Toast />
-      
-      <div className="layout-container flex h-full grow flex-col">
-        <Header onSearch={handleSearch} onNavigateToDashboard={() => setCurrentView('dashboard')} onNavigate={handleNavigate} />
+  // Add a comprehensive try-catch for the entire render
+  try {
+    return (
+      <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+        {/* Temporarily removed AuthStatus to debug */}
+        <Toast />
         
-        <div className="flex-1 overflow-hidden">
-          {renderTabContent()}
+        <div className="layout-container flex h-full grow flex-col">
+          <Header onSearch={handleSearch} onNavigateToDashboard={() => setCurrentView('dashboard')} onNavigate={handleNavigate} />
+          
+          <div className="flex-1 overflow-hidden">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error('Render error:', error);
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong className="font-bold">Render Error</strong>
+            <p className="block sm:inline mt-2">Failed to render application: {error.message}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default App;

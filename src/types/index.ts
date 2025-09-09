@@ -169,3 +169,6 @@ export interface PipelineMetrics {
 
 // Re-export ROI types
 export * from './roi';
+
+// Re-export permission types
+export * from './permissions';

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Wrench, User, Bell, Shield, Database, Palette, Globe, Users, Crown } from 'lucide-react';
+import { Settings, Wrench, User, Bell, Shield, Database, Palette, Globe, Users, Crown, Play } from 'lucide-react';
 import { ProfileSettingsPage } from './ProfileSettingsPage';
 import { SystemSettingsPage } from './SystemSettingsPage';
 import { UserProfilePage } from './UserProfilePage';
 import { TeamPage } from '../team/TeamPage';
 import { RoleManagement } from '../admin/RoleManagement';
+import { AdvancedPermissionsManagement } from '../admin/AdvancedPermissionsManagement';
+import { DemoPermissionsManager } from '../admin/DemoPermissionsManager';
 import { userService, UserWithRole } from '../../lib/userService';
 
 interface SettingsHoldingPageProps {
@@ -12,7 +14,7 @@ interface SettingsHoldingPageProps {
 }
 
 export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
-  const [currentPage, setCurrentPage] = useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields' | 'role-management'>('main');
+  const [currentPage, setCurrentPage] = useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields' | 'role-management' | 'advanced-permissions' | 'demo-permissions'>('main');
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
 
   useEffect(() => {
@@ -41,6 +43,14 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
 
   if (currentPage === 'role-management') {
     return <RoleManagement onBack={() => setCurrentPage('main')} />;
+  }
+
+  if (currentPage === 'advanced-permissions') {
+    return <AdvancedPermissionsManagement onBack={() => setCurrentPage('main')} />;
+  }
+
+  if (currentPage === 'demo-permissions') {
+    return <DemoPermissionsManager onBack={() => setCurrentPage('main')} />;
   }
 
   const settingsCategories = [
@@ -96,6 +106,22 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
       description: 'Manage user roles and permissions across the platform',
       status: 'Available',
       onClick: () => setCurrentPage('role-management')
+    });
+    
+    settingsCategories.push({
+      icon: Shield,
+      title: 'Advanced Permissions',
+      description: 'Complete permission matrix with 312 permission points',
+      status: 'Available',
+      onClick: () => setCurrentPage('advanced-permissions')
+    });
+
+    settingsCategories.push({
+      icon: Play,
+      title: 'Demo Permissions Manager',
+      description: 'Interactive permissions demo with full functionality',
+      status: 'Available',
+      onClick: () => setCurrentPage('demo-permissions')
     });
   }
 

@@ -509,3 +509,234 @@ export async function getPipelineMetrics() {
     };
   }
 }
+
+// Permission system functions
+export async function checkUserPermission(
+  userId: string,
+  module: string,
+  section: string,
+  action: string,
+  projectId?: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('check_user_permission', {
+      p_user_id: userId,
+      p_module: module,
+      p_section: section,
+      p_action: action,
+      p_project_id: projectId || null
+    });
+
+    if (error) {
+      console.error('Permission check error:', error);
+      return false;
+    }
+
+    return data || false;
+  } catch (error) {
+    console.error('Permission check failed:', error);
+    return false;
+  }
+}
+
+// Get all permissions for a user
+export async function getUserPermissions(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select(`
+        role_type,
+        role_permissions!inner(
+          is_granted,
+          permission:permissions(*)
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to get user permissions:', error);
+    return null;
+  }
+}
+
+// Get user project assignments
+export async function getUserProjectAssignments(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_project_assignments')
+      .select(`
+        *,
+        project:projects(
+          id,
+          project_code,
+          event_location,
+          client:clients(name)
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('active', true);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Failed to get project assignments:', error);
+    return [];
+  }
+}
+
+// Assign user to project (Master/Senior only)
+export async function assignUserToProject(
+  userId: string,
+  projectId: string,
+  roleOnProject: string,
+  assignedBy: string
+) {
+  try {
+    const { data, error } = await supabase
+      .from('user_project_assignments')
+      .insert([{
+        user_id: userId,
+        project_id: projectId,
+        role_on_project: roleOnProject,
+        assigned_by: assignedBy
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log the assignment
+    await supabase
+      .from('permission_audit_log')
+      .insert([{
+        action_type: 'assign_project',
+        target_user_id: userId,
+        project_id: projectId,
+        changed_by: assignedBy,
+        new_value: { role_on_project: roleOnProject }
+      }]);
+
+    return data;
+  } catch (error) {
+    console.error('Failed to assign user to project:', error);
+    throw error;
+  }
+}
+
+// Remove user from project
+export async function removeUserFromProject(
+  userId: string,
+  projectId: string,
+  removedBy: string
+) {
+  try {
+    const { error } = await supabase
+      .from('user_project_assignments')
+      .update({ active: false })
+      .eq('user_id', userId)
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+
+    // Log the removal
+    await supabase
+      .from('permission_audit_log')
+      .insert([{
+        action_type: 'assign_project',
+        target_user_id: userId,
+        project_id: projectId,
+        changed_by: removedBy,
+        new_value: { active: false }
+      }]);
+
+  } catch (error) {
+    console.error('Failed to remove user from project:', error);
+    throw error;
+  }
+}
+
+// Grant permission override to user
+export async function grantPermissionOverride(
+  userId: string,
+  permissionId: string,
+  reason: string,
+  grantedBy: string,
+  expiresAt?: string
+) {
+  try {
+    const { data, error } = await supabase
+      .from('user_permission_overrides')
+      .upsert([{
+        user_id: userId,
+        permission_id: permissionId,
+        is_granted: true,
+        reason,
+        override_by: grantedBy,
+        expires_at: expiresAt
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log the override
+    await supabase
+      .from('permission_audit_log')
+      .insert([{
+        action_type: 'override',
+        target_user_id: userId,
+        permission_id: permissionId,
+        changed_by: grantedBy,
+        new_value: { is_granted: true, reason, expires_at: expiresAt }
+      }]);
+
+    return data;
+  } catch (error) {
+    console.error('Failed to grant permission override:', error);
+    throw error;
+  }
+}
+
+// Get all permissions (for management)
+export async function getAllPermissions() {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .select('*')
+      .order('module', { ascending: true })
+      .order('section', { ascending: true })
+      .order('action', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Failed to get permissions:', error);
+    return [];
+  }
+}
+
+// Get permission audit log
+export async function getPermissionAuditLog(limit: number = 100) {
+  try {
+    const { data, error } = await supabase
+      .from('permission_audit_log')
+      .select(`
+        *,
+        target_user:auth.users!target_user_id(email),
+        changed_by_user:auth.users!changed_by(email),
+        permission:permissions(module, section, action)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Failed to get audit log:', error);
+    return [];
+  }
+}

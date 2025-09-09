@@ -38,7 +38,9 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
-  Trash2
+  Trash2,
+  Lock,
+  EyeOff
 } from 'lucide-react';
 
 // Add CSS style for row actions
@@ -55,6 +57,8 @@ import { Project } from '../../types';
 import { CompareTab } from './CompareTab';
 import { CostsTab } from './CostsTab';
 import { RevenueTab } from './RevenueTab';
+import { ProtectedPage } from '../permissions/ProtectedPage';
+import { ProtectedField } from '../permissions/ProtectedField';
 import toast from 'react-hot-toast';
 
 interface ROI3Props {
@@ -62,6 +66,46 @@ interface ROI3Props {
 }
 
 type ROITab = 'overview' | 'revenue' | 'costs' | 'compare' | 'scenarios';
+
+// Custom fallback component for ROI access restriction
+const ROIAccessRestricted = () => (
+  <div className="flex items-center justify-center min-h-96 p-8">
+    <div className="flex flex-col items-center gap-6 text-center max-w-lg">
+      <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-full">
+        <div className="p-4 bg-white rounded-full shadow-lg">
+          <Lock className="w-12 h-12 text-red-600" />
+        </div>
+      </div>
+      <div className="space-y-3">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Financial Data Access Restricted
+        </h2>
+        <p className="text-gray-600 text-lg">
+          ROI and financial information requires elevated permissions to access.
+        </p>
+        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 text-left">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-800 mb-1">
+                Access Requirements:
+              </p>
+              <ul className="text-amber-700 space-y-1">
+                <li>• Master or Senior role required</li>
+                <li>• HR Finance role for read-only access</li>
+                <li>• Contact your administrator for access</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-gray-500">
+        <EyeOff className="w-4 h-4" />
+        <span>This restriction protects sensitive financial data</span>
+      </div>
+    </div>
+  </div>
+);
 
 export function ROI3({ project }: ROI3Props) {
   const [activeTab, setActiveTab] = useState<ROITab>('overview');
@@ -226,14 +270,32 @@ export function ROI3({ project }: ROI3Props) {
               </div>
             </div>
             <div className="flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <p className="text-2xl font-bold text-gray-800">€90,656.80</p>
-                <span className="text-sm font-medium text-gray-500">(Actual)</span>
-              </div>
-              <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
-                <p className="text-lg font-semibold text-red-500">€3,636,432.78</p>
-                <span className="text-sm font-normal text-red-400">(Est.)</span>
-              </div>
+              <ProtectedField 
+                fieldId="total_costs_actual" 
+                label="Total Costs (Actual)"
+                hideWhenNoAccess={false}
+                placeholderText="Sensitive cost data"
+              >
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <p className="text-2xl font-bold text-gray-800">€90,656.80</p>
+                  <span className="text-sm font-medium text-gray-500">(Actual)</span>
+                </div>
+              </ProtectedField>
+              <ProtectedField 
+                fieldId="total_costs_estimate" 
+                label="Total Costs (Estimate)"
+                renderReadOnly={(value) => (
+                  <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
+                    <p className="text-lg font-medium text-gray-600">€[RESTRICTED]</p>
+                    <span className="text-sm font-normal text-gray-400">(Est.)</span>
+                  </div>
+                )}
+              >
+                <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
+                  <p className="text-lg font-semibold text-red-500">€3,636,432.78</p>
+                  <span className="text-sm font-normal text-red-400">(Est.)</span>
+                </div>
+              </ProtectedField>
               <div className="flex items-center text-green-600 text-sm font-medium mt-1">
                 <TrendingDown className="w-4 h-4" />
                 <span className="ml-1">-97.5%</span>
@@ -276,10 +338,17 @@ export function ROI3({ project }: ROI3Props) {
               </div>
             </div>
             <div className="flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <p className="text-2xl font-bold text-gray-800">€-65,287.01</p>
-                <span className="text-sm font-medium text-gray-500">(Actual)</span>
-              </div>
+              <ProtectedField 
+                fieldId="profit_actual" 
+                label="Profit (Actual)"
+                showPlaceholder={true}
+                placeholderText="Profit data restricted to authorized users"
+              >
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <p className="text-2xl font-bold text-gray-800">€-65,287.01</p>
+                  <span className="text-sm font-medium text-gray-500">(Actual)</span>
+                </div>
+              </ProtectedField>
               <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
                 <p className="text-lg font-semibold text-red-500">€-3,606,787.99</p>
                 <span className="text-sm font-normal text-red-400">(Est.)</span>
@@ -885,7 +954,12 @@ export function ROI3({ project }: ROI3Props) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-slate-50">
+    <ProtectedPage 
+      pageName="projects-roi"
+      fallback={<ROIAccessRestricted />}
+      showLoadingOverlay={true}
+      className="flex h-full flex-col bg-slate-50"
+    >
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -921,6 +995,6 @@ export function ROI3({ project }: ROI3Props) {
           {renderTabContent()}
         </div>
       </div>
-    </div>
+    </ProtectedPage>
   );
 }

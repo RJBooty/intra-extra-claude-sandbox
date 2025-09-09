@@ -230,13 +230,46 @@ CREATE POLICY "Authenticated users can manage project notifications"
   USING (true);
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id);
-CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
-CREATE INDEX IF NOT EXISTS idx_opportunities_stage ON opportunities(stage);
-CREATE INDEX IF NOT EXISTS idx_opportunities_owner_id ON opportunities(owner_id);
-CREATE INDEX IF NOT EXISTS idx_opportunity_activities_opportunity_id ON opportunity_activities(opportunity_id);
-CREATE INDEX IF NOT EXISTS idx_project_notifications_project_id ON project_notifications(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_notifications_is_read ON project_notifications(is_read);
+-- Add client_id column if it doesn't exist, then create index
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'projects' AND column_name = 'client_id') THEN
+        ALTER TABLE projects ADD COLUMN client_id uuid REFERENCES clients(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Create indexes safely - only if columns exist
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'client_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'status') THEN
+        CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'stage') THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_stage ON opportunities(stage);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunities' AND column_name = 'owner_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunities_owner_id ON opportunities(owner_id);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'opportunity_activities' AND column_name = 'opportunity_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_opportunity_activities_opportunity_id ON opportunity_activities(opportunity_id);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'project_notifications' AND column_name = 'project_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_project_notifications_project_id ON project_notifications(project_id);
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'project_notifications' AND column_name = 'is_read') THEN
+        CREATE INDEX IF NOT EXISTS idx_project_notifications_is_read ON project_notifications(is_read);
+    END IF;
+END $$;
 
 -- Insert default admin user (James Tyson)
 INSERT INTO users (name, email, role, role_level) VALUES

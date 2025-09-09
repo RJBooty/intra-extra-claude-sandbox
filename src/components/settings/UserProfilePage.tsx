@@ -38,6 +38,60 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   });
   const [financeQueryError, setFinanceQueryError] = useState(false);
   
+  // Standard lists for dropdowns
+  const NATIONALITIES = [
+    'Afghan', 'Albanian', 'Algerian', 'American', 'Andorran', 'Angolan', 'Argentine', 'Armenian', 'Australian',
+    'Austrian', 'Azerbaijani', 'Bahamian', 'Bahraini', 'Bangladeshi', 'Barbadian', 'Belarusian', 'Belgian',
+    'Belizean', 'Beninese', 'Bhutanese', 'Bolivian', 'Bosnian', 'Brazilian', 'British', 'Bruneian', 'Bulgarian',
+    'Burkinabe', 'Burmese', 'Burundian', 'Cambodian', 'Cameroonian', 'Canadian', 'Cape Verdean', 'Central African',
+    'Chadian', 'Chilean', 'Chinese', 'Colombian', 'Comoran', 'Congolese', 'Costa Rican', 'Croatian', 'Cuban',
+    'Cypriot', 'Czech', 'Danish', 'Djibouti', 'Dominican', 'Dutch', 'East Timorese', 'Ecuadorean', 'Egyptian',
+    'Emirian', 'Equatorial Guinean', 'Eritrean', 'Estonian', 'Ethiopian', 'Fijian', 'Filipino', 'Finnish', 'French',
+    'Gabonese', 'Gambian', 'Georgian', 'German', 'Ghanaian', 'Greek', 'Grenadian', 'Guatemalan', 'Guinea-Bissauan',
+    'Guinean', 'Guyanese', 'Haitian', 'Herzegovinian', 'Honduran', 'Hungarian', 'Icelander', 'Indian', 'Indonesian',
+    'Iranian', 'Iraqi', 'Irish', 'Israeli', 'Italian', 'Ivorian', 'Jamaican', 'Japanese', 'Jordanian',
+    'Kazakhstani', 'Kenyan', 'Kittian and Nevisian', 'Kuwaiti', 'Kyrgyz', 'Laotian', 'Latvian', 'Lebanese',
+    'Lesothan', 'Liberian', 'Libyan', 'Liechtensteiner', 'Lithuanian', 'Luxembourgish', 'Macedonian', 'Malagasy',
+    'Malawian', 'Malaysian', 'Maldivan', 'Malian', 'Maltese', 'Marshallese', 'Mauritanian', 'Mauritian', 'Mexican',
+    'Micronesian', 'Moldovan', 'Monacan', 'Mongolian', 'Moroccan', 'Mosotho', 'Motswana', 'Mozambican', 'Namibian',
+    'Nauruan', 'Nepalese', 'New Zealander', 'Ni-Vanuatu', 'Nicaraguan', 'Nigerian', 'Nigerien', 'North Korean',
+    'Norwegian', 'Omani', 'Pakistani', 'Palauan', 'Panamanian', 'Papua New Guinean', 'Paraguayan', 'Peruvian',
+    'Polish', 'Portuguese', 'Qatari', 'Romanian', 'Russian', 'Rwandan', 'Saint Lucian', 'Salvadoran', 'Samoan',
+    'San Marinese', 'Sao Tomean', 'Saudi', 'Scottish', 'Senegalese', 'Serbian', 'Seychellois', 'Sierra Leonean',
+    'Singaporean', 'Slovakian', 'Slovenian', 'Solomon Islander', 'Somali', 'South African', 'South Korean',
+    'Spanish', 'Sri Lankan', 'Sudanese', 'Surinamer', 'Swazi', 'Swedish', 'Swiss', 'Syrian', 'Taiwanese',
+    'Tajik', 'Tanzanian', 'Thai', 'Togolese', 'Tongan', 'Trinidadian or Tobagonian', 'Tunisian', 'Turkish',
+    'Tuvaluan', 'Ugandan', 'Ukrainian', 'Uruguayan', 'Uzbekistani', 'Venezuelan', 'Vietnamese', 'Welsh',
+    'Yemenite', 'Zambian', 'Zimbabwean'
+  ];
+
+  const LANGUAGES = [
+    'Afrikaans', 'Albanian', 'Amharic', 'Arabic', 'Armenian', 'Assamese', 'Aymara', 'Azerbaijani', 'Bambara',
+    'Basque', 'Belarusian', 'Bengali', 'Bhojpuri', 'Bosnian', 'Bulgarian', 'Catalan', 'Cebuano', 'Chinese (Simplified)',
+    'Chinese (Traditional)', 'Corsican', 'Croatian', 'Czech', 'Danish', 'Dhivehi', 'Dogri', 'Dutch', 'English',
+    'Esperanto', 'Estonian', 'Ewe', 'Filipino', 'Finnish', 'French', 'Frisian', 'Galician', 'Georgian', 'German',
+    'Greek', 'Guarani', 'Gujarati', 'Haitian Creole', 'Hausa', 'Hawaiian', 'Hebrew', 'Hindi', 'Hmong', 'Hungarian',
+    'Icelandic', 'Igbo', 'Ilocano', 'Indonesian', 'Irish', 'Italian', 'Japanese', 'Javanese', 'Kannada', 'Kazakh',
+    'Khmer', 'Kinyarwanda', 'Konkani', 'Korean', 'Krio', 'Kurdish', 'Kyrgyz', 'Lao', 'Latin', 'Latvian',
+    'Lingala', 'Lithuanian', 'Luganda', 'Luxembourgish', 'Macedonian', 'Maithili', 'Malagasy', 'Malay', 'Malayalam',
+    'Maltese', 'Maori', 'Marathi', 'Meiteilon', 'Mizo', 'Mongolian', 'Myanmar', 'Nepali', 'Norwegian', 'Nyanja',
+    'Odia', 'Oromo', 'Pashto', 'Persian', 'Polish', 'Portuguese', 'Punjabi', 'Quechua', 'Romanian', 'Russian',
+    'Samoan', 'Sanskrit', 'Scots Gaelic', 'Sepedi', 'Serbian', 'Sesotho', 'Shona', 'Sindhi', 'Sinhala', 'Slovak',
+    'Slovenian', 'Somali', 'Spanish', 'Sundanese', 'Swahili', 'Swedish', 'Tagalog', 'Tajik', 'Tamil', 'Tatar',
+    'Telugu', 'Thai', 'Tigrinya', 'Tsonga', 'Turkish', 'Turkmen', 'Twi', 'Ukrainian', 'Urdu', 'Uyghur', 'Uzbek',
+    'Vietnamese', 'Welsh', 'Xhosa', 'Yiddish', 'Yoruba', 'Zulu'
+  ];
+
+  const LANGUAGE_LEVELS = ['Native', 'Fluent', 'Advanced', 'Intermediate', 'Conversational', 'Basic'];
+  
+  // Language selector state
+  const [selectedLanguages, setSelectedLanguages] = useState([
+    { language: 'English', level: 'Native' },
+    { language: 'French', level: 'Conversational' }
+  ]);
+  const [languageSearch, setLanguageSearch] = useState('');
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
@@ -213,6 +267,30 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     }
   };
 
+  // Language selector helper functions
+  const addLanguage = (language: string, level: string = 'Basic') => {
+    if (!selectedLanguages.some(lang => lang.language === language)) {
+      setSelectedLanguages([...selectedLanguages, { language, level }]);
+      setLanguageSearch('');
+      setShowLanguageDropdown(false);
+    }
+  };
+
+  const removeLanguage = (languageToRemove: string) => {
+    setSelectedLanguages(selectedLanguages.filter(lang => lang.language !== languageToRemove));
+  };
+
+  const updateLanguageLevel = (language: string, level: string) => {
+    setSelectedLanguages(selectedLanguages.map(lang => 
+      lang.language === language ? { ...lang, level } : lang
+    ));
+  };
+
+  const filteredLanguages = LANGUAGES.filter(lang => 
+    lang.toLowerCase().includes(languageSearch.toLowerCase()) &&
+    !selectedLanguages.some(selected => selected.language === lang)
+  );
+
   // Compliance Tab Handlers
   const handleSelectDocument = (index: number) => {
     if (selectedDocuments.includes(index)) {
@@ -296,13 +374,71 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <EditableField
               label="Nationality"
               value="Australian"
+              isSelect={true}
+              options={NATIONALITIES}
             />
             <div className="col-span-1 md:col-span-2">
               <label className="text-xs font-medium text-gray-600">Languages Spoken</label>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">English (Native)</span>
-                <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-1 rounded-full">French (Conversational)</span>
-              </div>
+              {!isEditMode ? (
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {selectedLanguages.map((lang, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                      {lang.language} ({lang.level})
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-1.5 space-y-2">
+                  {/* Selected Languages */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedLanguages.map((lang, index) => (
+                      <div key={index} className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                        <span className="text-sm text-blue-900">{lang.language}</span>
+                        <select 
+                          value={lang.level} 
+                          onChange={(e) => updateLanguageLevel(lang.language, e.target.value)}
+                          className="text-xs border border-blue-300 rounded px-1 py-0.5 bg-white"
+                        >
+                          {LANGUAGE_LEVELS.map(level => (
+                            <option key={level} value={level}>{level}</option>
+                          ))}
+                        </select>
+                        <button 
+                          onClick={() => removeLanguage(lang.language)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Add Language Input */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={languageSearch}
+                      onChange={(e) => setLanguageSearch(e.target.value)}
+                      onFocus={() => setShowLanguageDropdown(true)}
+                      placeholder="Search and add languages..."
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {/* Language Dropdown */}
+                    {showLanguageDropdown && languageSearch && filteredLanguages.length > 0 && (
+                      <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {filteredLanguages.slice(0, 10).map((language) => (
+                          <button
+                            key={language}
+                            onClick={() => addLanguage(language)}
+                            className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                          >
+                            {language}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -379,12 +515,12 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <User className="w-5 h-5 mr-2 text-gray-500" />
             About Me
           </h3>
-          <div>
-            <label className="text-xs font-medium text-gray-600">Introduction</label>
-            <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 leading-relaxed text-sm h-full">
-              I'm a dedicated and passionate professional with over 8 years of experience in project management and international development. I thrive in collaborative environments and I'm always eager to take on new challenges. I'm excited to be part of this team and contribute to our shared goals. Outside of work, I'm an avid hiker and love exploring new cultures through travel and food.
-            </div>
-          </div>
+          <EditableField
+            label="Introduction"
+            value="I'm a dedicated and passionate professional with over 8 years of experience in project management and international development. I thrive in collaborative environments and I'm always eager to take on new challenges. I'm excited to be part of this team and contribute to our shared goals. Outside of work, I'm an avid hiker and love exploring new cultures through travel and food."
+            isTextarea={true}
+            placeholder="Tell us about yourself, your background, interests, and what motivates you..."
+          />
         </div>
 
         <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
@@ -393,19 +529,21 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             Job Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-gray-600">Job Title</label>
-              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Project Manager</div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600">Department</label>
-              <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">International Development</div>
-            </div>
+            <EditableField
+              label="Job Title"
+              value={userProfile?.job_title || "Project Manager"}
+            />
+            <EditableField
+              label="Department"
+              value={userProfile?.department || "International Development"}
+            />
             <div className="col-span-1 md:col-span-2">
-              <label className="text-xs font-medium text-gray-600">Brief Description</label>
-              <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 leading-relaxed text-sm">
-                Manages and oversees international development projects, ensuring they are completed on time, within budget, and to the required quality standards.
-              </div>
+              <EditableField
+                label="Brief Description"
+                value="Manages and oversees international development projects, ensuring they are completed on time, within budget, and to the required quality standards."
+                isTextarea={true}
+                placeholder="Describe your role and responsibilities..."
+              />
             </div>
           </div>
         </div>
@@ -424,18 +562,24 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Passport
             </h4>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-gray-600">Passport Number</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">E12345678</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Expiry Date</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">15/06/2030</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Country of Issue</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Australia</div>
-              </div>
+              <EditableField
+                label="Passport Number"
+                value="E12345678"
+                placeholder="Enter passport number"
+              />
+              <EditableField
+                label="Expiry Date"
+                value="15/06/2030"
+                type="date"
+                placeholder="Select expiry date"
+              />
+              <EditableField
+                label="Country of Issue"
+                value="Australia"
+                isSelect={true}
+                options={NATIONALITIES.map(nat => nat.replace(/an$|ian$|ish$|ese$|i$/, '').replace('American', 'USA').replace('British', 'UK'))}
+                placeholder="Select country"
+              />
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -444,18 +588,24 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Driving License
             </h4>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-gray-600">Number</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">987654321</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Country of Issue</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">Australia</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Expiry</label>
-                <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">21/08/2028</div>
-              </div>
+              <EditableField
+                label="License Number"
+                value="987654321"
+                placeholder="Enter license number"
+              />
+              <EditableField
+                label="Country of Issue"
+                value="Australia"
+                isSelect={true}
+                options={NATIONALITIES.map(nat => nat.replace(/an$|ian$|ish$|ese$|i$/, '').replace('American', 'USA').replace('British', 'UK'))}
+                placeholder="Select country"
+              />
+              <EditableField
+                label="Expiry Date"
+                value="21/08/2028"
+                type="date"
+                placeholder="Select expiry date"
+              />
             </div>
           </div>
         </div>
@@ -474,18 +624,54 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Emergency Information
             </h4>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
-                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Noah Thompson</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-red-700">Relationship</label>
-                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Partner</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
-                <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">+61 487 654 321</div>
-              </div>
+              {!isEditMode ? (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
+                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Noah Thompson</div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Relationship</label>
+                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Partner</div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
+                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">+61 487 654 321</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
+                    <input 
+                      className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      defaultValue="Noah Thompson"
+                      placeholder="Enter emergency contact name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Relationship</label>
+                    <select className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                      <option value="Partner">Partner</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Parent">Parent</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Child">Child</option>
+                      <option value="Friend">Friend</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
+                    <input 
+                      type="tel"
+                      className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      defaultValue="+61 487 654 321"
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
@@ -494,14 +680,42 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Medical Conditions
             </h4>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-gray-600">Allergies</label>
-                <div className="mt-1 p-2 bg-yellow-100 rounded-md text-red-700 font-medium border border-yellow-200 text-sm">Peanuts (anaphylactic)</div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Dietary Requirements</label>
-                <div className="mt-1 p-2 bg-yellow-100 rounded-md text-gray-800 border border-yellow-200 text-sm">Vegetarian</div>
-              </div>
+              {!isEditMode ? (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Allergies</label>
+                    <div className="mt-1 p-2 bg-yellow-100 rounded-md text-red-700 font-medium border border-yellow-200 text-sm">Peanuts (anaphylactic)</div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Dietary Requirements</label>
+                    <div className="mt-1 p-2 bg-yellow-100 rounded-md text-gray-800 border border-yellow-200 text-sm">Vegetarian</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Allergies</label>
+                    <textarea 
+                      className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      rows={2}
+                      defaultValue="Peanuts (anaphylactic)"
+                      placeholder="List any allergies and severity (e.g., mild, severe, anaphylactic)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Dietary Requirements</label>
+                    <select className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                      <option value="">No dietary requirements</option>
+                      <option value="Vegetarian" selected>Vegetarian</option>
+                      <option value="Vegan">Vegan</option>
+                      <option value="Gluten-free">Gluten-free</option>
+                      <option value="Halal">Halal</option>
+                      <option value="Kosher">Kosher</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { User, Bell, Shield, Database, Palette, Globe, Save } from 'lucide-react';
+import { User, Bell, Shield, Database, Palette, Globe, Save, Settings } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useAuth } from '../../hooks/useAuth';
+import { PermissionsDashboard } from '../permissions/PermissionsDashboard';
 import toast from 'react-hot-toast';
 
 interface SettingsPageProps {
@@ -8,7 +10,8 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onNavigate }: SettingsPageProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'integrations' | 'appearance' | 'system'>('profile');
+  const { userRole } = useAuth();
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'integrations' | 'appearance' | 'system' | 'permissions'>('profile');
   const [isLoading, setIsLoading] = useState(false);
 
   const tabs = [
@@ -18,12 +21,20 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
     { id: 'integrations' as const, label: 'Integrations', icon: Database },
     { id: 'appearance' as const, label: 'Appearance', icon: Palette },
     { id: 'system' as const, label: 'System', icon: Globe },
+    // Only show permissions tab for Master users
+    ...(userRole === 'master' ? [{ id: 'permissions' as const, label: 'Permission Management', icon: Settings }] : []),
   ];
 
   const handleSave = async () => {
+    // Permission Management has its own save mechanism
+    if (activeTab === 'permissions') {
+      toast.info('Use the save button within Permission Management to save permission changes.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulate save operation
+      // Simulate save operation for other tabs
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Settings saved successfully!');
     } catch (error) {
@@ -300,6 +311,23 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
           </div>
         );
 
+      case 'permissions':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Permission Management</h3>
+              <p className="text-gray-600 mb-6">
+                Manage access control for all pages, sections, and fields across the platform. 
+                Only Master users can modify permissions.
+              </p>
+            </div>
+            {/* Embed the PermissionsDashboard without its own outer container */}
+            <div className="-m-6"> {/* Negative margin to counteract the container padding */}
+              <PermissionsDashboard className="border-0 rounded-none shadow-none bg-transparent" />
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -348,17 +376,19 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
             {renderTabContent()}
           </div>
 
-          {/* Save Button */}
-          <div className="mt-8 flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
-            >
-              {isLoading ? <LoadingSpinner size="sm" /> : <Save className="w-4 h-4" />}
-              Save Changes
-            </button>
-          </div>
+          {/* Save Button - Hide for permissions tab as it has its own save mechanism */}
+          {activeTab !== 'permissions' && (
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+              >
+                {isLoading ? <LoadingSpinner size="sm" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
