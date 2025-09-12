@@ -214,20 +214,39 @@ export async function getClients() {
 
 export async function createClientRecord(clientData: any) {
   try {
+    console.log('📋 createClientRecord: Starting...');
+    console.log('📋 createClientRecord: Input data:', clientData);
+    
+    const insertData = {
+      ...clientData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('📋 createClientRecord: Insert data:', insertData);
+    
     const { data, error } = await supabase
       .from('clients')
-      .insert([{
-        ...clientData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .insert([insertData])
       .select()
       .single();
 
-    if (error) throw error;
+    console.log('📋 createClientRecord: Supabase response:', { data, error });
+
+    if (error) {
+      console.error('📋 createClientRecord: Supabase error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      throw error;
+    }
+    
+    console.log('📋 createClientRecord: Success!', data);
     return data;
   } catch (error) {
-    console.error('Failed to create client:', error);
+    console.error('📋 createClientRecord: Caught error:', error);
     throw error;
   }
 }
@@ -304,6 +323,22 @@ export async function getDeletedProjects() {
 // Soft delete a project (move to bin)
 export async function softDeleteProject(projectId: string, userId: string, reason?: string) {
   try {
+    // First check if project exists and is not already deleted
+    const { data: existingProject, error: checkError } = await supabase
+      .from('projects')
+      .select('id, is_deleted')
+      .eq('id', projectId)
+      .single();
+
+    if (checkError) {
+      throw new Error(`Project not found: ${checkError.message}`);
+    }
+
+    if (existingProject.is_deleted) {
+      throw new Error('Project is already deleted');
+    }
+
+    // Perform the soft delete
     const { data, error } = await supabase
       .from('projects')
       .update({
@@ -313,7 +348,6 @@ export async function softDeleteProject(projectId: string, userId: string, reaso
         updated_at: new Date().toISOString()
       })
       .eq('id', projectId)
-      .or('is_deleted.is.null,is_deleted.eq.false') // Only delete if not already deleted
       .select()
       .single();
 

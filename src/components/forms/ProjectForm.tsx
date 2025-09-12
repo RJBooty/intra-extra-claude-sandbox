@@ -8,6 +8,7 @@ import { Plus, X, Upload, Image } from 'lucide-react';
 import { Client, Project } from '../../types';
 import { getClients, createProject } from '../../lib/supabase';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { SearchableClientField } from '../ui/SearchableClientField';
 import { ClientForm } from './ClientForm';
 import { previewProjectCode, validateProjectCode, getCountryCode, parseLocation, isSameCountry } from '../../lib/projectCode';
 
@@ -46,6 +47,7 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
     reset,
     watch,
     setValue,
+    trigger,
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -174,6 +176,8 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
     setClients(prev => [newClient, ...prev]);
     // Auto-select the newly created client
     setValue('client_id', newClient.id);
+    // Trigger validation to clear any errors
+    trigger('client_id');
     toast.success(`Client "${newClient.company}" added and selected`);
   };
 
@@ -254,33 +258,24 @@ export function ProjectForm({ onProjectCreated }: ProjectFormProps) {
           <p className="text-[#101418] text-base font-medium leading-normal pb-2">
             Client *
           </p>
-          <div className="flex gap-2">
-            <select
-              {...register('client_id')}
-              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#101418] focus:outline-0 focus:ring-0 border border-[#d4dbe2] bg-gray-50 focus:border-blue-500 h-14 bg-[image:--select-button-svg] placeholder:text-[#5c728a] p-[15px] text-base font-normal leading-normal"
-              disabled={isLoadingClients}
-            >
-              <option value="">
-                {isLoadingClients ? 'Loading clients...' : 'Select Client'}
-              </option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name} - {client.company}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setShowClientForm(true)}
-              className="flex items-center justify-center w-14 h-14 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-colors"
-              title="Add New Client"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
-          {errors.client_id && (
-            <p className="text-red-600 text-sm mt-1">{errors.client_id.message}</p>
-          )}
+          <SearchableClientField
+            clients={clients}
+            selectedClientId={watch('client_id') || ''}
+            onClientSelect={(clientId) => {
+              setValue('client_id', clientId);
+              // Trigger validation
+              trigger('client_id');
+            }}
+            onAddNewClient={() => setShowClientForm(true)}
+            placeholder="Search for a client..."
+            isLoading={isLoadingClients}
+            error={errors.client_id?.message}
+          />
+          {/* Hidden input to maintain form registration */}
+          <input
+            {...register('client_id')}
+            type="hidden"
+          />
         </label>
       </div>
 

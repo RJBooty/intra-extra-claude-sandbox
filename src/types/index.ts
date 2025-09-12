@@ -22,11 +22,45 @@ export interface Project {
   event_type: 'Conference' | 'Festival' | 'Exhibition' | 'Sports' | 'Corporate' | 'Other';
   event_image?: string;  // URL or path to event image
   
-  // Additional metadata fields
-  onsite_start_date?: string;
-  onsite_end_date?: string;
+  // Key Dates section
+  on_site_start_date?: string;
+  on_site_end_date?: string;
   show_start_date?: string;
   show_end_date?: string;
+  load_in_date?: string;
+  load_out_date?: string;
+  
+  // Cashless Info section
+  online_vouchers_start_date?: string;
+  online_vouchers_end_date?: string;
+  topups_start_date?: string;
+  topups_end_date?: string;
+  
+  // Refund Info section
+  refund_window_start_date?: string;
+  refund_window_end_date?: string;
+  refund_document_url?: string;
+  refund_fee?: number;
+  
+  // Delivery & Deadlines section
+  delivery_contact_name?: string;
+  delivery_contact_phone?: string;
+  delivery_contact_email?: string;
+  delivery_address_line1?: string;
+  delivery_address_line2?: string;
+  delivery_city?: string;
+  delivery_state?: string;
+  delivery_postal_code?: string;
+  delivery_country?: string;
+  
+  // Summary Overview section
+  contract_status?: string;
+  roi_status?: string;
+  margin_threshold?: number;
+  
+  // Legacy fields (to maintain backward compatibility)
+  onsite_start_date?: string;
+  onsite_end_date?: string;
   voucher_sale_start?: string;
   voucher_sale_end?: string;
   topup_start?: string;
@@ -34,12 +68,7 @@ export interface Project {
   refund_window_start?: string;
   refund_window_end?: string;
   delivery_address?: string;
-  delivery_contact_name?: string;
-  delivery_contact_phone?: string;
-  delivery_contact_email?: string;
   wristband_order_deadline?: string;
-  load_in_date?: string;
-  load_out_date?: string;
   qr_code_url?: string;
   
   // Project status and phase

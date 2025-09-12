@@ -41,17 +41,28 @@ export function ClientForm({ onClose, onClientCreated }: ClientFormProps) {
   const onSubmit = async (data: ClientFormData) => {
     setIsSubmitting(true);
     try {
-      console.log('👤 Creating new client:', data);
+      console.log('👤 ClientForm: Starting client creation...');
+      console.log('👤 ClientForm: Form data:', data);
+      console.log('👤 ClientForm: About to call createClientRecord...');
+      
       const newClient = await createClientRecord(data);
-      console.log('✅ Client created successfully:', newClient);
+      
+      console.log('✅ ClientForm: Client created successfully:', newClient);
       
       toast.success('Client created successfully!');
       reset();
       onClientCreated(newClient);
       onClose();
     } catch (error) {
-      console.error('❌ Error creating client:', error);
-      toast.error('Failed to create client. Please try again.');
+      console.error('❌ ClientForm: Error creating client:', error);
+      console.error('❌ ClientForm: Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        stack: error?.stack
+      });
+      toast.error(`Failed to create client: ${error?.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +83,7 @@ export function ClientForm({ onClose, onClientCreated }: ClientFormProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -161,7 +172,8 @@ export function ClientForm({ onClose, onClientCreated }: ClientFormProps) {
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit(onSubmit)}
               disabled={isSubmitting}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
             >
@@ -169,7 +181,7 @@ export function ClientForm({ onClose, onClientCreated }: ClientFormProps) {
               Create Client
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
