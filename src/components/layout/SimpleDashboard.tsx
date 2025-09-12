@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Briefcase, Calendar, TrendingUp, Users, FolderOpen, BarChart3 } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { userService, UserWithRole } from '../../lib/userService';
+import { userService } from '../../lib/services/userService';
+import { UserWithRole } from '../../types/user';
 import { auth } from '../../lib/supabase';
 import '../../utils/setupUserProfile'; // Import for browser console access
 import '../../utils/createUserProfile'; // Import direct creation method

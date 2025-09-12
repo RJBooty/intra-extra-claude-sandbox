@@ -20,6 +20,7 @@ export interface Project {
   event_end_date: string;
   expected_attendance: number;
   event_type: 'Conference' | 'Festival' | 'Exhibition' | 'Sports' | 'Corporate' | 'Other';
+  event_image?: string;  // URL or path to event image
   
   // Additional metadata fields
   onsite_start_date?: string;

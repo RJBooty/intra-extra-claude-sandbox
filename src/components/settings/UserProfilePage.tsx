@@ -16,11 +16,523 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { TeamsIcon, SlackIcon, WhatsAppIcon, EmailIcon } from '../icons/BrandIcons';
-import { userService, UserWithRole } from '../../lib/userService';
+import { userService } from '../../lib/services/userService';
+import { UserWithRole } from '../../types/user';
 
 interface UserProfilePageProps {
   onBack: () => void;
 }
+
+// Helper component for select fields with 'Other' option
+const SelectWithOtherField = ({ 
+  label, 
+  value, 
+  options,
+  fieldKey,
+  otherFieldKey,
+  placeholder = "",
+  className = "",
+  isEditMode,
+  formData,
+  setFormData,
+  userProfile
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  fieldKey: keyof UserWithRole;
+  otherFieldKey: keyof UserWithRole;
+  placeholder?: string;
+  className?: string;
+  isEditMode: boolean;
+  formData: Partial<UserWithRole>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+  userProfile: UserWithRole | null;
+}) => {
+  const otherValue = formData[otherFieldKey] as string || "";
+  const isOtherSelected = value === "Other" || (!options.includes(value) && value);
+
+  const handleSelectChange = (newValue: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      [fieldKey]: newValue,
+      [otherFieldKey]: newValue === "Other" ? otherValue : ""
+    }));
+  };
+
+  const handleOtherChange = (otherText: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      [fieldKey]: "Other",
+      [otherFieldKey]: otherText
+    }));
+  };
+
+  if (!isEditMode) {
+    return (
+      <div>
+        <label className="text-xs font-medium text-gray-600">{label}</label>
+        <div className={`mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm ${className}`}>
+          {isOtherSelected ? (otherValue || value) : (value || 'Not specified')}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="text-xs font-medium text-gray-700">{label}</label>
+      <select 
+        className={`mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+        value={isOtherSelected ? "Other" : value}
+        onChange={(e) => handleSelectChange(e.target.value)}
+      >
+        <option value="">{placeholder || `Select ${label.toLowerCase()}`}</option>
+        {options.map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+      {isOtherSelected && (
+        <input
+          type="text"
+          className={`mt-2 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+          value={otherValue}
+          onChange={(e) => handleOtherChange(e.target.value)}
+          placeholder="Please specify..."
+        />
+      )}
+    </div>
+  );
+};
+
+// Helper component for searchable address field
+const AddressField = ({ 
+  label, 
+  value, 
+  fieldKey,
+  placeholder = "Enter address",
+  isEditMode,
+  formData,
+  setFormData,
+  userProfile
+}: {
+  label: string;
+  value: string;
+  fieldKey: keyof UserWithRole;
+  placeholder?: string;
+  isEditMode: boolean;
+  formData: Partial<UserWithRole>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+  userProfile: UserWithRole | null;
+}) => {
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+
+  // Simulate address search - in real implementation, this would call a geocoding API
+  const searchAddresses = (query: string) => {
+    if (query.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Simulate API results with common address patterns
+    const mockResults = [
+      `${query} Street, London, UK`,
+      `${query} Avenue, New York, NY, USA`,
+      `${query} Road, Sydney, NSW, Australia`,
+      `${query} Boulevard, Paris, France`,
+      `${query} Lane, Toronto, ON, Canada`
+    ].filter(addr => addr.toLowerCase().includes(query.toLowerCase()));
+
+    setSearchResults(mockResults);
+  };
+
+  const handleAddressSelect = (address: string) => {
+    setFormData(prev => ({ ...prev, [fieldKey]: address }));
+    setIsSearching(false);
+    setSearchResults([]);
+  };
+
+  if (!isEditMode) {
+    return (
+      <div>
+        <label className="text-xs font-medium text-gray-600">{label}</label>
+        <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm min-h-[80px]">
+          {value || 'Not specified'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <label className="text-xs font-medium text-gray-700">{label}</label>
+      <div className="mt-1">
+        <textarea
+          className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px] resize-y"
+          value={value}
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, [fieldKey]: e.target.value }));
+            searchAddresses(e.target.value);
+            setIsSearching(true);
+          }}
+          onFocus={() => {
+            if (value && value.length >= 3) {
+              searchAddresses(value);
+              setIsSearching(true);
+            }
+          }}
+          placeholder={placeholder}
+          rows={3}
+        />
+        {isSearching && searchResults.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+            <div className="p-2 border-b border-gray-200 bg-gray-50">
+              <span className="text-xs text-gray-600">Suggested addresses:</span>
+            </div>
+            {searchResults.map((address, index) => (
+              <div
+                key={index}
+                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                onClick={() => handleAddressSelect(address)}
+              >
+                {address}
+              </div>
+            ))}
+            <div className="p-2 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
+              Can't find your address? Continue typing to enter manually.
+            </div>
+          </div>
+        )}
+      </div>
+      {isSearching && (
+        <div 
+          className="fixed inset-0 z-5" 
+          onClick={() => {
+            setIsSearching(false);
+            setSearchResults([]);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Helper component for searchable city field
+const CityField = ({ 
+  label, 
+  value, 
+  fieldKey,
+  placeholder = "Select City",
+  isEditMode,
+  formData,
+  setFormData,
+  userProfile
+}: {
+  label: string;
+  value: string;
+  fieldKey: keyof UserWithRole;
+  placeholder?: string;
+  isEditMode: boolean;
+  formData: Partial<UserWithRole>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+  userProfile: UserWithRole | null;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCities = CITIES.filter(city => 
+    city.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCitySelect = (city: string) => {
+    setFormData(prev => ({ ...prev, [fieldKey]: city }));
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  if (!isEditMode) {
+    return (
+      <div>
+        <label className="text-xs font-medium text-gray-600">{label}</label>
+        <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
+          {value || 'Not specified'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <label className="text-xs font-medium text-gray-700">{label}</label>
+      <div className="mt-1">
+        <input
+          type="text"
+          className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={value}
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, [fieldKey]: e.target.value }));
+            setSearchTerm(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder={placeholder}
+        />
+        {isOpen && (
+          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            <div className="p-2">
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search cities..."
+              />
+            </div>
+            {filteredCities.length > 0 ? (
+              filteredCities.slice(0, 10).map((city) => (
+                <div
+                  key={city}
+                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                  onClick={() => handleCitySelect(city)}
+                >
+                  {city}
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-500 text-sm">
+                No cities found. You can enter a custom location.
+              </div>
+            )}
+            <div 
+              className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-t border-gray-200 text-blue-600"
+              onClick={() => setIsOpen(false)}
+            >
+              ✓ Use "{value || searchTerm}" (Custom)
+            </div>
+          </div>
+        )}
+      </div>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-5" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Helper component for phone number fields with country code
+const PhoneField = ({ 
+  label, 
+  value, 
+  fieldKey,
+  placeholder = "Enter phone number",
+  isEditMode,
+  formData,
+  setFormData,
+  userProfile
+}: {
+  label: string;
+  value: string;
+  fieldKey: keyof UserWithRole;
+  placeholder?: string;
+  isEditMode: boolean;
+  formData: Partial<UserWithRole>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+  userProfile: UserWithRole | null;
+}) => {
+  // Parse existing phone number to separate country code and number
+  const parsePhone = (phone: string) => {
+    if (!phone) return { countryCode: '+44', number: '' };
+    
+    const match = phone.match(/^(\+\d{1,4})\s?(.*)$/);
+    if (match) {
+      return { countryCode: match[1], number: match[2] };
+    }
+    return { countryCode: '+44', number: phone };
+  };
+
+  const { countryCode, number } = parsePhone(value);
+
+  const handleCountryCodeChange = (newCountryCode: string) => {
+    const newValue = number ? `${newCountryCode} ${number}` : newCountryCode;
+    setFormData(prev => ({ ...prev, [fieldKey]: newValue }));
+  };
+
+  const handleNumberChange = (newNumber: string) => {
+    const newValue = newNumber ? `${countryCode} ${newNumber}` : countryCode;
+    setFormData(prev => ({ ...prev, [fieldKey]: newValue }));
+  };
+
+  if (!isEditMode) {
+    return (
+      <div>
+        <label className="text-xs font-medium text-gray-600">{label}</label>
+        <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
+          {value || 'Not specified'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="text-xs font-medium text-gray-700">{label}</label>
+      <div className="mt-1 flex">
+        <select 
+          className="border border-gray-300 rounded-l-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          value={countryCode}
+          onChange={(e) => handleCountryCodeChange(e.target.value)}
+        >
+          {COUNTRY_CODES.map(({ code, country, flag }) => (
+            <option key={code} value={code}>
+              {flag} {code}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          className="flex-1 border border-l-0 border-gray-300 rounded-r-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={number}
+          onChange={(e) => handleNumberChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Country codes with flags for phone number selection
+const COUNTRY_CODES = [
+  { code: '+1', country: 'US/Canada', flag: '🇺🇸' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+33', country: 'France', flag: '🇫🇷' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪' },
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+86', country: 'China', flag: '🇨🇳' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+  { code: '+852', country: 'Hong Kong', flag: '🇭🇰' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷' }
+].sort((a, b) => a.country.localeCompare(b.country));
+
+// Popular cities worldwide for working location
+const CITIES = [
+  'London, United Kingdom', 'New York, United States', 'Paris, France', 'Berlin, Germany', 'Tokyo, Japan',
+  'Sydney, Australia', 'Toronto, Canada', 'Amsterdam, Netherlands', 'Barcelona, Spain', 'Rome, Italy',
+  'Stockholm, Sweden', 'Copenhagen, Denmark', 'Dublin, Ireland', 'Zurich, Switzerland', 'Vienna, Austria',
+  'Brussels, Belgium', 'Oslo, Norway', 'Helsinki, Finland', 'Warsaw, Poland', 'Prague, Czech Republic',
+  'Budapest, Hungary', 'Athens, Greece', 'Lisbon, Portugal', 'Madrid, Spain', 'Milan, Italy',
+  'Munich, Germany', 'Frankfurt, Germany', 'Hamburg, Germany', 'Edinburgh, United Kingdom', 'Manchester, United Kingdom',
+  'Birmingham, United Kingdom', 'Glasgow, United Kingdom', 'Bristol, United Kingdom', 'Leeds, United Kingdom',
+  'Los Angeles, United States', 'Chicago, United States', 'San Francisco, United States', 'Boston, United States',
+  'Seattle, United States', 'Austin, United States', 'Denver, United States', 'Miami, United States',
+  'Las Vegas, United States', 'Vancouver, Canada', 'Montreal, Canada', 'Calgary, Canada', 'Ottawa, Canada',
+  'Melbourne, Australia', 'Brisbane, Australia', 'Perth, Australia', 'Adelaide, Australia',
+  'Singapore, Singapore', 'Hong Kong, Hong Kong', 'Seoul, South Korea', 'Mumbai, India', 'Delhi, India',
+  'Bangalore, India', 'Shanghai, China', 'Beijing, China', 'Dubai, United Arab Emirates',
+  'Tel Aviv, Israel', 'Cape Town, South Africa', 'Johannesburg, South Africa', 'São Paulo, Brazil',
+  'Rio de Janeiro, Brazil', 'Mexico City, Mexico', 'Buenos Aires, Argentina'
+].sort();
+
+// Helper component for editable fields
+const EditableField = ({ 
+  label, 
+  value, 
+  type = 'text', 
+  isTextarea = false, 
+  isSelect = false, 
+  options = [], 
+  className = '',
+  placeholder = '',
+  fieldKey,
+  isEditMode,
+  formData,
+  setFormData,
+  userProfile
+}: {
+  label: string;
+  value: string;
+  type?: string;
+  isTextarea?: boolean;
+  isSelect?: boolean;
+  options?: string[];
+  className?: string;
+  placeholder?: string;
+  fieldKey: keyof UserWithRole;
+  isEditMode: boolean;
+  formData: Partial<UserWithRole>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+  userProfile: UserWithRole | null;
+}) => {
+  const handleFieldChange = (newValue: string) => {
+    setFormData(prev => ({ ...prev, [fieldKey]: newValue }));
+  };
+
+  if (!isEditMode) {
+    return (
+      <div>
+        <label className="text-xs font-medium text-gray-600">{label}</label>
+        <div className={`mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm ${isTextarea ? 'min-h-[120px]' : ''}`}>
+          {value || 'Not specified'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="text-xs font-medium text-gray-700">{label}</label>
+      {isTextarea ? (
+        <textarea
+          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px] resize-y"
+          value={value}
+          onChange={(e) => handleFieldChange(e.target.value)}
+          placeholder={placeholder}
+          rows={5}
+        />
+      ) : isSelect ? (
+        <select 
+          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={value}
+          onChange={(e) => handleFieldChange(e.target.value)}
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={value}
+          onChange={(e) => handleFieldChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      )}
+    </div>
+  );
+};
 
 export function UserProfilePage({ onBack }: UserProfilePageProps) {
   const [activeTab, setActiveTab] = useState<'personal' | 'work' | 'compliance' | 'payments' | 'availability' | 'performance' | 'reports' | 'preferences'>('personal');
@@ -28,6 +540,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [userProfile, setUserProfile] = useState<UserWithRole | null>(null);
   const [userError, setUserError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Partial<UserWithRole>>({});
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [showFinanceQueryModal, setShowFinanceQueryModal] = useState(false);
   const [financeQueryForm, setFinanceQueryForm] = useState({
@@ -64,6 +577,34 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     'Tuvaluan', 'Ugandan', 'Ukrainian', 'Uruguayan', 'Uzbekistani', 'Venezuelan', 'Vietnamese', 'Welsh',
     'Yemenite', 'Zambian', 'Zimbabwean'
   ];
+
+  // Standardized list of countries/territories for official documents
+  const COUNTRIES = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia',
+    'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium',
+    'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria',
+    'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic',
+    'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba',
+    'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominican Republic', 'Ecuador', 'Egypt',
+    'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Fiji', 'Finland', 'France',
+    'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau',
+    'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
+    'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kuwait', 'Kyrgyzstan',
+    'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg',
+    'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius',
+    'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar',
+    'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea',
+    'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
+    'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Lucia', 'Samoa',
+    'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone',
+    'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan',
+    'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan',
+    'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+    'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan',
+    'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  ].sort();
+
+  // Common country codes for phone numbers
 
   const LANGUAGES = [
     'Afrikaans', 'Albanian', 'Amharic', 'Arabic', 'Armenian', 'Assamese', 'Aymara', 'Azerbaijani', 'Bambara',
@@ -160,12 +701,39 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       try {
         setIsLoading(true);
         setUserError(null);
-        const profile = await userService.getCurrentUserProfile();
-        setUserProfile(profile);
+        
+        // Try database first, fall back to mock service
+        let profile: UserWithRole | null = null;
+        try {
+          profile = await userService.getCurrentUserWithRole();
+          
+          // If no profile exists, try to create one
+          if (!profile) {
+            console.log('No profile found, attempting to create one...');
+            const created = await userService.createCurrentUserProfile();
+            if (created) {
+              // Try fetching again after creation
+              profile = await userService.getCurrentUserWithRole();
+            }
+          }
+        } catch (dbError) {
+          console.warn('Database unavailable, using mock service:', dbError);
+          // Import MockUserService dynamically to avoid circular deps
+          const { MockUserService } = await import('../../lib/userService.mock');
+          profile = await MockUserService.getCurrentUserWithRole();
+        }
+        
+        if (profile) {
+          setUserProfile(profile);
+          setFormData(profile); // Initialize form with current user data
+          console.log('UserProfilePage - User profile loaded:', profile);
+        } else {
+          throw new Error('No user profile found and unable to create one');
+        }
       } catch (error) {
         console.error('Failed to fetch user profile:', error);
         setUserError(error instanceof Error ? error.message : 'Failed to load user profile');
-        toast.error('Failed to load user profile. Using fallback data.');
+        toast.error('Failed to load user profile');
       } finally {
         setIsLoading(false);
       }
@@ -362,20 +930,35 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             </div>
             <EditableField
               label="Date of Birth"
-              value="21/08/92 (32 years old)"
+              value={formData.date_of_birth || userProfile?.date_of_birth || ""}
               type="date"
+              fieldKey="date_of_birth"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <EditableField
               label="Gender"
-              value="Female"
+              value={formData.gender || userProfile?.gender || ""}
               isSelect={true}
               options={['Female', 'Male', 'Other', 'Prefer not to say']}
+              fieldKey="gender"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <EditableField
               label="Nationality"
-              value="Australian"
+              value={formData.nationality || userProfile?.nationality || ""}
               isSelect={true}
               options={NATIONALITIES}
+              fieldKey="nationality"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <div className="col-span-1 md:col-span-2">
               <label className="text-xs font-medium text-gray-600">Languages Spoken</label>
@@ -451,31 +1034,54 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <EditableField
               label="Email"
-              value={userProfile?.email || ""}
+              value={formData.email || userProfile?.email || ""}
               type="email"
+              fieldKey="email"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
-            <EditableField
+            <PhoneField
               label="Mobile Phone"
-              value="+61 412 345 678"
-              type="tel"
+              value={formData.phone || userProfile?.phone || ""}
+              fieldKey="phone"
+              placeholder="Enter mobile number"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
-            <EditableField
+            <PhoneField
               label="Work Number"
-              value="+61 412 345 678"
-              type="tel"
+              value={formData.work_phone || userProfile?.work_phone || ""}
+              fieldKey="work_phone"
+              placeholder="Enter work number"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
-            <EditableField
+            <CityField
               label="Working Location"
-              value="Remote"
-              isSelect={true}
-              options={['Remote', 'On-site', 'Hybrid', 'Flexible']}
+              value={formData.office_location || userProfile?.office_location || ""}
+              fieldKey="office_location"
+              placeholder="Select City or enter custom location"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <div className="col-span-1 md:col-span-2">
-              <EditableField
+              <AddressField
                 label="Home Address"
-                value="123 Example St, Sydney, NSW 2090, Australia"
-                isTextarea={true}
+                value={formData.home_address || userProfile?.home_address || ""}
                 placeholder="Enter your full home address"
+                fieldKey="home_address"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
             </div>
             <div className="col-span-1 md:col-span-2">
@@ -517,9 +1123,14 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           </h3>
           <EditableField
             label="Introduction"
-            value="I'm a dedicated and passionate professional with over 8 years of experience in project management and international development. I thrive in collaborative environments and I'm always eager to take on new challenges. I'm excited to be part of this team and contribute to our shared goals. Outside of work, I'm an avid hiker and love exploring new cultures through travel and food."
+            value={formData.bio || userProfile?.bio || ""}
             isTextarea={true}
             placeholder="Tell us about yourself, your background, interests, and what motivates you..."
+            fieldKey="bio"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
           />
         </div>
 
@@ -531,18 +1142,33 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <EditableField
               label="Job Title"
-              value={userProfile?.job_title || "Project Manager"}
+              value={formData.job_title || userProfile?.job_title || ""}
+              fieldKey="job_title"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <EditableField
               label="Department"
-              value={userProfile?.department || "International Development"}
+              value={formData.department || userProfile?.department || ""}
+              fieldKey="department"
+              isEditMode={isEditMode}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
             />
             <div className="col-span-1 md:col-span-2">
               <EditableField
                 label="Brief Description"
-                value="Manages and oversees international development projects, ensuring they are completed on time, within budget, and to the required quality standards."
+                value={formData.job_description || userProfile?.job_description || ""}
                 isTextarea={true}
                 placeholder="Describe your role and responsibilities..."
+                fieldKey="job_description"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
             </div>
           </div>
@@ -564,21 +1190,36 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <div className="space-y-3">
               <EditableField
                 label="Passport Number"
-                value="E12345678"
+                value={formData.passport_number || userProfile?.passport_number || ""}
                 placeholder="Enter passport number"
+                fieldKey="passport_number"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
               <EditableField
                 label="Expiry Date"
-                value="15/06/2030"
+                value={formData.passport_expiry || userProfile?.passport_expiry || ""}
                 type="date"
                 placeholder="Select expiry date"
+                fieldKey="passport_expiry"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
               <EditableField
                 label="Country of Issue"
-                value="Australia"
+                value={formData.passport_country || userProfile?.passport_country || ""}
                 isSelect={true}
-                options={NATIONALITIES.map(nat => nat.replace(/an$|ian$|ish$|ese$|i$/, '').replace('American', 'USA').replace('British', 'UK'))}
+                options={COUNTRIES}
                 placeholder="Select country"
+                fieldKey="passport_country"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
             </div>
           </div>
@@ -590,21 +1231,36 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <div className="space-y-3">
               <EditableField
                 label="License Number"
-                value="987654321"
+                value={formData.license_number || userProfile?.license_number || ""}
                 placeholder="Enter license number"
+                fieldKey="license_number"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
               <EditableField
                 label="Country of Issue"
-                value="Australia"
+                value={formData.license_country || userProfile?.license_country || ""}
                 isSelect={true}
-                options={NATIONALITIES.map(nat => nat.replace(/an$|ian$|ish$|ese$|i$/, '').replace('American', 'USA').replace('British', 'UK'))}
+                options={COUNTRIES}
                 placeholder="Select country"
+                fieldKey="license_country"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
               <EditableField
                 label="Expiry Date"
-                value="21/08/2028"
+                value={formData.license_expiry || userProfile?.license_expiry || ""}
                 type="date"
                 placeholder="Select expiry date"
+                fieldKey="license_expiry"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
               />
             </div>
           </div>
@@ -624,54 +1280,39 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Emergency Information
             </h4>
             <div className="space-y-3">
-              {!isEditMode ? (
-                <>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
-                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Noah Thompson</div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Relationship</label>
-                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">Partner</div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
-                    <div className="mt-1 p-2 bg-red-100 rounded-md text-red-900 border border-red-200 text-sm">+61 487 654 321</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Emergency Contact Name</label>
-                    <input 
-                      className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      defaultValue="Noah Thompson"
-                      placeholder="Enter emergency contact name"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Relationship</label>
-                    <select className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                      <option value="Partner">Partner</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Parent">Parent</option>
-                      <option value="Sibling">Sibling</option>
-                      <option value="Child">Child</option>
-                      <option value="Friend">Friend</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-red-700">Emergency Contact Phone</label>
-                    <input 
-                      type="tel"
-                      className="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      defaultValue="+61 487 654 321"
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                </>
-              )}
+              <EditableField
+                label="Emergency Contact Name"
+                value={formData.emergency_contact_name || userProfile?.emergency_contact_name || ""}
+                placeholder="Enter emergency contact name"
+                fieldKey="emergency_contact_name"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <SelectWithOtherField
+                label="Relationship"
+                value={formData.emergency_contact_relationship || userProfile?.emergency_contact_relationship || ""}
+                options={['Partner', 'Spouse', 'Parent', 'Sibling', 'Child', 'Friend', 'Other']}
+                fieldKey="emergency_contact_relationship"
+                otherFieldKey="emergency_contact_relationship_other"
+                placeholder="Select relationship"
+                className="bg-red-50 border-red-300 focus:ring-red-500"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <PhoneField
+                label="Emergency Contact Phone"
+                value={formData.emergency_contact_phone || userProfile?.emergency_contact_phone || ""}
+                fieldKey="emergency_contact_phone"
+                placeholder="Enter emergency contact phone"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
             </div>
           </div>
           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
@@ -680,42 +1321,30 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
               Medical Conditions
             </h4>
             <div className="space-y-3">
-              {!isEditMode ? (
-                <>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600">Allergies</label>
-                    <div className="mt-1 p-2 bg-yellow-100 rounded-md text-red-700 font-medium border border-yellow-200 text-sm">Peanuts (anaphylactic)</div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600">Dietary Requirements</label>
-                    <div className="mt-1 p-2 bg-yellow-100 rounded-md text-gray-800 border border-yellow-200 text-sm">Vegetarian</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700">Allergies</label>
-                    <textarea 
-                      className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      rows={2}
-                      defaultValue="Peanuts (anaphylactic)"
-                      placeholder="List any allergies and severity (e.g., mild, severe, anaphylactic)"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700">Dietary Requirements</label>
-                    <select className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                      <option value="">No dietary requirements</option>
-                      <option value="Vegetarian" selected>Vegetarian</option>
-                      <option value="Vegan">Vegan</option>
-                      <option value="Gluten-free">Gluten-free</option>
-                      <option value="Halal">Halal</option>
-                      <option value="Kosher">Kosher</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              <EditableField
+                label="Allergies"
+                value={formData.allergies || userProfile?.allergies || ""}
+                isTextarea={true}
+                placeholder="List any allergies and severity (e.g., mild, severe, anaphylactic)"
+                fieldKey="allergies"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <SelectWithOtherField
+                label="Dietary Requirements"
+                value={formData.dietary_requirements || userProfile?.dietary_requirements || ""}
+                options={['Vegetarian', 'Vegan', 'Gluten-free', 'Halal', 'Kosher', 'Other']}
+                fieldKey="dietary_requirements"
+                otherFieldKey="dietary_requirements_other"
+                placeholder="No dietary requirements"
+                className="bg-yellow-50 border-yellow-300 focus:ring-yellow-500"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
             </div>
           </div>
         </div>
@@ -740,21 +1369,36 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8">
           <EditableField
             label="Primary Role"
-            value="Stage Manager"
+            value={formData.primary_role || userProfile?.primary_role || ""}
             isSelect={true}
             options={['Stage Manager', 'Event Coordinator', 'Technical Manager', 'Audio Technician', 'Lighting Technician', 'Other']}
+            fieldKey="primary_role"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
           />
           <EditableField
             label="Secondary Role"
-            value="Lighting Technician"
+            value={formData.secondary_role || userProfile?.secondary_role || ""}
             isSelect={true}
             options={['Lighting Technician', 'Audio Technician', 'Stage Manager', 'Event Coordinator', 'Technical Manager', 'Other']}
+            fieldKey="secondary_role"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
           />
           <EditableField
             label="Years of Experience"
-            value="8+ Years"
+            value={formData.years_experience || userProfile?.years_experience || ""}
             isSelect={true}
             options={['0-1 Years', '1-2 Years', '2-5 Years', '5-8 Years', '8+ Years', '10+ Years']}
+            fieldKey="years_experience"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
           />
           <div>
             <label className="block text-sm font-medium text-gray-600">Date Joined CASFID</label>
@@ -2692,9 +3336,14 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           
           <EditableField
             label="General Notes (Visible to Crew Member)"
-            value="Allergic to nuts. Also have experience in basic carpentry."
+            value={formData.general_notes || userProfile?.general_notes || ""}
             isTextarea={true}
             placeholder="Enter any additional notes or requirements..."
+            fieldKey="general_notes"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
           />
           
           <div className="pt-4 bg-gray-50 p-4 rounded-lg -m-4 mt-4">
@@ -2779,78 +3428,50 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   };
 
   const handleSave = async () => {
+    if (!userProfile) {
+      toast.error('No user profile loaded');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully!');
-      setIsEditMode(false); // Exit edit mode after successful save
+      // Remove role from formData as it's stored in a separate table
+      const { role, preferences, ...profileUpdates } = formData;
+      
+      // Try database first, fall back to mock service
+      let success = false;
+      try {
+        success = await userService.updateCurrentUserProfile(profileUpdates);
+      } catch (dbError) {
+        console.warn('Database unavailable, using mock service:', dbError);
+        // Import MockUserService dynamically to avoid circular deps
+        const { MockUserService } = await import('../../lib/userService.mock');
+        success = await MockUserService.updateUserProfile(userProfile.id, profileUpdates);
+      }
+
+      if (success) {
+        // Update the userProfile state with the new data
+        const updatedProfile = { ...userProfile, ...profileUpdates };
+        setUserProfile(updatedProfile);
+        
+        toast.success('Profile updated successfully!');
+        setIsEditMode(false); // Exit edit mode after successful save
+        console.log('Profile updated:', updatedProfile);
+      } else {
+        toast.error('Failed to save profile changes');
+      }
     } catch (error) {
+      console.error('Error saving profile:', error);
       toast.error('Failed to save changes');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper component for editable fields
-  const EditableField = ({ 
-    label, 
-    value, 
-    type = 'text', 
-    isTextarea = false, 
-    isSelect = false, 
-    options = [], 
-    className = '',
-    placeholder = ''
-  }: {
-    label: string;
-    value: string;
-    type?: string;
-    isTextarea?: boolean;
-    isSelect?: boolean;
-    options?: string[];
-    className?: string;
-    placeholder?: string;
-  }) => {
-    if (!isEditMode) {
-      return (
-        <div>
-          <label className="text-xs font-medium text-gray-600">{label}</label>
-          <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-            {value}
-          </div>
-        </div>
-      );
-    }
 
-    return (
-      <div>
-        <label className="text-xs font-medium text-gray-700">{label}</label>
-        {isTextarea ? (
-          <textarea
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            defaultValue={value}
-            placeholder={placeholder}
-            rows={3}
-          />
-        ) : isSelect ? (
-          <select className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            {options.map((option) => (
-              <option key={option} value={option} selected={option === value}>
-                {option}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type={type}
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            defaultValue={value}
-            placeholder={placeholder}
-          />
-        )}
-      </div>
-    );
-  };
+
+
+
 
   const handleFinanceQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();

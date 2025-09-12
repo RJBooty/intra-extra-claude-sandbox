@@ -7,7 +7,8 @@ import { TeamPage } from '../team/TeamPage';
 import { RoleManagement } from '../admin/RoleManagement';
 import { AdvancedPermissionsManagement } from '../admin/AdvancedPermissionsManagement';
 import { DemoPermissionsManager } from '../admin/DemoPermissionsManager';
-import { userService, UserWithRole } from '../../lib/userService';
+import { userService } from '../../lib/services/userService';
+import { UserWithRole } from '../../types/user';
 
 interface SettingsHoldingPageProps {
   onNavigate: (section: string) => void;
@@ -19,7 +20,9 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
 
   useEffect(() => {
     const loadCurrentUser = async () => {
-      const profile = await userService.getCurrentUserProfile();
+      const profile = await userService.getCurrentUserWithRole();
+      console.log('SettingsHoldingPage - Current user loaded:', profile);
+      console.log('User role type:', profile?.role?.role_type);
       setCurrentUser(profile);
     };
     loadCurrentUser();

@@ -116,26 +116,76 @@ export async function updateUserProfile(profileData: any) {
   }
 }
 
-// Helper function to get user role
+// Helper function to get user role - uses user_roles table
 export const getUserRole = async (userId: string) => {
   const { data, error } = await supabase
-    .from('platform_user_roles')
-    .select('role_level')
+    .from('user_roles')
+    .select('role_type')
     .eq('user_id', userId)
+    .eq('is_active', true)
     .single()
   
   if (error) {
     console.error('Error fetching user role:', error)
-    return 'user' // default role
+    return 'user'
   }
   
-  return data?.role_level || 'user'
+  const roleType = data?.role_type?.toLowerCase() || 'user'
+  const roleMapping: { [key: string]: string } = {
+    'master': 'master',
+    'senior': 'senior', 
+    'mid': 'mid',
+    'external': 'external',
+    'hr': 'hr'
+  }
+  
+  return roleMapping[roleType] || 'user'
 }
 
 // Helper function to check if user is master
 export const isMasterUser = async (userId: string) => {
   const role = await getUserRole(userId)
   return role === 'master'
+}
+
+// Helper function to get user role level (numeric)
+export const getUserRoleLevel = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role_level')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .single()
+  
+  if (error) {
+    console.error('Error fetching user role level:', error)
+    return 5 // default to lowest level (External)
+  }
+  
+  return data?.role_level || 5
+}
+
+// Helper function to check if user has minimum role level
+export const hasMinimumRoleLevel = async (userId: string, requiredLevel: number) => {
+  const userLevel = await getUserRoleLevel(userId)
+  return userLevel <= requiredLevel // Lower numbers = higher access (1=Master, 5=External)
+}
+
+// Helper function to get full user role info
+export const getUserRoleInfo = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .single()
+  
+  if (error) {
+    console.error('Error fetching user role info:', error)
+    return null
+  }
+  
+  return data
 }
 
 // Database helpers with error handling
@@ -182,6 +232,29 @@ export async function createClientRecord(clientData: any) {
   }
 }
 
+// PROJECT MANAGEMENT FUNCTIONS
+
+// Get only active (non-deleted) projects
+export async function getActiveProjects() {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        client:clients(*)
+      `)
+      .or('is_deleted.is.null,is_deleted.eq.false') // Handle both null and false values
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch active projects:', error);
+    return [];
+  }
+}
+
+// Get all projects (legacy function - kept for compatibility)
 export async function getProjects() {
   try {
     const { data, error } = await supabase
@@ -208,19 +281,175 @@ export async function getProjects() {
   }
 }
 
+// Get deleted projects (bin contents)
+export async function getDeletedProjects() {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        client:clients(*)
+      `)
+      .eq('is_deleted', true)
+      .order('deleted_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch deleted projects:', error);
+    return [];
+  }
+}
+
+// Soft delete a project (move to bin)
+export async function softDeleteProject(projectId: string, userId: string, reason?: string) {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+        deleted_by: userId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId)
+      .or('is_deleted.is.null,is_deleted.eq.false') // Only delete if not already deleted
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log the deletion action
+    try {
+      await supabase
+        .from('project_deletions')
+        .insert([{
+          project_id: projectId,
+          action_type: 'soft_delete',
+          performed_by: userId,
+          reason: reason || 'No reason provided'
+        }]);
+    } catch (auditError) {
+      console.warn('Failed to log deletion audit:', auditError);
+      // Don't fail the main operation if audit logging fails
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Failed to soft delete project:', error);
+    throw error;
+  }
+}
+
+// Restore a project from bin
+export async function restoreProject(projectId: string, userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
+        is_deleted: false,
+        deleted_at: null,
+        deleted_by: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', projectId)
+      .eq('is_deleted', true) // Only restore if currently deleted
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log the restoration
+    try {
+      await supabase
+        .from('project_deletions')
+        .insert([{
+          project_id: projectId,
+          action_type: 'restore',
+          performed_by: userId
+        }]);
+    } catch (auditError) {
+      console.warn('Failed to log restoration audit:', auditError);
+      // Don't fail the main operation if audit logging fails
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Failed to restore project:', error);
+    throw error;
+  }
+}
+
+// Permanently delete a project
+export async function permanentDeleteProject(projectId: string, userId: string) {
+  try {
+    // Log the permanent deletion first
+    try {
+      await supabase
+        .from('project_deletions')
+        .insert([{
+          project_id: projectId,
+          action_type: 'permanent_delete',
+          performed_by: userId
+        }]);
+    } catch (auditError) {
+      console.warn('Failed to log permanent deletion audit:', auditError);
+      // Continue with deletion even if audit fails
+    }
+
+    // Then permanently delete the project
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+      .eq('is_deleted', true); // Only delete if currently in bin
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to permanently delete project:', error);
+    throw error;
+  }
+}
+
 export async function createProject(projectData: any) {
   try {
+    // Reserve a project code if not provided or if it needs to be generated
+    let finalProjectCode = projectData.project_code;
+    
+    if (!finalProjectCode && projectData.event_location) {
+      // Reserve the actual project code only at creation time
+      const { data: reservedCode, error: codeError } = await supabase
+        .rpc('reserve_project_code', { p_location: projectData.event_location });
+      
+      if (codeError) {
+        console.error('Failed to reserve project code:', codeError);
+        throw new Error(`Failed to reserve project code: ${codeError.message}`);
+      }
+      
+      finalProjectCode = reservedCode;
+    }
+
+    // Insert project with reserved code in a transaction
     const { data, error } = await supabase
       .from('projects')
       .insert([{
         ...projectData,
+        project_code: finalProjectCode,
+        is_deleted: false, // Ensure new projects are not deleted
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // If insert fails due to duplicate project_code, it will be caught here
+      console.error('Project creation failed:', error);
+      throw error;
+    }
+    
     return data;
   } catch (error) {
     console.error('Failed to create project:', error);
@@ -316,7 +545,7 @@ export async function updateOpportunity(opportunityId: string, updates: any) {
 export async function getUsers() {
   try {
     const { data, error } = await supabase
-      .from('platform_user_roles')
+      .from('user_roles')
       .select('*');
     
     if (error) {
@@ -738,5 +967,151 @@ export async function getPermissionAuditLog(limit: number = 100) {
   } catch (error) {
     console.error('Failed to get audit log:', error);
     return [];
+  }
+}
+
+// Enhanced getProjects with permission filtering
+export async function getProjectsWithPermissions(userId?: string, userRole?: string) {
+  try {
+    let query = supabase
+      .from('projects')
+      .select(`
+        *,
+        client:clients(*)
+      `);
+
+    // For now, let's remove the external user filtering since we don't have 
+    // the assigned_users column. We'll implement proper project assignments later.
+    // 
+    // if (userRole === 'external' && userId) {
+    //   // External users only see assigned projects
+    //   query = query.eq('assigned_users', userId);
+    // }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+      if (error.message?.includes('not found') || error.message?.includes('does not exist')) {
+        console.warn('Projects table not found, returning empty array');
+        return [];
+      }
+      throw error;
+    }
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch projects:', error);
+    return [];
+  }
+}
+
+// Enhanced createProject with project code generation
+export async function createProjectWithCode(projectData: any, userRole?: string) {
+  try {
+    // Check permissions
+    if (userRole && !['master', 'senior'].includes(userRole)) {
+      throw new Error('Insufficient permissions to create projects');
+    }
+
+    // Generate unique project code based on location
+    const regionCode = extractRegionCodeFromLocation(projectData.event_location);
+    const projectCode = await generateUniqueProjectCode(regionCode);
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        ...projectData,
+        project_code: projectCode,
+        current_phase: 1,
+        phase_progress: 25,
+        status: 'Active',
+        is_deleted: false, // Ensure new projects are not deleted
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select(`
+        *,
+        client:clients(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to create project:', error);
+    throw error;
+  }
+}
+
+// Helper functions
+function extractRegionCodeFromLocation(location: string): string {
+  const locationLower = location.toLowerCase();
+  
+  if (locationLower.includes('united kingdom') || locationLower.includes('uk')) return 'UK';
+  if (locationLower.includes('spain')) return 'ES';
+  if (locationLower.includes('france')) return 'FR';
+  if (locationLower.includes('germany')) return 'DE';
+  if (locationLower.includes('italy')) return 'IT';
+  if (locationLower.includes('united states') || locationLower.includes('usa')) return 'US';
+  // Add more countries as needed
+  
+  return 'XX'; // Default for unknown regions
+}
+
+async function generateUniqueProjectCode(regionCode: string): Promise<string> {
+  try {
+    // Try to use your database function if it exists
+    const { data, error } = await supabase.rpc('generate_project_code', {
+      p_region: regionCode
+    });
+
+    if (error || !data) {
+      // Fallback to manual generation
+      const year = new Date().getFullYear();
+      const randomNum = Math.floor(Math.random() * 9999) + 1;
+      return `${regionCode}-${year}-${randomNum.toString().padStart(4, '0')}`;
+    }
+
+    return data;
+  } catch (error) {
+    // Fallback generation
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(Math.random() * 9999) + 1;
+    return `${regionCode}-${year}-${randomNum.toString().padStart(4, '0')}`;
+  }
+}
+
+// Real-time subscription for projects
+export function subscribeToProjectChanges(callback: (payload: any) => void) {
+  return supabase
+    .channel('projects_changes')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'projects' 
+      }, 
+      callback
+    )
+    .subscribe();
+}
+
+// Legacy delete project function (kept for compatibility)
+export async function deleteProject(projectId: string) {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) {
+      console.error('Error deleting project:', error);
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete project:', error);
+    throw error;
   }
 }

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, CircleDot, LogOut, User, Settings } from 'lucide-react';
 import { auth } from '../../lib/supabase';
-import { userService, UserWithRole } from '../../lib/userService';
+import { userService } from '../../lib/services/userService';
+import { UserWithRole } from '../../types/user';
 import toast from 'react-hot-toast';
 
 interface HeaderProps {

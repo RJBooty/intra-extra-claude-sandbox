@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './lib/supabase';
+import { auth, getUserRole } from './lib/supabase';
 import { LoginPage } from './components/auth/LoginPage';
 import { Dashboard } from './components/layout/Dashboard';
 import { Header } from './components/layout/Header';
@@ -27,6 +27,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState<string>('external');
   const [appError, setAppError] = useState<string | null>(null);
 
   // Real authentication checking with timeout
@@ -47,6 +48,16 @@ function App() {
         if (currentUser) {
           setUser(currentUser);
           setIsAuthenticated(true);
+          
+          // Fetch user role from database
+          try {
+            const role = await getUserRole(currentUser.id);
+            console.log('User role fetched:', role);
+            setUserRole(role);
+          } catch (roleError) {
+            console.error('Error fetching user role:', roleError);
+            setUserRole('external'); // fallback
+          }
         } else {
           setIsAuthenticated(false);
         }
@@ -67,14 +78,25 @@ function App() {
 
     // Listen for auth state changes
     try {
-      const { data: { subscription } } = auth.onAuthStateChange((authUser) => {
+      const { data: { subscription } } = auth.onAuthStateChange(async (authUser) => {
         console.log('Auth state changed:', authUser);
         if (authUser) {
           setUser(authUser);
           setIsAuthenticated(true);
+          
+          // Fetch user role when auth state changes
+          try {
+            const role = await getUserRole(authUser.id);
+            console.log('User role fetched on auth change:', role);
+            setUserRole(role);
+          } catch (roleError) {
+            console.error('Error fetching user role on auth change:', roleError);
+            setUserRole('external'); // fallback
+          }
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setUserRole('external'); // reset role when logged out
         }
         setIsLoading(false);
       });
@@ -96,7 +118,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Add a failsafe debug log - now all variables are initialized
-  console.log('App render state:', { isLoading, appError, isAuthenticated, currentView, activeTab });
+  console.log('App render state:', { isLoading, appError, isAuthenticated, currentView, activeTab, userRole });
 
   const handleProjectCreated = (project: Project) => {
     setCurrentProject(project);
@@ -225,8 +247,19 @@ function App() {
           <button 
             onClick={() => {
               setIsLoading(false);
-              setIsAuthenticated(false);
+              setIsAuthenticated(true);
               setAppError(null);
+              // Set a mock user for development
+              setUser({
+                id: 'dev-user-id',
+                email: 'tyson@casfid.com',
+                user_metadata: {
+                  first_name: 'James',
+                  last_name: 'Tyson',
+                  display_name: 'James Tyson (Dev Mode)'
+                }
+              });
+              setUserRole('master'); // Set master role for dev mode
             }}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -266,6 +299,7 @@ function App() {
     console.log('activeTab:', activeTab);
     console.log('showProjectDetail:', showProjectDetail);
     console.log('currentProject:', currentProject?.id || 'null');
+    console.log('userRole:', userRole);
     
     // Show project detail view if a project is selected
     if (showProjectDetail && currentProject) {
@@ -282,6 +316,7 @@ function App() {
                 project={currentProject}
                 onBack={() => setShowProjectDetail(false)}
                 onNavigate={handleNavigate}
+                userRole={userRole}
               />
             </div>
           </div>
@@ -293,18 +328,27 @@ function App() {
       case 'projects':
         console.log('>>> PROJECTS TAB CASE');
         console.log('>>> RENDERING PROJECTS LIST');
+        console.log('User object in App:', user);
+        console.log('Passing userRole:', userRole);
+        console.log('Passing userId:', user?.id);
+        
         return (
-        <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
-          <div className="layout-container flex h-full grow flex-col">
-            <div className="gap-1 px-3 flex flex-1 justify-start py-5">
-            {/* Persistent Sidebar */}
-            <Sidebar currentView="projects" onNavigate={handleNavigate} />
-            
-            <div className="layout-content-container flex flex-col flex-1 ml-4">
-              <ProjectsList onNavigate={handleNavigate} onProjectSelect={handleProjectSelect} />
+          <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+            <div className="layout-container flex h-full grow flex-col">
+              <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+                {/* Persistent Sidebar */}
+                <Sidebar currentView="projects" onNavigate={handleNavigate} />
+                
+                <div className="layout-content-container flex flex-col flex-1 ml-4">
+                  <ProjectsList 
+                    onNavigate={handleNavigate} 
+                    onProjectSelect={handleProjectSelect}
+                    userRole={userRole}
+                    userId={user?.id}
+                  />
+                </div>
+              </div>
             </div>
-            </div>
-          </div>
           </div>
         );
       
@@ -325,20 +369,11 @@ function App() {
                   </div>
 
                   {/* Project Form */}
-                  <ProjectForm onProjectCreated={handleProjectCreated} />
-
-                  {/* Phase Tracker */}
-                  <PhaseTracker 
-                    currentPhase={currentProject?.current_phase || 1}
-                    phaseProgress={currentProject?.phase_progress || 25}
+                  <ProjectForm 
+                    onProjectCreated={handleProjectCreated}
+                    userRole={userRole}
                   />
-
-                  {/* Document Management */}
-                  <DocumentManager projectId={currentProject?.id} />
                 </div>
-
-                {/* Project Metadata Sidebar */}
-                <ProjectMetadata project={currentProject} />
               </div>
             </div>
           </div>

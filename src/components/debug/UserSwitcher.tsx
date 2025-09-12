@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { auth } from '../../lib/supabase';
-import { userService } from '../../lib/userService';
+import { userService } from '../../lib/services/userService';
 import toast from 'react-hot-toast';
 
 export function UserSwitcher() {

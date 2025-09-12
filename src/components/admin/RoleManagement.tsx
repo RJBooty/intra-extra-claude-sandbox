@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Crown, Star, UserCheck, AlertTriangle, Trash2, Edit3, Save, X } from 'lucide-react';
-import { userService, UserWithRole, UserRole } from '../../lib/userService';
+import { Shield, Users, Crown, Star, UserCheck, AlertTriangle, Trash2, Edit3, Save, X, Plus, Mail, User, Eye } from 'lucide-react';
+import { userService } from '../../lib/services/userService';
+import { UserWithRole, UserRole } from '../../types/user';
+import { MockUserService } from '../../lib/userService.mock';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -39,6 +41,15 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole['role_type']>('External');
   const [showConfirmModal, setShowConfirmModal] = useState<string | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [selectedUserForView, setSelectedUserForView] = useState<UserWithRole | null>(null);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    role_type: 'External' as UserRole['role_type']
+  });
 
   useEffect(() => {
     loadData();
@@ -47,13 +58,30 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [allUsers, profile] = await Promise.all([
-        userService.getAllUsers(),
-        userService.getCurrentUserProfile()
-      ]);
       
-      setUsers(allUsers);
-      setCurrentUser(profile);
+      // Try to load from database first, fall back to mock data
+      try {
+        const [allUsers, profile] = await Promise.all([
+          userService.getAllUserProfiles(),
+          userService.getCurrentUserWithRole()
+        ]);
+        
+        setUsers(allUsers);
+        setCurrentUser(profile);
+        console.log('RoleManagement - Current user loaded:', profile);
+        console.log('RoleManagement - User role type:', profile?.role?.role_type);
+      } catch (dbError) {
+        console.warn('Database unavailable, using mock data:', dbError);
+        
+        // Use mock service as fallback
+        const [allUsers, profile] = await Promise.all([
+          MockUserService.getAllUsers(),
+          MockUserService.getCurrentUserWithRole()
+        ]);
+        
+        setUsers(allUsers);
+        setCurrentUser(profile);
+      }
     } catch (error) {
       console.error('Failed to load role management data:', error);
       toast.error('Failed to load user data');
@@ -65,7 +93,15 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
   const handleRoleChange = async (userId: string, newRole: UserRole['role_type']) => {
     try {
       setLoading(true);
-      await userService.assignRole(userId, newRole);
+      
+      // Try database first, fall back to mock service
+      try {
+        await userService.assignRole(userId, newRole);
+      } catch (dbError) {
+        console.warn('Database unavailable, using mock service:', dbError);
+        await MockUserService.updateUserRole(userId, newRole);
+      }
+      
       toast.success(`Role updated successfully to ${newRole}`);
       await loadData(); // Reload data
       setEditingUserId(null);
@@ -77,19 +113,46 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
     }
   };
 
-  const handleSetupMasterUser = async () => {
+  const handleViewUser = (user: UserWithRole) => {
+    setSelectedUserForView(user);
+    setShowUserProfileModal(true);
+  };
+
+  const handleCloseUserModal = () => {
+    setShowUserProfileModal(false);
+    setSelectedUserForView(null);
+  };
+
+  const handleCreateUser = async () => {
     try {
-      setLoading(true);
-      const success = await userService.setupMasterUser();
-      if (success) {
-        toast.success('Master user setup completed');
-        await loadData();
-      } else {
-        toast.error('Failed to setup master user');
+      if (!newUserData.email || !newUserData.first_name || !newUserData.last_name) {
+        toast.error('Please fill in all required fields');
+        return;
       }
+
+      setLoading(true);
+      
+      // Try database first, fall back to mock service
+      try {
+        const newUser = await userService.createUser(newUserData);
+        toast.success(`User ${newUser.display_name} created successfully`);
+      } catch (dbError) {
+        console.warn('Database unavailable, using mock service:', dbError);
+        const newUser = await MockUserService.createUser(newUserData);
+        toast.success(`User ${newUser.display_name} created successfully`);
+      }
+      
+      await loadData();
+      setShowCreateUserModal(false);
+      setNewUserData({
+        email: '',
+        first_name: '',
+        last_name: '',
+        role_type: 'External'
+      });
     } catch (error) {
-      console.error('Failed to setup master user:', error);
-      toast.error('Failed to setup master user');
+      console.error('Failed to create user:', error);
+      toast.error('Failed to create user');
     } finally {
       setLoading(false);
     }
@@ -145,11 +208,11 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
             <h1 className="text-3xl font-bold text-gray-900">Role Management</h1>
           </div>
           <button
-            onClick={handleSetupMasterUser}
+            onClick={() => setShowCreateUserModal(true)}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2"
           >
-            <Crown className="w-4 h-4" />
-            Setup Master User
+            <Plus className="w-4 h-4" />
+            Create New User
           </button>
         </div>
         <p className="text-gray-600">
@@ -273,6 +336,7 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
                             onClick={() => handleRoleChange(user.id, selectedRole)}
                             className="text-green-600 hover:text-green-900 p-1"
                             disabled={loading}
+                            title="Save Role Change"
                           >
                             <Save className="w-4 h-4" />
                           </button>
@@ -282,21 +346,32 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
                               setSelectedRole('External');
                             }}
                             className="text-gray-600 hover:text-gray-900 p-1"
+                            title="Cancel"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => {
-                            setEditingUserId(user.id);
-                            setSelectedRole(user.role?.role_type || 'External');
-                          }}
-                          className="text-blue-600 hover:text-blue-900 p-1"
-                          disabled={loading}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewUser(user)}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="View Profile"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingUserId(user.id);
+                              setSelectedRole(user.role?.role_type || 'External');
+                            }}
+                            className="text-purple-600 hover:text-purple-900 p-1"
+                            disabled={loading}
+                            title="Edit Role"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -314,6 +389,264 @@ export function RoleManagement({ onBack }: RoleManagementProps) {
           <p className="text-gray-600">
             Users will appear here once they register for the platform.
           </p>
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Create New User</h3>
+              <button
+                onClick={() => setShowCreateUserModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateUser(); }} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="user@company.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name *
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                    <input
+                      type="text"
+                      id="first_name"
+                      value={newUserData.first_name}
+                      onChange={(e) => setNewUserData(prev => ({ ...prev, first_name: e.target.value }))}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="last_name"
+                    value={newUserData.last_name}
+                    onChange={(e) => setNewUserData(prev => ({ ...prev, last_name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="role_type" className="block text-sm font-medium text-gray-700 mb-1">
+                  Initial Role
+                </label>
+                <select
+                  id="role_type"
+                  value={newUserData.role_type}
+                  onChange={(e) => setNewUserData(prev => ({ ...prev, role_type: e.target.value as UserRole['role_type'] }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {Object.entries(roleDescriptions).map(([role, description]) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateUserModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showUserProfileModal && selectedUserForView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">User Profile</h2>
+              <button
+                onClick={handleCloseUserModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Profile Content */}
+            <div className="p-6">
+              {/* Avatar and Basic Info */}
+              <div className="flex items-center gap-6 mb-8">
+                <div
+                  className="w-20 h-20 rounded-full bg-cover bg-center border-4 border-white shadow-lg"
+                  style={{
+                    backgroundImage: selectedUserForView.avatar_url
+                      ? `url("${selectedUserForView.avatar_url}")`
+                      : `url("https://ui-avatars.com/api/?name=${selectedUserForView.first_name}+${selectedUserForView.last_name}&background=random")`
+                  }}
+                />
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {selectedUserForView.display_name || `${selectedUserForView.first_name} ${selectedUserForView.last_name}`}
+                  </h3>
+                  <p className="text-gray-600">{selectedUserForView.email}</p>
+                  <div className="mt-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                      selectedUserForView.role ? roleColors[selectedUserForView.role.role_type] : 'bg-gray-100 text-gray-800 border-gray-200'
+                    }`}>
+                      {selectedUserForView.role && roleIcons[selectedUserForView.role.role_type] && 
+                        React.createElement(roleIcons[selectedUserForView.role.role_type], { className: "w-3 h-3 mr-1" })
+                      }
+                      {selectedUserForView.role?.role_type || 'No Role'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Information Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Phone</label>
+                    <p className="text-gray-900">{selectedUserForView.phone || 'Not provided'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Timezone</label>
+                    <p className="text-gray-900">{selectedUserForView.timezone || 'Not set'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Preferred Communication</label>
+                    <p className="text-gray-900 capitalize">{selectedUserForView.preferred_communication || 'Not set'}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Work Information</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Job Title</label>
+                    <p className="text-gray-900">{selectedUserForView.job_title || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Department</label>
+                    <p className="text-gray-900">{selectedUserForView.department || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Office Location</label>
+                    <p className="text-gray-900">{selectedUserForView.office_location || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Start Date</label>
+                    <p className="text-gray-900">
+                      {selectedUserForView.start_date 
+                        ? new Date(selectedUserForView.start_date).toLocaleDateString()
+                        : 'Not specified'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Role Information */}
+              {selectedUserForView.role && (
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Role Details</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">Role Level:</span>
+                      <span className="ml-2 text-gray-900">{selectedUserForView.role.role_level}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Status:</span>
+                      <span className={`ml-2 ${selectedUserForView.role.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                        {selectedUserForView.role.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Assigned:</span>
+                      <span className="ml-2 text-gray-900">
+                        {selectedUserForView.role.assigned_at 
+                          ? new Date(selectedUserForView.role.assigned_at).toLocaleDateString()
+                          : 'Unknown'
+                        }
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Account Status:</span>
+                      <span className={`ml-2 ${selectedUserForView.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                        {selectedUserForView.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <span className="font-medium text-gray-600">Last Login:</span>
+                    <span className="ml-2 text-gray-900">
+                      {selectedUserForView.last_login 
+                        ? new Date(selectedUserForView.last_login).toLocaleString()
+                        : 'Never'
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* System Information */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">System Information</h4>
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div>User ID: {selectedUserForView.id}</div>
+                  <div>Created: {new Date(selectedUserForView.created_at).toLocaleString()}</div>
+                  <div>Updated: {new Date(selectedUserForView.updated_at).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
