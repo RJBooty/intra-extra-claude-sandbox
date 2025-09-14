@@ -1,0 +1,57 @@
+TICKETING - MAINS,,,,Tkt. Price,Qty,"Our tkt
+% Fee","Our value
+per tkt","Sales
+Perf %","Total
+Tkt Units",TOTAL
+- ,GA Ticket Price,,,€300.00,"1,000",10.00%,€30.00,10%,100,"€3,000.00"
+- ,VIP Ticket Price,,,€300.00,500,10.00%,€30.00,0%,0,€0.00
+,,,,,,,,,,
+TICKETING ADDONS,,,,Tkt. Price,Qty,"Our tkt
+% Fee","Our value
+per tkt","Sales
+Perf %","Total
+Tkt Units",TOTAL
+- ,Bell Tents // £450,,,€450.00,100,10.00%,€45.00,100%,100,"€4,500.00"
+- ,Campervan Pass (Large),,,€100.00,50,10.00%,€10.00,100%,50,€500.00
+- ,Campervan Pass (Small),,,€150.00,75,10.00%,€15.00,100%,75,"€1,125.00"
+- ,Motorhome (Large),,,€175.00,60,10.00%,€17.50,100%,60,"€1,050.00"
+- ,Car Park Pass,,,€50.00,500,10.00%,€5.00,100%,500,"€2,500.00"
+- ,Shuttle Bus,,,€20.00,500,10.00%,€2.00,100%,500,"€1,000.00"
+- ,Hot Tub (Private),,,€220.00,20,10.00%,€22.00,100%,20,€440.00
+- ,Hot Tub (Single),,,€270.00,30,10.00%,€27.00,100%,30,€810.00
+- ,EXTRAS,,,-,-,-%,-,-%,-,-
+,,,,,,,,,,
+WRISTBANDS & DEVICES,,,,,Qty,Fee Per,,Perf %,,TOTAL
+-,Generic Wristband Charge,,,,0,€0.00,,0.00%,,€0.00
+-,Customised Wristband Charge,,,,"3,300",€0.50,,100.00%,,"€1,650.00"
+-,Cards Charge,,,,0,€0.00,,0.00%,,€0.00
+-,Scanners Charge,,,,45,€30.00,,100.00%,,"€1,350.00"
+PLANS & INSURANCE,,,,"Average
+Tkt. Price",Qty,"Our tkt
+% Fee","Our tkt
+£ Value","Sales
+Perf %",,TOTAL
+- ,Ticketing Insurance - 5%,,,€169.58,10,5.00%,€8.48,100%,,€84.79
+- ,Payment Plan - 7%,,,€200.00,5,10.00%,€20.00,100%,,€100.00
+,,,,,,,,,,
+ACCESS & ACCRED,,,,,Qty,Fee Per,,"Sales
+Perf %",,TOTAL
+-,Access Control Fees,,,,5,€10.00,,100.00%,,€50.00
+-,Staff Accreditation Fees,,,,10,€5.00,,50.00%,,€25.00
+,,,,,,,,,,
+,,,,,,,,,,
+CASHLESS,,,,Avg. Spend,Qty,% Fee,,"Sales
+Perf %",,TOTAL
+-,Advanced Credit Vouchers,,,€85.00,"3,000",10.00%,,30%,,"€7,650.00"
+-,On-site TopUp Trxn  Fee - 0.4%,,,€100.00,"3,000",0.40%,,80%,,€960.00
+- ,Activation Fee,,,,"3,000",€1.00,,80%,,"€2,400.00"
+- ,Online Refund Fees,,,,"3,000",€0.50,,30%,,€450.00
+,,,,,,,,,,
+INSIGHTS & DATA,,,,,Qty,Fee Per,,Perf %,,TOTAL
+-,Insights Fees,,,,0,€0.00,,0.00%,,€0.00
+-,Survey Fees,,,,0,€0.00,,0.00%,,€0.00
+,,,,,,,,,,
+COMMERCIAL MODULES,,,,,Qty,Fee Per,,Perf %,,TOTAL
+-,Sponsorship Fees,,,,0,€0.00,,0.00%,,€0.00
+-,Marketplace ,,,,0,€0.00,,0.00%,,€0.00
+-,Other,,,,0,€0.00,,0.00%,,€0.00
