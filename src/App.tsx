@@ -37,9 +37,13 @@ function App() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const type = url.searchParams.get('type');
+    const accessToken = url.searchParams.get('access_token');
+    const refreshToken = url.searchParams.get('refresh_token');
 
-    if (type === 'recovery') {
+    if (type === 'recovery' && accessToken && refreshToken) {
+      console.log('Password reset URL detected, setting authView to reset-confirm');
       setAuthView('reset-confirm');
+      setIsAuthenticated(false); // Force to show reset form even if authenticated
     }
   }, []);
 

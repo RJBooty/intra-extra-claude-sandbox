@@ -59,6 +59,10 @@ export const auth = {
 
   getSession: async () => {
     return await supabase.auth.getSession()
+  },
+
+  setSession: async (session: { access_token: string; refresh_token: string }) => {
+    return await supabase.auth.setSession(session)
   }
 }
 

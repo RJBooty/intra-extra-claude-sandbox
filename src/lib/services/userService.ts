@@ -102,29 +102,6 @@ class UserService {
         .single();
 
       if (profileError) {
-        // If profile doesn't exist and user is tyson@casfid.com, create a mock profile
-        if (user.email === 'tyson@casfid.com') {
-          console.log('Creating mock profile for tyson@casfid.com');
-          return {
-            id: user.id,
-            email: user.email!,
-            first_name: 'James',
-            last_name: 'Tyson',
-            display_name: 'James Tyson',
-            job_title: 'Platform Owner',
-            department: 'Management',
-            is_active: true,
-            role: {
-              id: 'master-role-tyson',
-              user_id: user.id,
-              role_type: 'Master',
-              role_level: 1,
-              assigned_by: null,
-              assigned_at: new Date().toISOString(),
-              is_active: true
-            }
-          } as UserWithRole;
-        }
         console.error('Error fetching current user profile:', profileError);
         return null;
       }
@@ -434,6 +411,32 @@ class UserService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
+
+      // For known admin users, try to bootstrap them
+      if (user.email === 'tyson@casfid.com' || user.email === 'j.r.tyson@outlook.com') {
+        try {
+          const names = user.email === 'tyson@casfid.com'
+            ? { first: 'James', last: 'Tyson' }
+            : { first: 'JR', last: 'TY' };
+
+          const response = await supabase.rpc('create_bootstrap_master_user', {
+            user_email: user.email,
+            user_first_name: names.first,
+            user_last_name: names.last
+          });
+
+          if (response.error) {
+            console.error('Bootstrap function error:', response.error);
+            return false;
+          }
+
+          console.log(`Bootstrap profile creation successful for ${user.email}`);
+          return true;
+        } catch (error) {
+          console.error('Failed to bootstrap user:', error);
+          return false;
+        }
+      }
 
       const { error } = await supabase
         .from('user_profiles')

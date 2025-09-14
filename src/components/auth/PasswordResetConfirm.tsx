@@ -43,23 +43,42 @@ export function PasswordResetConfirm({ onSuccess, onError }: PasswordResetConfir
 
   const checkResetToken = async () => {
     try {
-      const { data: { session }, error } = await auth.getSession();
-
-      if (error || !session) {
-        console.error('No valid session for password reset:', error);
-        setTokenValid(false);
-        return;
-      }
-
-      // Check if this is a password reset session
+      // Get URL parameters
       const url = new URL(window.location.href);
       const accessToken = url.searchParams.get('access_token');
       const refreshToken = url.searchParams.get('refresh_token');
       const type = url.searchParams.get('type');
 
+      console.log('Reset token check:', { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+
+      // If we have the recovery tokens in URL, set the session
       if (type === 'recovery' && accessToken && refreshToken) {
-        setTokenValid(true);
+        try {
+          // Set the session from URL tokens
+          const { data: { session }, error } = await auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (error) {
+            console.error('Error setting session from URL tokens:', error);
+            setTokenValid(false);
+            return;
+          }
+
+          if (session) {
+            console.log('Successfully set session from URL tokens');
+            setTokenValid(true);
+          } else {
+            console.error('No session created from URL tokens');
+            setTokenValid(false);
+          }
+        } catch (sessionError) {
+          console.error('Error setting session:', sessionError);
+          setTokenValid(false);
+        }
       } else {
+        console.error('Missing recovery parameters in URL');
         setTokenValid(false);
       }
     } catch (error) {
