@@ -47,6 +47,7 @@ export const auth = {
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(session?.user || null)
     })
+<<<<<<< HEAD
   },
 
   resetPasswordForEmail: async (email: string, options?: { redirectTo?: string }) => {
@@ -63,6 +64,8 @@ export const auth = {
 
   setSession: async (session: { access_token: string; refresh_token: string }) => {
     return await supabase.auth.setSession(session)
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
   }
 }
 

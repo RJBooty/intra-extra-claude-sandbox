@@ -7,9 +7,12 @@ import { Eye, EyeOff, Lock, Mail, User, AlertCircle, Briefcase, Building, CheckC
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { auth } from '../../lib/supabase';
+<<<<<<< HEAD
 import { ProjectSetup } from '../debug/ProjectSetup';
 import { ConnectionStatus } from '../debug/ConnectionStatus';
 import { EmailDebugPanel } from '../debug/EmailDebugPanel';
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
 
 const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -34,17 +37,26 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 interface LoginPageProps {
   onLogin: () => void;
+<<<<<<< HEAD
   onForgotPassword?: () => void;
 }
 
 export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
+=======
+}
+
+export function LoginPage({ onLogin }: LoginPageProps) {
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
   const [isSignup, setIsSignup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const [pendingUserEmail, setPendingUserEmail] = useState('');
+<<<<<<< HEAD
   const [showProjectSetup, setShowProjectSetup] = useState(false);
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -71,7 +83,11 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
     setIsLoading(true);
     try {
       console.log('🔐 Attempting login with Supabase:', { email: data.email });
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
       const { data: authData, error } = await auth.signIn(data.email, data.password);
       
       if (error) {
@@ -81,9 +97,12 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
           toast.error('Invalid email or password');
         } else if (error.message.includes('Email not confirmed')) {
           toast.error('Please check your email and confirm your account first');
+<<<<<<< HEAD
         } else if (error.message.includes('Invalid API key') || error.message.includes('JWTError')) {
           toast.error('Database connection error. Please check your setup.');
           setShowProjectSetup(true);
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
         } else {
           toast.error(`Login failed: ${error.message}`);
         }
@@ -173,9 +192,12 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
 
   return (
     <>
+<<<<<<< HEAD
       <ConnectionStatus />
       <EmailDebugPanel />
       {showProjectSetup && <ProjectSetup />}
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           {/* Logo and Header */}
@@ -407,6 +429,7 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   )}
                 </div>
 
+<<<<<<< HEAD
                 {onForgotPassword && (
                   <div className="text-right">
                     <button
@@ -419,6 +442,8 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   </div>
                 )}
 
+=======
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -437,6 +462,7 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
             )}
 
             {/* Toggle between login and signup */}
+<<<<<<< HEAD
             <div className="mt-6 text-center space-y-2">
               <button
                 onClick={toggleMode}
@@ -456,6 +482,18 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   Database Setup
                 </button>
               )}
+=======
+            <div className="mt-6 text-center">
+              <button
+                onClick={toggleMode}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {isSignup 
+                  ? 'Already have an account? Sign in' 
+                  : "Don't have an account? Sign up"
+                }
+              </button>
+>>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
             </div>
           </div>
         </div>
