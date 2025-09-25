@@ -102,8 +102,6 @@ class UserService {
         .single();
 
       if (profileError) {
-<<<<<<< HEAD
-=======
         // If profile doesn't exist and user is tyson@casfid.com, create a mock profile
         if (user.email === 'tyson@casfid.com') {
           console.log('Creating mock profile for tyson@casfid.com');
@@ -127,7 +125,6 @@ class UserService {
             }
           } as UserWithRole;
         }
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
         console.error('Error fetching current user profile:', profileError);
         return null;
       }
@@ -438,7 +435,6 @@ class UserService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-<<<<<<< HEAD
       // For known admin users, try to bootstrap them
       if (user.email === 'tyson@casfid.com' || user.email === 'j.r.tyson@outlook.com') {
         try {
@@ -465,8 +461,6 @@ class UserService {
         }
       }
 
-=======
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
       const { error } = await supabase
         .from('user_profiles')
         .insert({

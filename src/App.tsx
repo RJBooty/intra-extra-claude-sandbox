@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { auth, getUserRole } from './lib/supabase';
 import { LoginPage } from './components/auth/LoginPage';
-<<<<<<< HEAD
 import { PasswordResetRequest } from './components/auth/PasswordResetRequest';
 import { PasswordResetConfirm } from './components/auth/PasswordResetConfirm';
-=======
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
 import { Dashboard } from './components/layout/Dashboard';
 import { Header } from './components/layout/Header';
 import { ProjectView } from './components/project/ProjectView';
@@ -34,7 +31,6 @@ function App() {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState<string>('external');
   const [appError, setAppError] = useState<string | null>(null);
-<<<<<<< HEAD
   const [authView, setAuthView] = useState<'login' | 'reset-request' | 'reset-confirm'>('login');
 
   // Check URL for password reset parameters
@@ -50,15 +46,12 @@ function App() {
       setIsAuthenticated(false); // Force to show reset form even if authenticated
     }
   }, []);
-=======
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
 
   // Real authentication checking with timeout
   useEffect(() => {
     const checkAuth = async () => {
       try {
         console.log('Checking authentication...');
-<<<<<<< HEAD
 
         // Add timeout to prevent hanging
         const authPromise = auth.getCurrentUser();
@@ -73,22 +66,6 @@ function App() {
           setUser(currentUser);
           setIsAuthenticated(true);
 
-=======
-        
-        // Add timeout to prevent hanging
-        const authPromise = auth.getCurrentUser();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout after 5 seconds')), 5000)
-        );
-        
-        const currentUser = await Promise.race([authPromise, timeoutPromise]);
-        console.log('Current user:', currentUser);
-        
-        if (currentUser) {
-          setUser(currentUser);
-          setIsAuthenticated(true);
-          
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
           // Fetch user role from database
           try {
             const role = await getUserRole(currentUser.id);
@@ -310,7 +287,6 @@ function App() {
     );
   }
 
-<<<<<<< HEAD
   // Show auth pages if not authenticated
   if (!isAuthenticated) {
     switch (authView) {
@@ -342,14 +318,6 @@ function App() {
           />
         );
     }
-=======
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={() => {
-      // onLogin will be handled automatically by the auth state listener
-      console.log('Login callback triggered');
-    }} />;
->>>>>>> 154385223d8bb9b733eed09dd439631b10769d25
   }
 
   // Show dashboard view
