@@ -180,7 +180,7 @@ export function CoreInfoPage({ project, onProjectUpdate }: CoreInfoPageProps) {
   // Enter edit mode
   const handleEditMode = () => {
     setIsEditMode(true);
-    // Reset form data to current project values
+    // Reset form data to current project values - ALL FIELDS
     setFormData({
       project_id: project.project_id || '',
       project_code: project.project_code || '',
@@ -191,14 +191,42 @@ export function CoreInfoPage({ project, onProjectUpdate }: CoreInfoPageProps) {
       event_type: project.event_type || '',
       description: project.description || '',
       requirements: project.requirements || '',
-      special_notes: project.special_notes || ''
+      special_notes: project.special_notes || '',
+      // Key Dates
+      onsite_start_date: project.onsite_start_date || '',
+      onsite_end_date: project.onsite_end_date || '',
+      show_start_date: project.show_start_date || '',
+      show_end_date: project.show_end_date || '',
+      load_in_date: project.load_in_date || '',
+      load_out_date: project.load_out_date || '',
+      // Cashless Info
+      voucher_sale_start: project.voucher_sale_start || '',
+      voucher_sale_end: project.voucher_sale_end || '',
+      topup_start: project.topup_start || '',
+      topup_end: project.topup_end || '',
+      // Refund Info
+      refund_window_start: project.refund_window_start || '',
+      refund_window_end: project.refund_window_end || '',
+      refund_fee: project.refund_fee || '',
+      // Delivery & Deadlines
+      wristband_order_deadline: project.wristband_order_deadline || '',
+      hardware_onsite_deadline: project.hardware_onsite_deadline || '',
+      delivery_address: project.delivery_address || '',
+      delivery_contact_name: project.delivery_contact_name || '',
+      delivery_contact_phone: project.delivery_contact_phone || '',
+      delivery_contact_email: project.delivery_contact_email || '',
+      collection_address: project.collection_address || '',
+      collection_contact_name: project.collection_contact_name || '',
+      collection_contact_phone: project.collection_contact_phone || '',
+      collection_contact_email: project.collection_contact_email || '',
+      same_as_delivery: project.same_as_delivery || false
     });
   };
 
   // Cancel edit mode
   const handleCancelEdit = () => {
     setIsEditMode(false);
-    // Reset form data to original values
+    // Reset form data to original values - ALL FIELDS
     setFormData({
       project_id: project.project_id || '',
       project_code: project.project_code || '',
@@ -209,7 +237,35 @@ export function CoreInfoPage({ project, onProjectUpdate }: CoreInfoPageProps) {
       event_type: project.event_type || '',
       description: project.description || '',
       requirements: project.requirements || '',
-      special_notes: project.special_notes || ''
+      special_notes: project.special_notes || '',
+      // Key Dates
+      onsite_start_date: project.onsite_start_date || '',
+      onsite_end_date: project.onsite_end_date || '',
+      show_start_date: project.show_start_date || '',
+      show_end_date: project.show_end_date || '',
+      load_in_date: project.load_in_date || '',
+      load_out_date: project.load_out_date || '',
+      // Cashless Info
+      voucher_sale_start: project.voucher_sale_start || '',
+      voucher_sale_end: project.voucher_sale_end || '',
+      topup_start: project.topup_start || '',
+      topup_end: project.topup_end || '',
+      // Refund Info
+      refund_window_start: project.refund_window_start || '',
+      refund_window_end: project.refund_window_end || '',
+      refund_fee: project.refund_fee || '',
+      // Delivery & Deadlines
+      wristband_order_deadline: project.wristband_order_deadline || '',
+      hardware_onsite_deadline: project.hardware_onsite_deadline || '',
+      delivery_address: project.delivery_address || '',
+      delivery_contact_name: project.delivery_contact_name || '',
+      delivery_contact_phone: project.delivery_contact_phone || '',
+      delivery_contact_email: project.delivery_contact_email || '',
+      collection_address: project.collection_address || '',
+      collection_contact_name: project.collection_contact_name || '',
+      collection_contact_phone: project.collection_contact_phone || '',
+      collection_contact_email: project.collection_contact_email || '',
+      same_as_delivery: project.same_as_delivery || false
     });
   };
 
@@ -223,9 +279,17 @@ export function CoreInfoPage({ project, onProjectUpdate }: CoreInfoPageProps) {
         return;
       }
 
+      // Combine form data with configuration toggles
+      const dataToSave = {
+        ...formData,
+        online_vouchers_enabled: onlineVouchers,
+        online_topups_enabled: onlineTopups,
+        refund_window_enabled: refundWindow
+      };
+
       // Use the Supabase service
-      const updatedProject = await updateProject(project.id, formData);
-      
+      const updatedProject = await updateProject(project.id, dataToSave);
+
       // Update parent component if callback provided
       if (onProjectUpdate) {
         onProjectUpdate(updatedProject);

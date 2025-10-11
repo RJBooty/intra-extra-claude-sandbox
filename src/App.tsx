@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { auth, getUserRole } from './lib/supabase';
 import { LoginPage } from './components/auth/LoginPage';
 import { PasswordResetRequest } from './components/auth/PasswordResetRequest';
 import { PasswordResetConfirm } from './components/auth/PasswordResetConfirm';
+import { EmailConfirmation } from './components/auth/EmailConfirmation';
 import { Dashboard } from './components/layout/Dashboard';
 import { Header } from './components/layout/Header';
 import { ProjectView } from './components/project/ProjectView';
@@ -21,9 +22,10 @@ import { AuthStatus } from './components/debug/AuthStatus';
 import { GuardsPage } from './components/guards/GuardsPage';
 import { ROI3 } from './components/roi/ROI3';
 import { ClientsPage } from './components/clients/ClientsPage';
+import { InventoryPage } from './components/inventory/InventoryPage';
 import { Project } from './types';
 
-type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards' | 'new-project' | 'team' | 'user-profile';
+type TabId = 'projects' | 'sales' | 'roi' | 'operations' | 'clients' | 'inventory' | 'marketing' | 'support' | 'analytics' | 'settings' | 'guards' | 'new-project' | 'team' | 'user-profile';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,19 +33,74 @@ function App() {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState<string>('external');
   const [appError, setAppError] = useState<string | null>(null);
-  const [authView, setAuthView] = useState<'login' | 'reset-request' | 'reset-confirm'>('login');
+  const [authView, setAuthView] = useState<'login' | 'reset-request' | 'reset-confirm' | 'email-confirmation'>('login');
+  const hasSpecialUrlParamsRef = useRef(false);
+  const [resetTokens, setResetTokens] = useState<{accessToken: string, refreshToken: string} | null>(null);
 
-  // Check URL for password reset parameters
+  // Check URL for password reset and email confirmation parameters
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const type = url.searchParams.get('type');
-    const accessToken = url.searchParams.get('access_token');
-    const refreshToken = url.searchParams.get('refresh_token');
+    const fullUrl = window.location.href;
+    const url = new URL(fullUrl);
+
+    // Check both query parameters and hash fragments
+    const queryType = url.searchParams.get('type');
+    const queryAccessToken = url.searchParams.get('access_token');
+    const queryRefreshToken = url.searchParams.get('refresh_token');
+    const queryToken = url.searchParams.get('token');
+
+    // Also check hash fragments (common for OAuth redirects)
+    const hash = url.hash;
+    const hashParams = new URLSearchParams(hash.substring(1));
+    const hashType = hashParams.get('type');
+    const hashAccessToken = hashParams.get('access_token');
+    const hashRefreshToken = hashParams.get('refresh_token');
+    const hashToken = hashParams.get('token');
+
+    // Use query params first, fallback to hash params
+    const type = queryType || hashType;
+    const accessToken = queryAccessToken || hashAccessToken;
+    const refreshToken = queryRefreshToken || hashRefreshToken;
+    const token = queryToken || hashToken;
+
+    console.log('🔍 Complete URL Analysis:', {
+      fullUrl: fullUrl,
+      search: url.search,
+      hash: hash,
+      queryParams: {
+        type: queryType,
+        hasAccessToken: !!queryAccessToken,
+        hasRefreshToken: !!queryRefreshToken,
+        hasToken: !!queryToken
+      },
+      hashParams: {
+        type: hashType,
+        hasAccessToken: !!hashAccessToken,
+        hasRefreshToken: !!hashRefreshToken,
+        hasToken: !!hashToken
+      },
+      finalParams: {
+        type,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        hasToken: !!token
+      }
+    });
 
     if (type === 'recovery' && accessToken && refreshToken) {
-      console.log('Password reset URL detected, setting authView to reset-confirm');
+      console.log('✅ Password reset URL detected, setting authView to reset-confirm');
+      console.log('📝 Storing tokens for PasswordResetConfirm component');
+      setResetTokens({ accessToken, refreshToken });
       setAuthView('reset-confirm');
       setIsAuthenticated(false); // Force to show reset form even if authenticated
+      hasSpecialUrlParamsRef.current = true;
+    } else if (type === 'signup' || (token && (type === 'signup' || type === 'email_confirmation'))) {
+      console.log('✅ Email confirmation URL detected, setting authView to email-confirmation');
+      setAuthView('email-confirmation');
+      setIsAuthenticated(false); // Force to show confirmation even if authenticated
+      hasSpecialUrlParamsRef.current = true;
+    } else {
+      console.log('🔍 No special URL parameters detected, using default login view');
+      hasSpecialUrlParamsRef.current = false;
     }
   }, []);
 
@@ -97,10 +154,19 @@ function App() {
     try {
       const { data: { subscription } } = auth.onAuthStateChange(async (authUser) => {
         console.log('Auth state changed:', authUser);
+        console.log('Has special URL params (ref):', hasSpecialUrlParamsRef.current);
+
         if (authUser) {
           setUser(authUser);
-          setIsAuthenticated(true);
-          
+
+          // Don't automatically set as authenticated if we have special URL params (like password reset)
+          if (!hasSpecialUrlParamsRef.current) {
+            setIsAuthenticated(true);
+          } else {
+            console.log('🔒 Keeping authentication false due to special URL params (password reset/confirmation)');
+            setIsAuthenticated(false);
+          }
+
           // Fetch user role when auth state changes
           try {
             const role = await getUserRole(authUser.id);
@@ -196,6 +262,9 @@ function App() {
       } else if (section === 'clients') {
         console.log('Setting activeTab to: clients');
         setActiveTab('clients');
+      } else if (section === 'inventory') {
+        console.log('Setting activeTab to: inventory');
+        setActiveTab('inventory');
       } else if (section === 'reports') {
         console.log('Setting activeTab to: analytics');
         setActiveTab('analytics');
@@ -299,12 +368,26 @@ function App() {
       case 'reset-confirm':
         return (
           <PasswordResetConfirm
+            tokens={resetTokens}
             onSuccess={() => {
               setAuthView('login');
+              hasSpecialUrlParamsRef.current = false; // Clear the flag after successful reset
+              setResetTokens(null); // Clear the stored tokens
               // Clear the URL parameters
               window.history.replaceState({}, document.title, window.location.pathname);
             }}
             onError={() => setAuthView('reset-request')}
+          />
+        );
+      case 'email-confirmation':
+        return (
+          <EmailConfirmation
+            onConfirmed={() => {
+              setAuthView('login');
+              // Clear the URL parameters
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }}
+            onError={() => setAuthView('login')}
           />
         );
       default:
@@ -514,7 +597,7 @@ function App() {
               <div className="gap-1 px-3 flex flex-1 justify-start py-5">
                 {/* Persistent Sidebar */}
                 <Sidebar currentView={activeTab} onNavigate={handleNavigate} />
-                
+
                 <div className="layout-content-container flex flex-col flex-1 ml-4">
                   <ClientsPage />
                 </div>
@@ -522,7 +605,24 @@ function App() {
             </div>
           </div>
         );
-      
+
+      case 'inventory':
+        console.log('>>> INVENTORY TAB CASE');
+        return (
+          <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden">
+            <div className="layout-container flex h-full grow flex-col">
+              <div className="gap-1 px-3 flex flex-1 justify-start py-5">
+                {/* Persistent Sidebar */}
+                <Sidebar currentView={activeTab} onNavigate={handleNavigate} />
+
+                <div className="layout-content-container flex flex-col flex-1 ml-4">
+                  <InventoryPage onNavigate={handleNavigate} />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         console.log('>>> DEFAULT TAB CASE');
         return (

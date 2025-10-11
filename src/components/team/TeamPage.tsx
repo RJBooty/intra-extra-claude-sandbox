@@ -289,15 +289,22 @@ export function TeamPage({ onNavigate }: TeamPageProps) {
 
     try {
       setProfileSaving(true);
-      
+
       // Prepare profile data including avatar
       let profileUpdateData = { ...editingProfileData };
-      
+
       // If there's a new avatar file, convert it to base64 data URL
       if (avatarFile && avatarPreview) {
         profileUpdateData.avatar_url = avatarPreview;
       }
-      
+
+      // Filter out empty string values that would violate database constraints
+      Object.keys(profileUpdateData).forEach(key => {
+        if (profileUpdateData[key] === '') {
+          delete profileUpdateData[key];
+        }
+      });
+
       // Try database first, fall back to mock service
       let success = false;
       try {

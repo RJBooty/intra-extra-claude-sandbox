@@ -3,6 +3,7 @@ import { Settings, Wrench, User, Bell, Shield, Database, Palette, Globe, Users, 
 import { ProfileSettingsPage } from './ProfileSettingsPage';
 import { SystemSettingsPage } from './SystemSettingsPage';
 import { UserProfilePage } from './UserProfilePage';
+import { SecuritySettings } from './SecuritySettings';
 import { TeamPage } from '../team/TeamPage';
 import { RoleManagement } from '../admin/RoleManagement';
 import { AdvancedPermissionsManagement } from '../admin/AdvancedPermissionsManagement';
@@ -15,7 +16,7 @@ interface SettingsHoldingPageProps {
 }
 
 export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
-  const [currentPage, setCurrentPage] = useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields' | 'role-management' | 'advanced-permissions' | 'demo-permissions'>('main');
+  const [currentPage, setCurrentPage] = useState<'main' | 'profile' | 'system' | 'team' | 'user-profile' | 'input-fields' | 'role-management' | 'advanced-permissions' | 'demo-permissions' | 'security'>('main');
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,10 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
 
   if (currentPage === 'user-profile') {
     return <UserProfilePage onBack={() => setCurrentPage('main')} />;
+  }
+
+  if (currentPage === 'security') {
+    return <SecuritySettings onBack={() => setCurrentPage('main')} />;
   }
 
   if (currentPage === 'role-management') {
@@ -72,13 +77,6 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
       onClick: () => {}
     },
     {
-      icon: Shield,
-      title: 'Security',
-      description: 'Password management and two-factor authentication',
-      status: 'Coming Soon',
-      onClick: () => {}
-    },
-    {
       icon: Database,
       title: 'Integrations',
       description: 'Connect external systems like Jira, JUE, and RMS',
@@ -104,15 +102,23 @@ export function SettingsHoldingPage({ onNavigate }: SettingsHoldingPageProps) {
   // Add Role Management for Master users
   if (currentUser?.role?.role_type === 'Master') {
     settingsCategories.push({
+      icon: Shield,
+      title: 'Security',
+      description: 'Configure authentication, email verification, and security policies',
+      status: 'Available',
+      onClick: () => setCurrentPage('security')
+    });
+
+    settingsCategories.push({
       icon: Crown,
       title: 'Role Management',
       description: 'Manage user roles and permissions across the platform',
       status: 'Available',
       onClick: () => setCurrentPage('role-management')
     });
-    
+
     settingsCategories.push({
-      icon: Shield,
+      icon: Database,
       title: 'Advanced Permissions',
       description: 'Complete permission matrix with 312 permission points',
       status: 'Available',

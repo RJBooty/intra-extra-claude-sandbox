@@ -7,7 +7,6 @@ import { UserWithRole } from '../../types/user';
 import { auth } from '../../lib/supabase';
 import '../../utils/setupUserProfile'; // Import for browser console access
 import '../../utils/createUserProfile'; // Import direct creation method
-import { UserSwitcher } from '../debug/UserSwitcher';
 
 interface SimpleDashboardProps {
   onNavigate: (section: string) => void;
@@ -95,7 +94,6 @@ export function SimpleDashboard({ onNavigate }: SimpleDashboardProps) {
   
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
-      <UserSwitcher />
       <div className="layout-container flex h-full grow flex-col">
         <Header onSearch={() => {}} onNavigateToDashboard={() => onNavigate('dashboard')} onNavigate={onNavigate} />
         <div className="gap-1 px-3 flex flex-1 justify-start py-5">

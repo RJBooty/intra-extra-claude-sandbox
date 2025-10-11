@@ -1,5 +1,5 @@
 import React from 'react';
-import { House, Folder, Users, Users as UsersThree, Presentation as PresentationChart, BarChart3, Settings, Section as Security } from 'lucide-react';
+import { House, Folder, Users, Users as UsersThree, Presentation as PresentationChart, BarChart3, Settings, Section as Security, Package } from 'lucide-react';
 
 interface SidebarProps {
   currentView: string;
@@ -76,20 +76,32 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             <button
               onClick={() => onNavigate('clients')}
               className={`flex items-center gap-3 px-3 py-2 transition-colors ${
-                currentView === 'clients' 
-                  ? 'rounded-full bg-[#eaedf1]' 
+                currentView === 'clients'
+                  ? 'rounded-full bg-[#eaedf1]'
                   : 'hover:bg-gray-100 rounded-lg'
               }`}
             >
               <Users className="w-6 h-6 text-[#101418]" />
               <p className="text-[#101418] text-sm font-medium leading-normal">Clients</p>
             </button>
-            
+
+            <button
+              onClick={() => onNavigate('inventory')}
+              className={`flex items-center gap-3 px-3 py-2 transition-colors ${
+                currentView === 'inventory'
+                  ? 'rounded-full bg-[#eaedf1]'
+                  : 'hover:bg-gray-100 rounded-lg'
+              }`}
+            >
+              <Package className="w-6 h-6 text-[#101418]" />
+              <p className="text-[#101418] text-sm font-medium leading-normal">Inventory</p>
+            </button>
+
             <button
               onClick={() => onNavigate('team')}
               className={`flex items-center gap-3 px-3 py-2 transition-colors ${
-                currentView === 'team' 
-                  ? 'rounded-full bg-[#eaedf1]' 
+                currentView === 'team'
+                  ? 'rounded-full bg-[#eaedf1]'
                   : 'hover:bg-gray-100 rounded-lg'
               }`}
             >

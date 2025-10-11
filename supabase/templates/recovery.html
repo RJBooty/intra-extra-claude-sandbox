@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Password - IntraExtra</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #f9fafb;
+        }
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .tagline {
+            color: #e0e7ff;
+            font-size: 14px;
+            margin: 0;
+        }
+        .email-body {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 24px;
+        }
+        .content {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 24px;
+        }
+        .security-notice {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .security-notice h4 {
+            color: #92400e;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .security-notice p {
+            color: #92400e;
+            margin: 0;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: #ffffff;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 24px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 16px -4px rgba(0, 0, 0, 0.1);
+        }
+        .alternative-link {
+            background-color: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+            border: 1px solid #e5e7eb;
+        }
+        .alternative-link h4 {
+            color: #374151;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .alternative-link a {
+            color: #1d4ed8;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .email-footer {
+            background-color: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .company-info {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .company-name {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .footer-links {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .footer-links a:hover {
+            color: #374151;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-header,
+            .email-body,
+            .email-footer {
+                padding: 20px;
+            }
+            .greeting {
+                font-size: 20px;
+            }
+            .cta-button {
+                display: block;
+                text-align: center;
+                padding: 14px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header -->
+        <div class="email-header">
+            <div class="logo">IntraExtra</div>
+            <p class="tagline">CASFID International Event Technology</p>
+        </div>
+
+        <!-- Body -->
+        <div class="email-body">
+            <div class="greeting">Reset Your Password</div>
+
+            <div class="content">
+                <p>Hello,</p>
+                <p>We received a request to reset the password for your IntraExtra account. If you didn't make this request, you can safely ignore this email.</p>
+                <p>To reset your password, click the button below:</p>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{ .ConfirmationURL }}" class="cta-button">Reset My Password</a>
+            </div>
+
+            <div class="security-notice">
+                <h4>🔒 Security Notice</h4>
+                <p>This password reset link will expire in 1 hour for security reasons. If you need a new link, please request another password reset from the login page.</p>
+            </div>
+
+            <div class="alternative-link">
+                <h4>Having trouble with the button?</h4>
+                <p>Copy and paste this link into your browser:</p>
+                <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+            </div>
+
+            <div class="content">
+                <p>If you're having trouble accessing your account or have any questions about this password reset, please contact our support team.</p>
+                <p>Best regards,<br>
+                <strong>The IntraExtra Team</strong><br>
+                CASFID International</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <div class="company-info">
+                <span class="company-name">CASFID International</span><br>
+                Event Technology & RFID Solutions
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a> |
+                <a href="#">Terms of Service</a> |
+                <a href="#">Support</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

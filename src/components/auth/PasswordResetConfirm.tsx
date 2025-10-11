@@ -20,9 +20,13 @@ type ResetConfirmFormData = z.infer<typeof resetConfirmSchema>;
 interface PasswordResetConfirmProps {
   onSuccess: () => void;
   onError: () => void;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
-export function PasswordResetConfirm({ onSuccess, onError }: PasswordResetConfirmProps) {
+export function PasswordResetConfirm({ onSuccess, onError, tokens }: PasswordResetConfirmProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,16 +47,23 @@ export function PasswordResetConfirm({ onSuccess, onError }: PasswordResetConfir
 
   const checkResetToken = async () => {
     try {
-      // Get URL parameters
-      const url = new URL(window.location.href);
-      const accessToken = url.searchParams.get('access_token');
-      const refreshToken = url.searchParams.get('refresh_token');
-      const type = url.searchParams.get('type');
+      // First try to use passed tokens, then fall back to URL parameters
+      let accessToken = tokens?.accessToken;
+      let refreshToken = tokens?.refreshToken;
 
-      console.log('Reset token check:', { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+      if (!accessToken || !refreshToken) {
+        // Get URL parameters as fallback
+        const url = new URL(window.location.href);
+        accessToken = url.searchParams.get('access_token');
+        refreshToken = url.searchParams.get('refresh_token');
+        const type = url.searchParams.get('type');
+        console.log('Reset token check (from URL):', { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+      } else {
+        console.log('Reset token check (from props):', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+      }
 
-      // If we have the recovery tokens in URL, set the session
-      if (type === 'recovery' && accessToken && refreshToken) {
+      // If we have the recovery tokens, set the session
+      if (accessToken && refreshToken) {
         try {
           // Set the session from URL tokens
           const { data: { session }, error } = await auth.setSession({

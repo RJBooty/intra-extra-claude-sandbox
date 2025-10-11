@@ -63,6 +63,17 @@ export const auth = {
 
   setSession: async (session: { access_token: string; refresh_token: string }) => {
     return await supabase.auth.setSession(session)
+  },
+
+  verifyOtp: async (params: { token_hash: string; type: 'signup' | 'recovery' | 'email_confirmation' }) => {
+    return await supabase.auth.verifyOtp(params)
+  },
+
+  resendConfirmation: async (email: string) => {
+    return await supabase.auth.resend({
+      type: 'signup',
+      email: email
+    })
   }
 }
 
@@ -75,33 +86,37 @@ export async function getUserProfile(userId?: string) {
     const targetUserId = userId || (await auth.getCurrentUser())?.id;
     if (!targetUserId) return null;
 
-    const { data, error } = await supabase
+    // Fetch user profile
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select(`
-        *,
-        role:user_roles!inner(
-          id,
-          role_type,
-          role_level,
-          assigned_by,
-          assigned_at,
-          is_active
-        ),
-        preferences:user_preferences(*)
-      `)
+      .select('*')
       .eq('id', targetUserId)
-      .eq('user_roles.is_active', true)
       .single();
 
-    if (error) {
-      console.error('Error fetching user profile:', error);
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
       return null;
     }
 
+    // Fetch user role separately
+    const { data: roles, error: roleError } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .eq('is_active', true)
+      .limit(1);
+
+    // Fetch user preferences separately
+    const { data: preferences, error: prefError } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .limit(1);
+
     return {
-      ...data,
-      role: data.role?.[0] || null,
-      preferences: data.preferences?.[0] || null
+      ...profile,
+      role: roles?.[0] || null,
+      preferences: preferences?.[0] || null
     };
   } catch (error) {
     console.error('Failed to get user profile:', error);

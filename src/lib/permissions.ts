@@ -221,11 +221,39 @@ export class PermissionService {
   /**
    * Check if user can access a specific field
    */
-  async canAccessField(userId: string, fieldId: string): Promise<PermissionCheckResult> {
+  async canAccessField(userId: string, fieldNameOrId: string): Promise<PermissionCheckResult> {
     try {
       const userTier = await getUserRole(userId) as UserTier;
       if (!userTier) {
         return this.createNoAccessResult('User tier not found');
+      }
+
+      // First, try to get the field definition by name (if it's not a UUID)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fieldNameOrId);
+
+      let actualFieldId = fieldNameOrId;
+
+      if (!isUUID) {
+        // Look up the field by name
+        const { data: fieldDef, error: fieldError } = await supabase
+          .from('field_definitions')
+          .select('id')
+          .eq('field_name', fieldNameOrId)
+          .single();
+
+        if (fieldError || !fieldDef) {
+          console.warn(`Field definition not found for field name: ${fieldNameOrId}`);
+          // Return full access for fields not in the permissions system
+          return {
+            permission: 'full',
+            canRead: true,
+            canCreate: true,
+            canUpdate: true,
+            canDelete: true
+          };
+        }
+
+        actualFieldId = fieldDef.id;
       }
 
       // Get field permission and field details
@@ -241,13 +269,20 @@ export class PermissionService {
             )
           )
         `)
-        .eq('field_id', fieldId)
+        .eq('field_id', actualFieldId)
         .eq('user_tier', userTier)
         .single();
 
       if (error || !fieldPermission) {
-        console.warn(`No field permission found for user ${userId} on field ${fieldId}:`, error);
-        return this.createNoAccessResult('No permission found');
+        console.warn(`No field permission found for user ${userId} on field ${fieldNameOrId}:`, error);
+        // Return full access for fields not in the permissions system
+        return {
+          permission: 'full',
+          canRead: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true
+        };
       }
 
       const field = fieldPermission.field as any;

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Lock, Mail, User, AlertCircle, Briefcase, Building, CheckC
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { auth } from '../../lib/supabase';
+import { systemSettingsService } from '../../lib/services/systemSettingsService';
 
 const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -41,6 +42,8 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const [pendingUserEmail, setPendingUserEmail] = useState('');
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -76,7 +79,9 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('Invalid email or password');
         } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Please check your email and confirm your account first');
+          toast.error('Please confirm your email address first');
+          setPendingUserEmail(data.email);
+          setShowResendConfirmation(true);
         } else {
           toast.error(error.message || 'Failed to login');
         }
@@ -98,6 +103,10 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
     setIsLoading(true);
     try {
       console.log('📝 Starting signup process for:', data.email);
+
+      // Check if email verification is enabled
+      const emailVerificationEnabled = await systemSettingsService.isEmailVerificationEnabled();
+      console.log('📧 Email verification enabled:', emailVerificationEnabled);
 
       const metadata = {
         first_name: data.firstName,
@@ -125,8 +134,17 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
       }
 
       console.log('✅ Signup successful:', authData);
-      setPendingUserEmail(data.email);
-      setShowEmailConfirmationModal(true);
+
+      // Only show email confirmation modal if email verification is enabled
+      if (emailVerificationEnabled) {
+        setPendingUserEmail(data.email);
+        setShowEmailConfirmationModal(true);
+        toast.success('Account created! Please check your email to confirm your account.');
+      } else {
+        // If email verification is disabled, user can proceed immediately
+        toast.success('Account created successfully! You can now log in.');
+        console.log('📧 Email verification disabled - user can proceed without confirmation');
+      }
 
       // Reset the form
       signupForm.reset();
@@ -135,6 +153,30 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
       toast.error('An unexpected error occurred during signup');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!pendingUserEmail) return;
+
+    try {
+      setResendingConfirmation(true);
+      const { error } = await auth.resendConfirmation(pendingUserEmail);
+
+      if (error) {
+        console.error('Resend confirmation error:', error);
+        toast.error(error.message || 'Failed to resend confirmation email');
+        return;
+      }
+
+      toast.success('Confirmation email sent! Please check your inbox.');
+      setShowResendConfirmation(false);
+      setShowEmailConfirmationModal(true);
+    } catch (error: any) {
+      console.error('Unexpected resend error:', error);
+      toast.error('Failed to resend confirmation email');
+    } finally {
+      setResendingConfirmation(false);
     }
   };
 
@@ -293,6 +335,27 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
               >
                 {isLoading ? <LoadingSpinner /> : 'Sign In'}
               </button>
+
+              {showResendConfirmation && (
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-yellow-800 mb-1">Email Not Confirmed</h4>
+                      <p className="text-sm text-yellow-700 mb-3">
+                        Your account exists but hasn't been confirmed yet. Check your email for the confirmation link.
+                      </p>
+                      <button
+                        onClick={handleResendConfirmation}
+                        disabled={resendingConfirmation}
+                        className="text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1 rounded border border-yellow-300 transition-colors disabled:opacity-50"
+                      >
+                        {resendingConfirmation ? 'Sending...' : 'Resend Confirmation Email'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
           ) : (
             <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">

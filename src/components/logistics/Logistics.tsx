@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { 
-  Truck, 
-  Package, 
-  MapPin, 
-  ArrowRight, 
-  X, 
-  Plus, 
-  Clock, 
-  Mail, 
-  MessageSquare, 
-  Phone, 
-  AlertTriangle, 
+import React, { useState, useEffect } from 'react';
+import {
+  Truck,
+  Package,
+  MapPin,
+  ArrowRight,
+  X,
+  Plus,
+  Clock,
+  Mail,
+  MessageSquare,
+  Phone,
+  AlertTriangle,
   CheckCircle,
   Search,
   Download,
@@ -27,6 +27,11 @@ import {
   FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AddFromInventoryModal } from './AddFromInventoryModal';
+import { AddEquipmentToLocationModal } from './AddEquipmentToLocationModal';
+import { useLogisticsService } from '../../services/logisticsService';
+import { useSiteAllocationService } from '../../lib/services/siteAllocationService';
+import { useInventoryService } from '../../services/inventoryService';
 
 interface LogisticsProps {
   project?: any;
@@ -40,6 +45,8 @@ interface EquipmentItem {
   name: string;
   quantity: number;
   comments: string;
+  equipment_item_id?: string | null; // For items from inventory
+  isFromDatabase?: boolean; // Track if this came from database
 }
 
 interface Comment {
@@ -61,6 +68,8 @@ interface HardwareItem {
   name: string;
   quantity: number;
   notes?: string;
+  equipment_item_id?: string | null; // For items from inventory
+  isFromDatabase?: boolean; // Track if this came from database
 }
 
 interface LocationData {
@@ -93,7 +102,241 @@ export function Logistics({ project }: LogisticsProps) {
   const [currentNoteItem, setCurrentNoteItem] = useState<{ categoryId: string; locationIndex: number; itemId: string } | null>(null);
   const [noteText, setNoteText] = useState('');
   const [selectedLocations, setSelectedLocations] = useState<Record<string, Set<string>>>({});
-  
+  const [showAddFromInventoryModal, setShowAddFromInventoryModal] = useState(false);
+  const [isLoadingEquipment, setIsLoadingEquipment] = useState(false);
+  const [showAddToLocationModal, setShowAddToLocationModal] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ categoryId: string; locationIndex: number; locationName: string } | null>(null);
+  const [isLoadingSiteAllocations, setIsLoadingSiteAllocations] = useState(false);
+  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
+  const [filteredInventoryItems, setFilteredInventoryItems] = useState<any[]>([]);
+  const [draggedItem, setDraggedItem] = useState<any | null>(null);
+
+  // Get logistics service
+  const {
+    getProjectEquipmentPlanning,
+    addEquipmentToProject,
+    updateEquipmentPlanning,
+    deleteEquipmentPlanning
+  } = useLogisticsService();
+
+  // Get site allocation service
+  const {
+    getProjectSiteAllocations,
+    addEquipmentToLocation,
+    updateSiteAllocation,
+    deleteSiteAllocation,
+    clearLocation,
+    clearMultipleLocations
+  } = useSiteAllocationService();
+
+  // Get inventory service
+  const { getAllEquipment } = useInventoryService();
+
+  // Load equipment planning and site allocations from database
+  useEffect(() => {
+    if (project?.id) {
+      loadEquipmentPlanning();
+      loadSiteAllocations();
+    }
+  }, [project?.id]);
+
+  // Load inventory items on mount
+  useEffect(() => {
+    loadInventoryItems();
+  }, []);
+
+  // Filter inventory items based on search query
+  useEffect(() => {
+    if (!siteSearchQuery) {
+      setFilteredInventoryItems([]);
+    } else {
+      const filtered = inventoryItems.filter(item =>
+        item.name.toLowerCase().includes(siteSearchQuery.toLowerCase()) ||
+        item.sku.toLowerCase().includes(siteSearchQuery.toLowerCase()) ||
+        item.category_name.toLowerCase().includes(siteSearchQuery.toLowerCase())
+      );
+      setFilteredInventoryItems(filtered);
+    }
+  }, [siteSearchQuery, inventoryItems]);
+
+  const loadEquipmentPlanning = async () => {
+    if (!project?.id) return;
+
+    setIsLoadingEquipment(true);
+    try {
+      const planning = await getProjectEquipmentPlanning(project.id);
+
+      // Transform database format to component state format
+      const transformedData: Record<EquipmentCategory, EquipmentItem[]> = {
+        cashless: [],
+        network: [],
+        power: [],
+        other: []
+      };
+
+      planning.forEach(item => {
+        const category = item.category.toLowerCase() as EquipmentCategory;
+        if (category in transformedData) {
+          transformedData[category].push({
+            id: item.id,
+            name: item.equipment_item?.name || item.equipment_name || 'Unknown',
+            quantity: item.quantity_planned,
+            comments: item.notes || '',
+            equipment_item_id: item.equipment_item_id,
+            isFromDatabase: true
+          });
+        }
+      });
+
+      setEquipmentData(transformedData);
+    } catch (error) {
+      console.error('Failed to load equipment planning:', error);
+      // Keep using empty/default state
+    } finally {
+      setIsLoadingEquipment(false);
+    }
+  };
+
+  const loadSiteAllocations = async () => {
+    if (!project?.id) return;
+
+    setIsLoadingSiteAllocations(true);
+    try {
+      const allocations = await getProjectSiteAllocations(project.id);
+
+      // Transform database format to component state format
+      setAllocationCategories(prev =>
+        prev.map(category => ({
+          ...category,
+          locations: category.locations.map(location => {
+            // Find all allocations for this category and location
+            const locationAllocations = allocations.filter(
+              alloc => alloc.category === category.id && alloc.location_name === location.name
+            );
+
+            // Transform to hardware items
+            const hardware: HardwareItem[] = locationAllocations.map(alloc => ({
+              id: alloc.id,
+              name: alloc.equipment_item?.name || 'Unknown',
+              quantity: alloc.quantity,
+              notes: alloc.notes || undefined,
+              equipment_item_id: alloc.equipment_item_id,
+              isFromDatabase: true
+            }));
+
+            return {
+              ...location,
+              hardware: hardware.length > 0 ? hardware : location.hardware // Keep default if no allocations
+            };
+          })
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to load site allocations:', error);
+      // Keep using default state
+    } finally {
+      setIsLoadingSiteAllocations(false);
+    }
+  };
+
+  const loadInventoryItems = async () => {
+    try {
+      const items = await getAllEquipment();
+      setInventoryItems(items);
+    } catch (error) {
+      console.error('Failed to load inventory items:', error);
+    }
+  };
+
+  // Check if an equipment item is in the Equipment Planning tab
+  const isInEquipmentPlanning = (equipmentItemId: string): boolean => {
+    // Check all categories in equipmentData
+    for (const category of Object.values(equipmentData)) {
+      for (const item of category) {
+        if (item.equipment_item_id === equipmentItemId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, item: any) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = async (e: React.DragEvent, categoryId: string, locationIndex: number) => {
+    e.preventDefault();
+
+    if (!draggedItem || !project?.id) {
+      return;
+    }
+
+    // Check if item is in Equipment Planning
+    if (!isInEquipmentPlanning(draggedItem.id)) {
+      toast.error('This item must be added to Equipment Planning first');
+      setDraggedItem(null);
+      return;
+    }
+
+    const category = allocationCategories.find(cat => cat.id === categoryId);
+    if (!category) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const location = category.locations[locationIndex];
+
+    try {
+      // Add to database
+      const newAllocation = await addEquipmentToLocation(project.id, {
+        equipment_item_id: draggedItem.id,
+        category: categoryId,
+        location_name: location.name,
+        quantity: 1,
+        notes: ''
+      });
+
+      // Add to local state
+      const newItem: HardwareItem = {
+        id: newAllocation.id,
+        name: draggedItem.name,
+        quantity: 1,
+        notes: undefined,
+        equipment_item_id: draggedItem.id,
+        isFromDatabase: true
+      };
+
+      setAllocationCategories(prev =>
+        prev.map(cat =>
+          cat.id === categoryId ? {
+            ...cat,
+            locations: cat.locations.map((loc, index) =>
+              index === locationIndex ? {
+                ...loc,
+                hardware: [...loc.hardware, newItem]
+              } : loc
+            )
+          } : cat
+        )
+      );
+
+      toast.success(`Added ${draggedItem.name} to ${location.name}`);
+    } catch (error) {
+      console.error('Failed to add equipment to location:', error);
+      toast.error('Failed to add equipment to location');
+    }
+
+    setDraggedItem(null);
+  };
+
   // Site Allocation Data
   const [allocationCategories, setAllocationCategories] = useState<AllocationCategory[]>([
     {
@@ -266,34 +509,92 @@ export function Logistics({ project }: LogisticsProps) {
     }
   };
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = async (itemId: string) => {
+    const item = equipmentData[activeEquipmentCategory].find(i => i.id === itemId);
+
+    // If item is from database, delete from database
+    if (item?.isFromDatabase) {
+      try {
+        await deleteEquipmentPlanning(itemId);
+      } catch (error) {
+        console.error('Failed to delete equipment:', error);
+        toast.error('Failed to delete equipment from project');
+        return;
+      }
+    }
+
+    // Remove from local state
     setEquipmentData(prev => ({
       ...prev,
       [activeEquipmentCategory]: prev[activeEquipmentCategory].filter(item => item.id !== itemId)
     }));
   };
 
-  const handleAddItem = () => {
-    const newItem: EquipmentItem = {
-      id: Date.now().toString(),
-      name: '',
-      quantity: 0,
-      comments: ''
-    };
+  const handleAddFromInventory = async (equipment: { name: string; quantity: number; comments: string; equipment_item_id: string }) => {
+    if (!project?.id) {
+      toast.error('No project selected');
+      return;
+    }
 
-    setEquipmentData(prev => ({
-      ...prev,
-      [activeEquipmentCategory]: [...prev[activeEquipmentCategory], newItem]
-    }));
+    try {
+      // Add to database
+      const newPlanning = await addEquipmentToProject(project.id, {
+        equipment_item_id: equipment.equipment_item_id,
+        category: activeEquipmentCategory,
+        quantity_planned: equipment.quantity,
+        notes: equipment.comments
+      });
+
+      // Add to local state
+      const newItem: EquipmentItem = {
+        id: newPlanning.id,
+        name: equipment.name,
+        quantity: equipment.quantity,
+        comments: equipment.comments,
+        equipment_item_id: equipment.equipment_item_id,
+        isFromDatabase: true
+      };
+
+      setEquipmentData(prev => ({
+        ...prev,
+        [activeEquipmentCategory]: [...prev[activeEquipmentCategory], newItem]
+      }));
+    } catch (error) {
+      console.error('Failed to add equipment:', error);
+      toast.error('Failed to add equipment to project');
+    }
   };
 
-  const handleItemChange = (itemId: string, field: keyof EquipmentItem, value: string | number) => {
+  const handleItemChange = async (itemId: string, field: keyof EquipmentItem, value: string | number) => {
+    const item = equipmentData[activeEquipmentCategory].find(i => i.id === itemId);
+
+    // Update local state immediately for responsive UI
     setEquipmentData(prev => ({
       ...prev,
       [activeEquipmentCategory]: prev[activeEquipmentCategory].map(item =>
         item.id === itemId ? { ...item, [field]: value } : item
       )
     }));
+
+    // If item is from database, update database
+    if (item?.isFromDatabase) {
+      try {
+        const updates: { quantity_planned?: number; notes?: string } = {};
+
+        if (field === 'quantity') {
+          updates.quantity_planned = value as number;
+        } else if (field === 'comments') {
+          updates.notes = value as string;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await updateEquipmentPlanning(itemId, updates);
+        }
+      } catch (error) {
+        console.error('Failed to update equipment:', error);
+        toast.error('Failed to update equipment. Changes may not be saved.');
+      }
+    }
   };
 
   const handlePushToJUE = () => {
@@ -546,11 +847,11 @@ export function Logistics({ project }: LogisticsProps) {
                 
                 <div className="mt-4 flex items-center justify-between">
                   <button
-                    onClick={handleAddItem}
-                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 inline-flex items-center gap-2"
+                    onClick={() => setShowAddFromInventoryModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 inline-flex items-center gap-2"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Item
+                    <Package className="w-4 h-4" />
+                    Add from Inventory
                   </button>
                   <a
                     href="#page-top"
@@ -763,12 +1064,27 @@ export function Logistics({ project }: LogisticsProps) {
   );
 
   // Handler functions for Site Allocation
-  const handleItemDelete = (categoryId: string, locationIndex: number, itemId: string) => {
-    setAllocationCategories(prev => 
-      prev.map(category => 
+  const handleItemDelete = async (categoryId: string, locationIndex: number, itemId: string) => {
+    const category = allocationCategories.find(cat => cat.id === categoryId);
+    const item = category?.locations[locationIndex]?.hardware.find(hw => hw.id === itemId);
+
+    // If item is from database, delete from database
+    if (item?.isFromDatabase) {
+      try {
+        await deleteSiteAllocation(itemId);
+      } catch (error) {
+        console.error('Failed to delete site allocation:', error);
+        toast.error('Failed to delete equipment from location');
+        return;
+      }
+    }
+
+    // Remove from local state
+    setAllocationCategories(prev =>
+      prev.map(category =>
         category.id === categoryId ? {
           ...category,
-          locations: category.locations.map((location, index) => 
+          locations: category.locations.map((location, index) =>
             index === locationIndex ? {
               ...location,
               hardware: location.hardware.filter(item => item.id !== itemId)
@@ -779,15 +1095,19 @@ export function Logistics({ project }: LogisticsProps) {
     );
   };
 
-  const handleQuantityChange = (categoryId: string, locationIndex: number, itemId: string, newQuantity: number) => {
-    setAllocationCategories(prev => 
-      prev.map(category => 
+  const handleQuantityChange = async (categoryId: string, locationIndex: number, itemId: string, newQuantity: number) => {
+    const category = allocationCategories.find(cat => cat.id === categoryId);
+    const item = category?.locations[locationIndex]?.hardware.find(hw => hw.id === itemId);
+
+    // Update local state immediately for responsive UI
+    setAllocationCategories(prev =>
+      prev.map(category =>
         category.id === categoryId ? {
           ...category,
-          locations: category.locations.map((location, index) => 
+          locations: category.locations.map((location, index) =>
             index === locationIndex ? {
               ...location,
-              hardware: location.hardware.map(item => 
+              hardware: location.hardware.map(item =>
                 item.id === itemId ? { ...item, quantity: newQuantity } : item
               )
             } : location
@@ -795,6 +1115,16 @@ export function Logistics({ project }: LogisticsProps) {
         } : category
       )
     );
+
+    // If item is from database, update database
+    if (item?.isFromDatabase) {
+      try {
+        await updateSiteAllocation(itemId, { quantity: newQuantity });
+      } catch (error) {
+        console.error('Failed to update site allocation:', error);
+        toast.error('Failed to update quantity. Changes may not be saved.');
+      }
+    }
   };
 
   const handleOpenNotes = (categoryId: string, locationIndex: number, itemId: string) => {
@@ -806,19 +1136,22 @@ export function Logistics({ project }: LogisticsProps) {
     setShowNotesModal(true);
   };
 
-  const handleSaveNotes = () => {
+  const handleSaveNotes = async () => {
     if (!currentNoteItem) return;
-    
+
     const { categoryId, locationIndex, itemId } = currentNoteItem;
-    
-    setAllocationCategories(prev => 
-      prev.map(category => 
+    const category = allocationCategories.find(cat => cat.id === categoryId);
+    const item = category?.locations[locationIndex]?.hardware.find(hw => hw.id === itemId);
+
+    // Update local state
+    setAllocationCategories(prev =>
+      prev.map(category =>
         category.id === categoryId ? {
           ...category,
-          locations: category.locations.map((location, index) => 
+          locations: category.locations.map((location, index) =>
             index === locationIndex ? {
               ...location,
-              hardware: location.hardware.map(item => 
+              hardware: location.hardware.map(item =>
                 item.id === itemId ? { ...item, notes: noteText } : item
               )
             } : location
@@ -826,7 +1159,17 @@ export function Logistics({ project }: LogisticsProps) {
         } : category
       )
     );
-    
+
+    // If item is from database, update database
+    if (item?.isFromDatabase) {
+      try {
+        await updateSiteAllocation(itemId, { notes: noteText });
+      } catch (error) {
+        console.error('Failed to update notes:', error);
+        toast.error('Failed to save notes');
+      }
+    }
+
     setShowNotesModal(false);
     setCurrentNoteItem(null);
     setNoteText('');
@@ -883,15 +1226,71 @@ export function Logistics({ project }: LogisticsProps) {
     }));
   };
 
-  const filteredCategories = allocationCategories.map(category => ({
-    ...category,
-    locations: category.locations.map(location => ({
-      ...location,
-      hardware: location.hardware.filter(item => 
-        item.name.toLowerCase().includes(siteSearchQuery.toLowerCase())
-      )
-    }))
-  }));
+  const handleOpenAddToLocation = (categoryId: string, locationIndex: number) => {
+    const category = allocationCategories.find(cat => cat.id === categoryId);
+    if (!category) return;
+
+    const location = category.locations[locationIndex];
+    setCurrentLocation({
+      categoryId,
+      locationIndex,
+      locationName: location.name
+    });
+    setShowAddToLocationModal(true);
+  };
+
+  const handleAddEquipmentToLocation = async (equipment: {
+    equipment_item_id: string;
+    name: string;
+    quantity: number;
+    notes: string;
+  }) => {
+    if (!project?.id || !currentLocation) {
+      toast.error('No project or location selected');
+      return;
+    }
+
+    try {
+      // Add to database
+      const newAllocation = await addEquipmentToLocation(project.id, {
+        equipment_item_id: equipment.equipment_item_id,
+        category: currentLocation.categoryId,
+        location_name: currentLocation.locationName,
+        quantity: equipment.quantity,
+        notes: equipment.notes
+      });
+
+      // Add to local state
+      const newItem: HardwareItem = {
+        id: newAllocation.id,
+        name: equipment.name,
+        quantity: equipment.quantity,
+        notes: equipment.notes || undefined,
+        equipment_item_id: equipment.equipment_item_id,
+        isFromDatabase: true
+      };
+
+      setAllocationCategories(prev =>
+        prev.map(category =>
+          category.id === currentLocation.categoryId ? {
+            ...category,
+            locations: category.locations.map((location, index) =>
+              index === currentLocation.locationIndex ? {
+                ...location,
+                hardware: [...location.hardware, newItem]
+              } : location
+            )
+          } : category
+        )
+      );
+    } catch (error) {
+      console.error('Failed to add equipment to location:', error);
+      toast.error('Failed to add equipment to location');
+    }
+  };
+
+  // Don't filter categories by search - we want to keep all locations visible
+  const filteredCategories = allocationCategories;
 
   const renderSiteAllocation = () => (
     <div className="py-8">
@@ -925,13 +1324,64 @@ export function Logistics({ project }: LogisticsProps) {
           </div>
           <input
             className="block w-full rounded-md border-gray-300 py-3 pl-10 pr-3 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Search by category, location, or hardware..."
+            placeholder="Search inventory to add equipment..."
             type="search"
             value={siteSearchQuery}
             onChange={(e) => setSiteSearchQuery(e.target.value)}
           />
         </div>
       </div>
+
+      {/* Inventory Items List (shown when searching) */}
+      {filteredInventoryItems.length > 0 && (
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            Drag items to locations below ({filteredInventoryItems.length} items found)
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+            {filteredInventoryItems.map((item) => {
+              const isInPlanning = isInEquipmentPlanning(item.id);
+
+              return (
+                <div
+                  key={item.id}
+                  draggable={isInPlanning}
+                  onDragStart={(e) => isInPlanning && handleDragStart(e, item)}
+                  className={`
+                    p-3 rounded-lg border-2 transition-all
+                    ${isInPlanning
+                      ? 'border-blue-200 bg-blue-50 cursor-grab hover:border-blue-400 hover:shadow-md active:cursor-grabbing'
+                      : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                    }
+                  `}
+                >
+                  <div className="flex items-start gap-2">
+                    {!isInPlanning && (
+                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${isInPlanning ? 'text-gray-900' : 'text-gray-600'}`}>
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        SKU: {item.sku}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {item.category_name}
+                      </p>
+                      {!isInPlanning && (
+                        <p className="text-xs text-red-600 mt-1">
+                          Add to Equipment Planning first
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Allocation Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -975,7 +1425,7 @@ export function Logistics({ project }: LogisticsProps) {
                                   type="button"
                                   onClick={() => handleLocationToggle(category.id, locationIndex)}
                                 >
-                                  <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${location.expanded ? 'rotate-90' : ''}`} />
+                                  <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${location.expanded ? '' : '-rotate-90'}`} />
                                 </button>
                                 <span className="text-sm font-medium text-gray-900">{location.name}</span>
                               </div>
@@ -989,7 +1439,15 @@ export function Logistics({ project }: LogisticsProps) {
                           </td>
                           {location.expanded && (
                             <td className="px-6 py-4 text-sm text-gray-500" colSpan={3}>
-                              <div className="space-y-2 border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+                              <div
+                                className="space-y-2 border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 min-h-[100px] transition-colors"
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, category.id, locationIndex)}
+                                style={{
+                                  backgroundColor: draggedItem ? '#eff6ff' : undefined,
+                                  borderColor: draggedItem ? '#3b82f6' : undefined
+                                }}
+                              >
                                 {location.hardware.map((item) => (
                                   <div key={item.id} className="bg-gray-100 rounded-md hardware-item" draggable>
                                     <div className="flex items-center gap-2 p-2">
@@ -1016,10 +1474,16 @@ export function Logistics({ project }: LogisticsProps) {
                                   </div>
                                 ))}
                                 {location.hardware.length === 0 && (
-                                  <div className="text-center py-2 text-gray-400">Drag hardware here</div>
+                                  <div className="text-center py-4 text-gray-400">
+                                    <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">Drag equipment here or click "Add hardware" below</p>
+                                  </div>
                                 )}
                               </div>
-                              <button className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-2">
+                              <button
+                                className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                                onClick={() => handleOpenAddToLocation(category.id, locationIndex)}
+                              >
                                 <Plus className="h-5 w-5 mr-1" />
                                 Add hardware
                               </button>
@@ -1481,6 +1945,28 @@ export function Logistics({ project }: LogisticsProps) {
           </div>
         </div>
       </div>
+
+      {/* Add from Inventory Modal */}
+      <AddFromInventoryModal
+        isOpen={showAddFromInventoryModal}
+        onClose={() => setShowAddFromInventoryModal(false)}
+        onAddEquipment={handleAddFromInventory}
+        category={activeEquipmentCategory}
+      />
+
+      {/* Add Equipment to Location Modal */}
+      {currentLocation && (
+        <AddEquipmentToLocationModal
+          isOpen={showAddToLocationModal}
+          onClose={() => {
+            setShowAddToLocationModal(false);
+            setCurrentLocation(null);
+          }}
+          onAddEquipment={handleAddEquipmentToLocation}
+          category={currentLocation.categoryId}
+          locationName={currentLocation.locationName}
+        />
+      )}
     </div>
   );
 }

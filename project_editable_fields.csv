@@ -1,0 +1,102 @@
+Page/Module,Field Name,Field Type,Category/Section,Required,Options/Format,Description,Database Column
+Core Info,Project ID,Text,Basic Information,Yes,Free text,Unique identifier for the project,project_id
+Core Info,Project Code,Text,Basic Information,Yes,Auto-generated (e.g. GB-0001),Automatically generated regional code,project_code
+Core Info,Client,Dropdown,Basic Information,Yes,Client list from database,Associated client company,client_id
+Core Info,Event Location,Text,Basic Information,Yes,"Format: City, Country",Where the event takes place,event_location
+Core Info,Event Type,Dropdown,Basic Information,No,"Conference, Festival, Exhibition, Sports, Corporate, Other",Type of event being managed,event_type
+Core Info,Expected Attendance,Number,Basic Information,No,Integer value,Estimated number of attendees,expected_attendance
+Core Info,Event Start Date,Date,Event Dates,Yes,Date format,Official event start date,event_start_date
+Core Info,Event End Date,Date,Event Dates,Yes,Date format,Official event end date,event_end_date
+Core Info,Description,Textarea,Project Information,No,Free text,Brief description of the event and project scope,description
+Core Info,Requirements,Textarea,Project Information,No,Free text,Key requirements and specifications,requirements
+Core Info,Special Notes,Textarea,Project Information,No,Free text,Any special considerations or notes,special_notes
+Core Info,On-site Start Date,Datetime,Key Dates,No,Date and time,When team arrives on-site,onsite_start_date
+Core Info,On-site End Date,Datetime,Key Dates,No,Date and time,When team leaves site,onsite_end_date
+Core Info,Show Start Date,Datetime,Key Dates,No,Date and time,When show/gates open to public,show_start_date
+Core Info,Show End Date,Datetime,Key Dates,No,Date and time,When show/gates close,show_end_date
+Core Info,Load In Date,Datetime,Key Dates,No,Date and time,Equipment load-in time,load_in_date
+Core Info,Load Out Date,Datetime,Key Dates,No,Date and time,Equipment load-out time,load_out_date
+Core Info,Voucher Sale Start,Datetime,Cashless Info,No,Date and time,Online voucher sales opening,voucher_sale_start
+Core Info,Voucher Sale End,Datetime,Cashless Info,No,Date and time,Online voucher sales closing,voucher_sale_end
+Core Info,TopUp Start,Datetime,Cashless Info,No,Date and time,Online top-up opening,topup_start
+Core Info,TopUp End,Datetime,Cashless Info,No,Date and time,Online top-up closing,topup_end
+Core Info,Refund Window Start,Datetime,Refund Info,No,Date and time,Refund requests opening,refund_window_start
+Core Info,Refund Window End,Datetime,Refund Info,No,Date and time,Refund requests closing,refund_window_end
+Core Info,Refund Fee,Number,Refund Info,No,Currency (e.g. 5.00),Fee charged for processing refunds,refund_fee
+Core Info,Wristband Order Deadline,Date,Delivery & Deadlines,No,Date format,Final date to order wristbands,wristband_order_deadline
+Core Info,Hardware On-site Deadline,Date,Delivery & Deadlines,No,Date format,When hardware must arrive on-site,hardware_onsite_deadline
+Core Info,Delivery Address,Textarea,Delivery & Deadlines,No,Full address,On-site delivery location,delivery_address
+Core Info,Delivery Contact Name,Text,Delivery & Deadlines,No,Full name,Person receiving delivery,delivery_contact_name
+Core Info,Delivery Contact Phone,Tel,Delivery & Deadlines,No,Phone number,Contact number for delivery,delivery_contact_phone
+Core Info,Delivery Contact Email,Email,Delivery & Deadlines,No,Email address,Email for delivery coordination,delivery_contact_email
+Core Info,Collection Address,Textarea,Delivery & Deadlines,No,Full address,On-site collection location,collection_address
+Core Info,Collection Contact Name,Text,Delivery & Deadlines,No,Full name,Person handling collection,collection_contact_name
+Core Info,Collection Contact Phone,Tel,Delivery & Deadlines,No,Phone number,Contact number for collection,collection_contact_phone
+Core Info,Collection Contact Email,Email,Delivery & Deadlines,No,Email address,Email for collection coordination,collection_contact_email
+Core Info,Same as Delivery,Checkbox,Delivery & Deadlines,No,Boolean (true/false),Collection address same as delivery,same_as_delivery
+Core Info,Online Vouchers Enabled,Toggle,Configuration Settings,No,Boolean (on/off),Enable online voucher purchases,online_vouchers_enabled
+Core Info,Online TopUps Enabled,Toggle,Configuration Settings,No,Boolean (on/off),Enable online top-up purchases,online_topups_enabled
+Core Info,Refund Window Enabled,Toggle,Configuration Settings,No,Boolean (on/off),Enable refund processing window,refund_window_enabled
+Core Info,Event Image,File Upload,Visual,No,Image file (jpg/png),Banner/hero image for project,event_image
+ROI,Revenue Categories,Dynamic Table,Revenue,No,Category rows with amounts,Various revenue streams and estimates,roi_revenue_*
+ROI,Cost Categories,Dynamic Table,Costs,No,Category rows with amounts,Various cost categories and estimates,roi_costs_*
+ROI,Equipment Costs,Table,Costs - Equipment,No,Equipment items with quantities,Hardware and equipment costs,roi_equipment_*
+ROI,Crew Costs,Table,Costs - Crew,No,Crew members with rates,Labor and personnel costs,roi_crew_*
+ROI,Logistics Costs,Table,Costs - Logistics,No,Logistics items,Shipping and logistics costs,roi_logistics_*
+ROI,Lock ROI,Action Button,Actions,No,Button to lock estimates,Locks estimates and pushes to other modules,roi_locked
+ROI,Actual Values,Table,Actuals,No,Actual amounts vs estimates,Actual costs and revenues post-event,roi_actuals_*
+ROI,Margin %,Calculated,Overview,No,Auto-calculated percentage,Profit margin calculation,roi_margin
+ROI,Scenarios,Multi-scenario,Scenarios,No,Multiple scenario versions,Different financial scenarios,roi_scenarios_*
+Logistics,Equipment Planning - Network,Table,Equipment Planning,No,Equipment items with quantities,Network equipment allocation,logistics_network_*
+Logistics,Equipment Planning - Cashless,Table,Equipment Planning,No,Equipment items with quantities,Cashless system equipment,logistics_cashless_*
+Logistics,Equipment Planning - Power,Table,Equipment Planning,No,Equipment items with quantities,Power and electrical equipment,logistics_power_*
+Logistics,Equipment Planning - Other,Table,Equipment Planning,No,Equipment items with quantities,Miscellaneous equipment,logistics_other_*
+Logistics,Site Allocation - Access Control,Location/Hardware Table,Site Allocation,No,Locations with hardware lists,Hardware at access points,logistics_access_*
+Logistics,Site Allocation - Accreditation,Location/Hardware Table,Site Allocation,No,Locations with hardware lists,Hardware at accreditation desks,logistics_accred_*
+Logistics,Site Allocation - POS,Location/Hardware Table,Site Allocation,No,Locations with hardware lists,Hardware at bars/merch locations,logistics_pos_*
+Logistics,Site Allocation - TopUp,Location/Hardware Table,Site Allocation,No,Locations with hardware lists,Hardware at top-up locations,logistics_topup_*
+Logistics,Site Allocation - Production,Location/Hardware Table,Site Allocation,No,Locations with hardware lists,Hardware for production office,logistics_prod_*
+Logistics,Shipping Documentation,File Upload,Shipping,No,PDF/Documents,Shipping labels and documentation,logistics_shipping_docs
+Logistics,JUE Status,Status Dropdown,JUE Integration,No,"Awaiting Push, Awaiting Confirmation, Request Received",Status of JUE equipment request,logistics_jue_status
+Logistics,Comments & Mentions,Rich Text with Mentions,Collaboration,No,@mentions supported,Team comments on equipment needs,logistics_comments
+Operations,Phase Tasks,Task List,Phase Management,No,Tasks per phase,Tasks for each project phase,operations_tasks_*
+Operations,Team Assignments,Team Table,Team,No,Team members with roles,Assigned team members,operations_team_*
+Operations,Integration Status,Status Grid,Integrations,No,Integration connection status,Third-party integration status,operations_integrations_*
+Operations,Timeline Milestones,Timeline,Timeline,No,Key dates and milestones,Project timeline and milestones,operations_timeline_*
+Operations,Phase Progress,Progress Bar,Phases,No,Percentage completion,Progress within each phase,operations_phase_progress_*
+Crew,Crew Assignment,Table,Assignment,No,Crew members with roles,Assign crew to project roles,crew_assignments_*
+Crew,Crew Compliance,Document Tracking,Compliance,No,Document status per crew member,Track DBS checks and insurance,crew_compliance_*
+Crew,Travel - Flights,Flight Table,Travel,No,Flight bookings with status,Crew flight information,crew_flights_*
+Crew,Travel - Drives,Drive Table,Travel,No,Vehicle and drive details,Ground transportation,crew_drives_*
+Crew,Travel - Accommodation,Accommodation Table,Travel,No,Hotel bookings,Crew accommodation details,crew_accommodation_*
+Crew,Crew Costs,Cost Table,Costs,No,Daily rates and expenses,Crew rates and expenses,crew_costs_*
+Crew,Crew Rota,Schedule Grid,Rota,No,Day-by-day schedule,Crew work schedule,crew_rota_*
+Client Relations,Internal Debrief,Rich Text Form,Internal Debrief,No,Structured debrief sections,Post-event internal review,client_internal_debrief
+Client Relations,Client Feedback,Feedback Form,Client Feedback,No,Client satisfaction survey,Client feedback and ratings,client_feedback_*
+Client Relations,Incidents Review,Incident List,Incidents,No,Incident reports,Review of incidents during event,client_incidents_*
+Client Relations,Summary & Actions,Report,Summary,No,Summary with action items,Post-event summary and actions,client_summary_actions
+Notifications,Project Notifications,Notification List,Notifications,No,Priority-based notifications,Critical project alerts,project_notifications_*
+Notifications,Escalations,Escalation Alerts,Critical,No,High-priority escalations,Critical issues requiring attention,notifications_escalations_*
+Documents,Contract,File Upload,Legal,No,PDF document,Signed contract,documents_contract
+Documents,Service Level Agreement,File Upload,Legal,No,PDF document,SLA document,documents_sla
+Documents,Scope of Work,File Upload,Planning,No,PDF document,Scope of work document,documents_sow
+Documents,Project Info Request,File Upload,Client Docs,No,PDF/Word,Client information request,documents_info_request
+Documents,Menus & Products,File Upload,Client Docs,No,PDF/Excel,Food and product lists,documents_menus
+Documents,Device Allocation,File Upload,Technical,No,PDF/Excel,Device allocation plan,documents_devices
+Documents,Technical Rider,File Upload,Technical,No,PDF document,Technical requirements,documents_rider
+Documents,Custom Documents,Multi-file Upload,Custom,No,Various formats,Additional project documents,documents_custom_*
+Timeline,Project Timeline,Gantt Chart,Timeline,No,Visual timeline,Project timeline visualization,N/A - Computed
+Settings,Project Settings,Settings Form,Configuration,No,Various settings,Project-specific settings,project_settings_*
+Settings,Notification Preferences,Checkbox List,Notifications,No,Boolean toggles,Notification settings,project_notif_prefs_*
+Settings,Integration Config,Integration Settings,External Systems,No,API configurations,External system connections,project_integration_config_*
+System,Current Phase,Read-only,Project Status,No,"1-5 (Discover, Build, Prepare, Deliver, Roundup)",Current project phase - managed by system,current_phase
+System,Phase Progress,Read-only,Project Status,No,Percentage (0-100),Progress within current phase,phase_progress
+System,Status,Read-only,Project Status,No,"Active, Completed, On Hold, Cancelled",Overall project status,status
+System,Project Name,Computed,Display,No,Auto-generated from fields,Computed display name,project_name
+System,Current Phase Text,Computed,Display,No,Phase name string,Human-readable phase name,current_phase_text
+System,Is Deleted,System,System,No,Boolean,Soft delete flag,is_deleted
+System,Deleted At,System,System,No,Timestamp,When project was deleted,deleted_at
+System,Deleted By,System,System,No,User ID,Who deleted the project,deleted_by
+System,Created At,System,System,No,Timestamp,Project creation timestamp,created_at
+System,Updated At,System,System,No,Timestamp,Last update timestamp,updated_at
+System,Updated By,System,System,No,User ID,Last user to update project,updated_by

@@ -57,9 +57,11 @@ import { Project } from '../../types';
 import { CompareTab } from './CompareTab';
 import { CostsTab } from './CostsTab';
 import { RevenueTab } from './RevenueTab';
+import { ScenariosTab } from './ScenariosTab';
 import { ProtectedPage } from '../permissions/ProtectedPage';
 import { ProtectedField } from '../permissions/ProtectedField';
 import toast from 'react-hot-toast';
+import { useROIService, ROICalculation } from '../../lib/services/roiService';
 
 interface ROI3Props {
   project?: Project;
@@ -117,6 +119,13 @@ export function ROI3({ project }: ROI3Props) {
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: boolean }>({});
 
+  // ROI data state
+  const [roiCalculation, setRoiCalculation] = useState<ROICalculation | null>(null);
+  const [isLoadingROI, setIsLoadingROI] = useState(false);
+
+  // ROI service
+  const { getOrCreateROI } = useROIService();
+
   const toggleCollapse = (section: string) => {
     setCollapsedSections(prev => ({
       ...prev,
@@ -129,11 +138,30 @@ export function ROI3({ project }: ROI3Props) {
     const styleElement = document.createElement('style');
     styleElement.textContent = styles;
     document.head.appendChild(styleElement);
-    
+
     return () => {
       document.head.removeChild(styleElement);
     };
   }, []);
+
+  // Load ROI data when project is available
+  useEffect(() => {
+    const loadROIData = async () => {
+      if (!project?.id) return;
+
+      setIsLoadingROI(true);
+      try {
+        const roiData = await getOrCreateROI(project.id);
+        setRoiCalculation(roiData);
+      } catch (error) {
+        console.error('Failed to load ROI data:', error);
+      } finally {
+        setIsLoadingROI(false);
+      }
+    };
+
+    loadROIData();
+  }, [project?.id]);
 
   const tabs = [
     { id: 'overview' as ROITab, label: 'Overview', icon: Calculator },
@@ -270,19 +298,21 @@ export function ROI3({ project }: ROI3Props) {
               </div>
             </div>
             <div className="flex-1">
-              <ProtectedField 
-                fieldId="total_costs_actual" 
+              <ProtectedField
+                fieldId="total_costs_actual"
                 label="Total Costs (Actual)"
                 hideWhenNoAccess={false}
                 placeholderText="Sensitive cost data"
               >
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <p className="text-2xl font-bold text-gray-800">€90,656.80</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {roiCalculation ? `€${roiCalculation.total_cost_actual.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                  </p>
                   <span className="text-sm font-medium text-gray-500">(Actual)</span>
                 </div>
               </ProtectedField>
-              <ProtectedField 
-                fieldId="total_costs_estimate" 
+              <ProtectedField
+                fieldId="total_costs_estimate"
                 label="Total Costs (Estimate)"
                 renderReadOnly={(value) => (
                   <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
@@ -292,13 +322,38 @@ export function ROI3({ project }: ROI3Props) {
                 )}
               >
                 <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
-                  <p className="text-lg font-semibold text-red-500">€3,636,432.78</p>
+                  <p className="text-lg font-semibold text-red-500">
+                    {roiCalculation ? `€${roiCalculation.total_cost_estimate.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                  </p>
                   <span className="text-sm font-normal text-red-400">(Est.)</span>
                 </div>
               </ProtectedField>
               <div className="flex items-center text-green-600 text-sm font-medium mt-1">
-                <TrendingDown className="w-4 h-4" />
-                <span className="ml-1">-97.5%</span>
+                {roiCalculation ? (
+                  roiCalculation.total_cost_actual < roiCalculation.total_cost_estimate ? (
+                    <>
+                      <TrendingDown className="w-4 h-4" />
+                      <span className="ml-1">
+                        {roiCalculation.total_cost_estimate > 0
+                          ? `${(((roiCalculation.total_cost_estimate - roiCalculation.total_cost_actual) / roiCalculation.total_cost_estimate) * 100).toFixed(1)}%`
+                          : '0%'
+                        }
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="w-4 h-4" />
+                      <span className="ml-1">
+                        {roiCalculation.total_cost_estimate > 0
+                          ? `+${(((roiCalculation.total_cost_actual - roiCalculation.total_cost_estimate) / roiCalculation.total_cost_estimate) * 100).toFixed(1)}%`
+                          : '0%'
+                        }
+                      </span>
+                    </>
+                  )
+                ) : (
+                  <span className="ml-1">-</span>
+                )}
               </div>
             </div>
           </div>
@@ -313,16 +368,43 @@ export function ROI3({ project }: ROI3Props) {
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-baseline gap-x-2">
-                <p className="text-2xl font-bold text-gray-800">€25,369.79</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {roiCalculation ? `€${roiCalculation.total_revenue_actual.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                </p>
                 <span className="text-sm font-medium text-gray-500">(Actual)</span>
               </div>
               <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
-                <p className="text-lg font-semibold text-red-500">€29,644.79</p>
+                <p className="text-lg font-semibold text-red-500">
+                  {roiCalculation ? `€${roiCalculation.total_revenue_estimate.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                </p>
                 <span className="text-sm font-normal text-red-400">(Est.)</span>
               </div>
-              <div className="flex items-center text-red-500 text-sm font-medium mt-1">
-                <TrendingDown className="w-4 h-4" />
-                <span className="ml-1">-14.4%</span>
+              <div className="flex items-center text-sm font-medium mt-1">
+                {roiCalculation ? (
+                  roiCalculation.total_revenue_actual < roiCalculation.total_revenue_estimate ? (
+                    <>
+                      <TrendingDown className="w-4 h-4 text-red-500" />
+                      <span className="ml-1 text-red-500">
+                        {roiCalculation.total_revenue_estimate > 0
+                          ? `${(((roiCalculation.total_revenue_actual - roiCalculation.total_revenue_estimate) / roiCalculation.total_revenue_estimate) * 100).toFixed(1)}%`
+                          : '0%'
+                        }
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span className="ml-1 text-green-600">
+                        {roiCalculation.total_revenue_estimate > 0
+                          ? `+${(((roiCalculation.total_revenue_actual - roiCalculation.total_revenue_estimate) / roiCalculation.total_revenue_estimate) * 100).toFixed(1)}%`
+                          : '0%'
+                        }
+                      </span>
+                    </>
+                  )
+                ) : (
+                  <span className="ml-1">-</span>
+                )}
               </div>
             </div>
           </div>
@@ -338,24 +420,51 @@ export function ROI3({ project }: ROI3Props) {
               </div>
             </div>
             <div className="flex-1">
-              <ProtectedField 
-                fieldId="profit_actual" 
+              <ProtectedField
+                fieldId="profit_actual"
                 label="Profit (Actual)"
                 showPlaceholder={true}
                 placeholderText="Profit data restricted to authorized users"
               >
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <p className="text-2xl font-bold text-gray-800">€-65,287.01</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {roiCalculation ? `€${roiCalculation.margin_actual.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                  </p>
                   <span className="text-sm font-medium text-gray-500">(Actual)</span>
                 </div>
               </ProtectedField>
               <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
-                <p className="text-lg font-semibold text-red-500">€-3,606,787.99</p>
+                <p className="text-lg font-semibold text-red-500">
+                  {roiCalculation ? `€${roiCalculation.margin_estimate.toLocaleString('en-EU', { minimumFractionDigits: 2 })}` : '€0.00'}
+                </p>
                 <span className="text-sm font-normal text-red-400">(Est.)</span>
               </div>
-              <div className="flex items-center text-green-600 text-sm font-medium mt-1">
-                <TrendingUp className="w-4 h-4" />
-                <span className="ml-1">+98.2%</span>
+              <div className="flex items-center text-sm font-medium mt-1">
+                {roiCalculation ? (
+                  roiCalculation.margin_actual > roiCalculation.margin_estimate ? (
+                    <>
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span className="ml-1 text-green-600">
+                        {roiCalculation.margin_estimate !== 0
+                          ? `+${(((roiCalculation.margin_actual - roiCalculation.margin_estimate) / Math.abs(roiCalculation.margin_estimate)) * 100).toFixed(1)}%`
+                          : 'N/A'
+                        }
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown className="w-4 h-4 text-red-500" />
+                      <span className="ml-1 text-red-500">
+                        {roiCalculation.margin_estimate !== 0
+                          ? `${(((roiCalculation.margin_actual - roiCalculation.margin_estimate) / Math.abs(roiCalculation.margin_estimate)) * 100).toFixed(1)}%`
+                          : 'N/A'
+                        }
+                      </span>
+                    </>
+                  )
+                ) : (
+                  <span className="ml-1">-</span>
+                )}
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100 flex items-end justify-between">
@@ -396,15 +505,36 @@ export function ROI3({ project }: ROI3Props) {
                 </div>
               </div>
               <div className="flex flex-wrap items-baseline gap-x-2">
-                <p className="text-2xl font-bold text-gray-800">-257.34%</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {roiCalculation ? `${roiCalculation.margin_percentage_actual.toFixed(2)}%` : '0.00%'}
+                </p>
                 <span className="text-sm font-medium text-gray-500">(Actual)</span>
               </div>
               <div className="flex flex-wrap items-baseline gap-x-2 mt-2">
-                <p className="text-lg font-semibold text-red-500">-12166.68%</p>
+                <p className="text-lg font-semibold text-red-500">
+                  {roiCalculation ? `${roiCalculation.margin_percentage_estimate.toFixed(2)}%` : '0.00%'}
+                </p>
                 <span className="text-sm font-normal text-red-400">(Est.)</span>
-                <div className="flex items-center text-green-600 text-sm font-medium">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="ml-1">+97.8%</span>
+                <div className="flex items-center text-sm font-medium">
+                  {roiCalculation ? (
+                    roiCalculation.margin_percentage_actual > roiCalculation.margin_percentage_estimate ? (
+                      <>
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <span className="ml-1 text-green-600">
+                          +{(roiCalculation.margin_percentage_actual - roiCalculation.margin_percentage_estimate).toFixed(1)}pp
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDown className="w-4 h-4 text-red-500" />
+                        <span className="ml-1 text-red-500">
+                          {(roiCalculation.margin_percentage_actual - roiCalculation.margin_percentage_estimate).toFixed(1)}pp
+                        </span>
+                      </>
+                    )
+                  ) : (
+                    <span className="ml-1">-</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -933,21 +1063,13 @@ export function ROI3({ project }: ROI3Props) {
       case 'overview':
         return renderOverviewTab();
       case 'revenue':
-        return <RevenueTab />;
+        return <RevenueTab roiCalculationId={roiCalculation?.id} />;
       case 'costs':
-        return <CostsTab />;
+        return <CostsTab roiCalculationId={roiCalculation?.id} />;
       case 'compare':
         return <CompareTab />;
       case 'scenarios':
-        return (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="text-center py-12">
-              <Plus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Scenario Planning</h3>
-              <p className="text-gray-500">Create and analyze different financial scenarios.</p>
-            </div>
-          </div>
-        );
+        return <ScenariosTab roiCalculationId={roiCalculation?.id} />;
       default:
         return renderOverviewTab();
     }
