@@ -25,6 +25,8 @@ export interface ROICalculation {
   margin_percentage_actual: number;
   currency: string;
   notes?: string;
+  revenue_config?: any; // JSON config for revenue categories, columns, formulas
+  cost_config?: any; // JSON config for cost categories, columns, formulas
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -532,6 +534,74 @@ export class ROIService {
   }
 
   // ============================================
+  // CONFIGURATION METHODS (for Builder components)
+  // ============================================
+
+  /**
+   * Save revenue configuration (categories, columns, formulas, items)
+   */
+  static async saveRevenueConfig(
+    roiCalculationId: string,
+    config: any
+  ): Promise<ServiceResponse> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase
+        .from('project_roi_calculations')
+        .update({
+          revenue_config: config,
+          updated_by: user?.id
+        })
+        .eq('id', roiCalculationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error: any) {
+      console.error('Error saving revenue config:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save revenue configuration'
+      };
+    }
+  }
+
+  /**
+   * Save cost configuration (categories, columns, formulas, items)
+   */
+  static async saveCostConfig(
+    roiCalculationId: string,
+    config: any
+  ): Promise<ServiceResponse> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase
+        .from('project_roi_calculations')
+        .update({
+          cost_config: config,
+          updated_by: user?.id
+        })
+        .eq('id', roiCalculationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error: any) {
+      console.error('Error saving cost config:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save cost configuration'
+      };
+    }
+  }
+
+  // ============================================
   // HELPER METHODS
   // ============================================
 
@@ -756,6 +826,26 @@ export function useROIService() {
     }
   };
 
+  const saveRevenueConfig = async (roiCalculationId: string, config: any) => {
+    const result = await ROIService.saveRevenueConfig(roiCalculationId, config);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to save revenue configuration');
+      throw new Error(result.error);
+    }
+    toast.success('Revenue configuration saved successfully');
+    return result.data;
+  };
+
+  const saveCostConfig = async (roiCalculationId: string, config: any) => {
+    const result = await ROIService.saveCostConfig(roiCalculationId, config);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to save cost configuration');
+      throw new Error(result.error);
+    }
+    toast.success('Cost configuration saved successfully');
+    return result.data;
+  };
+
   return {
     getOrCreateROI,
     updateROI,
@@ -773,6 +863,8 @@ export function useROIService() {
     getScenarios,
     upsertScenario,
     deleteScenario,
-    recalculateTotals
+    recalculateTotals,
+    saveRevenueConfig,
+    saveCostConfig
   };
 }
