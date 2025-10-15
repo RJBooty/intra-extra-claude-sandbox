@@ -1180,3 +1180,144 @@ export async function deleteProject(projectId: string) {
     throw error;
   }
 }
+
+// PROJECT CARD LAYOUTS - Save and load card positions/configurations per project
+export async function saveProjectCardLayouts(projectCode: string, layouts: any[]) {
+  try {
+    // Delete existing layouts for this project
+    await supabase
+      .from('project_card_layouts')
+      .delete()
+      .eq('project_code', projectCode);
+
+    // Insert new layouts
+    const layoutsToInsert = layouts.map(layout => ({
+      project_code: projectCode,
+      card_id: layout.id,
+      title: layout.title,
+      icon_name: layout.icon.name || 'FolderOpen',
+      grid_column: layout.gridColumn,
+      grid_row: layout.gridRow,
+      grid_column_span: layout.gridColumnSpan,
+      grid_row_span: layout.gridRowSpan,
+      card_type: layout.type,
+      fields: JSON.stringify(layout.fields || [])
+    }));
+
+    const { data, error } = await supabase
+      .from('project_card_layouts')
+      .insert(layoutsToInsert)
+      .select();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to save project card layouts:', error);
+    throw error;
+  }
+}
+
+export async function loadProjectCardLayouts(projectCode: string) {
+  try {
+    const { data, error } = await supabase
+      .from('project_card_layouts')
+      .select('*')
+      .eq('project_code', projectCode)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // If no layouts found, return null (will use defaults)
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    // Transform database format back to component format
+    return data.map(layout => ({
+      id: layout.card_id,
+      title: layout.title,
+      icon: layout.icon_name, // We'll need to map this back to the icon component
+      gridColumn: layout.grid_column,
+      gridRow: layout.grid_row,
+      gridColumnSpan: layout.grid_column_span,
+      gridRowSpan: layout.grid_row_span,
+      type: layout.card_type,
+      fields: typeof layout.fields === 'string' ? JSON.parse(layout.fields) : layout.fields
+    }));
+  } catch (error) {
+    console.error('Failed to load project card layouts:', error);
+    return null;
+  }
+}
+
+// PROJECT FIELD VALUES - Save and load field data per project
+export async function saveProjectFieldValues(projectCode: string, fieldValues: Record<string, Record<string, any>>) {
+  try {
+    const valuesToInsert: any[] = [];
+
+    // Flatten the nested object structure
+    Object.entries(fieldValues).forEach(([cardId, fields]) => {
+      Object.entries(fields).forEach(([fieldId, value]) => {
+        valuesToInsert.push({
+          project_code: projectCode,
+          card_id: cardId,
+          field_id: fieldId,
+          field_value: typeof value === 'object' ? JSON.stringify(value) : String(value || '')
+        });
+      });
+    });
+
+    if (valuesToInsert.length === 0) {
+      return [];
+    }
+
+    // Upsert field values (insert or update if exists)
+    const { data, error } = await supabase
+      .from('project_field_values')
+      .upsert(valuesToInsert, {
+        onConflict: 'project_code,card_id,field_id'
+      })
+      .select();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to save project field values:', error);
+    throw error;
+  }
+}
+
+export async function loadProjectFieldValues(projectCode: string) {
+  try {
+    const { data, error } = await supabase
+      .from('project_field_values')
+      .select('*')
+      .eq('project_code', projectCode);
+
+    if (error) throw error;
+
+    // Transform flat array back to nested object structure
+    const fieldValues: Record<string, Record<string, any>> = {};
+
+    data?.forEach(row => {
+      if (!fieldValues[row.card_id]) {
+        fieldValues[row.card_id] = {};
+      }
+
+      // Try to parse JSON values, otherwise use as string
+      let value = row.field_value;
+      try {
+        value = JSON.parse(row.field_value);
+      } catch {
+        // Not JSON, use as-is
+      }
+
+      fieldValues[row.card_id][row.field_id] = value;
+    });
+
+    return fieldValues;
+  } catch (error) {
+    console.error('Failed to load project field values:', error);
+    return {};
+  }
+}

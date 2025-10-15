@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Info, Calculator, TrendingUp, FileText, Settings, Bell, Zap, Users, UserCheck } from 'lucide-react';
 import { Project } from '../../types';
-import { CoreInfoPage } from './CoreInfoPage';
+import ProjectCoreInfo from './ProjectCoreInfo';
 import { ROI3 } from '../roi/ROI3';
 import { Logistics } from '../logistics/Logistics';
 import { OperationsPipeline } from '../operations/OperationsPipeline';
@@ -43,8 +43,8 @@ export function ProjectView({ project, onBack, onNavigate }: ProjectViewProps) {
     switch (activeTab) {
       case 'core-info':
         return (
-          <CoreInfoPage 
-            project={currentProject} 
+          <ProjectCoreInfo
+            project={currentProject}
             onProjectUpdate={handleProjectUpdate}
           />
         );

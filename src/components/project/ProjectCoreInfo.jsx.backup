@@ -1,0 +1,1067 @@
+import React, { useState } from 'react';
+import { FolderOpen, Building2, Settings, Calendar, CreditCard, RefreshCw, Truck, BarChart3, Link2, FileText, DollarSign, Trash2, X, Plus, ChevronDown, MapPin, Upload, Table, Hash, Type, CheckSquare } from 'lucide-react';
+
+// IMPORT MODULAR COMPONENTS
+// In your actual project, these would be imported from separate files:
+// import { useGridLayout } from '../hooks/useGridLayout';
+// import { GridLayoutEditor } from '../components/GridLayoutEditor';
+
+// For this demo, we're including simplified versions inline
+
+// Field Editor Component
+const FieldEditor = ({ section, onSave, onClose }) => {
+  const [fields, setFields] = useState(section.fields || []);
+  const [showAddField, setShowAddField] = useState(false);
+
+  const fieldTypes = [
+    { value: 'text', label: 'Short Text', icon: Type },
+    { value: 'textarea', label: 'Long Text', icon: FileText },
+    { value: 'number', label: 'Number', icon: Hash },
+    { value: 'dropdown', label: 'Dropdown', icon: ChevronDown },
+    { value: 'multiselect', label: 'Multiple Choice', icon: CheckSquare },
+    { value: 'date', label: 'Date Only', icon: Calendar },
+    { value: 'time', label: 'Time Only', icon: Clock },
+    { value: 'datetime', label: 'Date & Time', icon: Calendar },
+    { value: 'address', label: 'Address', icon: MapPin },
+    { value: 'url', label: 'URL', icon: Link2 },
+    { value: 'file', label: 'File Upload', icon: Upload },
+    { value: 'table', label: 'Table', icon: Table }
+  ];
+
+  const addField = (type) => {
+    const newField = {
+      id: `field-${Date.now()}`,
+      type,
+      label: `New ${fieldTypes.find(f => f.value === type)?.label || 'Field'}`,
+      required: false,
+      options: type === 'dropdown' || type === 'multiselect' ? ['Option 1', 'Option 2'] : null
+    };
+    setFields([...fields, newField]);
+    setShowAddField(false);
+  };
+
+  const updateField = (fieldId, updates) => {
+    setFields(fields.map(f => f.id === fieldId ? { ...f, ...updates } : f));
+  };
+
+  const removeField = (fieldId) => {
+    setFields(fields.filter(f => f.id !== fieldId));
+  };
+
+  const moveField = (fieldId, direction) => {
+    const index = fields.findIndex(f => f.id === fieldId);
+    if (index === -1) return;
+    
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= fields.length) return;
+    
+    const newFields = [...fields];
+    [newFields[index], newFields[newIndex]] = [newFields[newIndex], newFields[index]];
+    setFields(newFields);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900">Edit Fields: {section.title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {fields.map((field, index) => {
+            const FieldTypeIcon = fieldTypes.find(t => t.value === field.type)?.icon || Type;
+            return (
+              <div key={field.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col gap-1 pt-2">
+                    <button 
+                      onClick={() => moveField(field.id, 'up')}
+                      disabled={index === 0}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs"
+                    >
+                      ▲
+                    </button>
+                    <button 
+                      onClick={() => moveField(field.id, 'down')}
+                      disabled={index === fields.length - 1}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FieldTypeIcon className="h-4 w-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={field.label}
+                        onChange={(e) => updateField(field.id, { label: e.target.value })}
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        placeholder="Field Label"
+                      />
+                      <select
+                        value={field.type}
+                        onChange={(e) => updateField(field.id, { type: e.target.value })}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      >
+                        {fieldTypes.map(type => (
+                          <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {(field.type === 'dropdown' || field.type === 'multiselect') && (
+                      <div className="pl-6">
+                        <label className="text-xs text-gray-600 font-medium">Options (comma separated):</label>
+                        <input
+                          type="text"
+                          value={(field.options || []).join(', ')}
+                          onChange={(e) => updateField(field.id, { 
+                            options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) 
+                          })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                          placeholder="Option 1, Option 2, Option 3"
+                        />
+                      </div>
+                    )}
+
+                    {field.type === 'table' && (
+                      <div className="pl-6">
+                        <label className="text-xs text-gray-600 font-medium">Column headers (comma separated):</label>
+                        <input
+                          type="text"
+                          value={(field.columns || []).join(', ')}
+                          onChange={(e) => updateField(field.id, { 
+                            columns: e.target.value.split(',').map(c => c.trim()).filter(Boolean) 
+                          })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                          placeholder="Column 1, Column 2, Column 3"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 pl-6">
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={field.required || false}
+                          onChange={(e) => updateField(field.id, { required: e.target.checked })}
+                          className="rounded"
+                        />
+                        Required
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={field.readonly || false}
+                          onChange={(e) => updateField(field.id, { readonly: e.target.checked })}
+                          className="rounded"
+                        />
+                        Read-only
+                      </label>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => removeField(field.id)}
+                    className="text-red-400 hover:text-red-600 p-1"
+                    title="Remove field"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {!showAddField ? (
+            <button
+              onClick={() => setShowAddField(true)}
+              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Field
+            </button>
+          ) : (
+            <div className="border-2 border-blue-400 rounded-lg p-4 bg-blue-50">
+              <p className="text-sm font-semibold text-gray-900 mb-3">Select field type:</p>
+              <div className="grid grid-cols-3 gap-2">
+                {fieldTypes.map(type => {
+                  const Icon = type.icon;
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => addField(type.value)}
+                      className="p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
+                    >
+                      <Icon className="h-5 w-5 text-gray-600 mb-1" />
+                      <p className="text-xs font-medium text-gray-900">{type.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setShowAddField(false)}
+                className="mt-3 text-sm text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(fields)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Save Fields
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Field Renderer Component
+const FieldRenderer = ({ field, value, onChange }) => {
+  switch (field.type) {
+    case 'text':
+      return (
+        <input
+          type="text"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'textarea':
+      return (
+        <textarea
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          rows={2}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm resize-none"
+        />
+      );
+    case 'number':
+      return (
+        <input
+          type="number"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'dropdown':
+      return (
+        <select
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        >
+          <option value="">Select...</option>
+          {(field.options || []).map((opt, idx) => (
+            <option key={idx} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    case 'multiselect':
+      const selectedValues = Array.isArray(value) ? value : [];
+      return (
+        <div className="space-y-1">
+          {(field.options || []).map((opt, idx) => (
+            <label key={idx} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={selectedValues.includes(opt)}
+                onChange={(e) => {
+                  const newValue = e.target.checked
+                    ? [...selectedValues, opt]
+                    : selectedValues.filter(v => v !== opt);
+                  onChange(newValue);
+                }}
+                disabled={field.readonly}
+                className="rounded"
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      );
+    case 'date':
+      return (
+        <input
+          type="date"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'time':
+      return (
+        <input
+          type="time"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'datetime':
+      return (
+        <input
+          type="datetime-local"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'address':
+      return (
+        <textarea
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          rows={2}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm resize-none"
+        />
+      );
+    case 'url':
+      return (
+        <input
+          type="url"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={field.readonly}
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
+        />
+      );
+    case 'file':
+      return (
+        <input
+          type="file"
+          onChange={(e) => onChange(e.target.files[0]?.name)}
+          disabled={field.readonly}
+          className="w-full text-sm"
+        />
+      );
+    default:
+      return <span className="text-sm text-gray-500">{value || '-'}</span>;
+  }
+};
+
+const ProjectCoreInfo = () => {
+  const [userRole] = useState('Senior');
+  
+  const projectData = {
+    projectId: 'PR-CAS-001',
+    eventName: 'Glastonbury Festival 2025',
+    status: 'Active',
+    projectType: 'Full Service',
+    clientTier: 'Tier 1',
+    progress: 45
+  };
+
+  const canViewFinancials = ['Master', 'Senior', 'HR_Finance'].includes(userRole);
+
+  const [draggedSection, setDraggedSection] = useState(null);
+  const [dragOverCell, setDragOverCell] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const [resizingSection, setResizingSection] = useState(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStart, setResizeStart] = useState(null);
+  
+  const [showGridGuides, setShowGridGuides] = useState(true);
+  const [hoveredSection, setHoveredSection] = useState(null);
+  
+  const [gridColumns, setGridColumns] = useState(35);
+  const [gridRows, setGridRows] = useState(25);
+  
+  const [overflowingSections, setOverflowingSections] = useState(new Set());
+  const sectionRefs = useRef({});
+  
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingFieldsSection, setEditingFieldsSection] = useState(null);
+  const [fieldValues, setFieldValues] = useState({});
+
+  const [sections, setSections] = useState([
+    { 
+      id: 'project-info', 
+      title: 'Project Information', 
+      icon: FolderOpen, 
+      gridColumn: 1, 
+      gridRow: 1, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'project-info',
+      fields: [
+        { id: 'f1', type: 'text', label: 'Project ID', readonly: false },
+        { id: 'f2', type: 'text', label: 'Event Name', readonly: false },
+        { id: 'f3', type: 'dropdown', label: 'Project Type', options: ['Full Service', 'Equipment Only', 'Consulting'], readonly: false },
+        { id: 'f4', type: 'dropdown', label: 'Status', options: ['Active', 'Planning', 'Complete'], readonly: false }
+      ]
+    },
+    { 
+      id: 'client-info', 
+      title: 'Client Information', 
+      icon: Building2, 
+      gridColumn: 10, 
+      gridRow: 1, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'client-info',
+      fields: [
+        { id: 'c1', type: 'text', label: 'Primary Contact', readonly: false },
+        { id: 'c2', type: 'text', label: 'Email', readonly: false },
+        { id: 'c3', type: 'text', label: 'Phone', readonly: false },
+        { id: 'c4', type: 'address', label: 'Venue Location', readonly: false }
+      ]
+    },
+    { 
+      id: 'back-office', 
+      title: 'Back-Office Connections', 
+      icon: Link2, 
+      gridColumn: 19, 
+      gridRow: 1, 
+      gridColumnSpan: 6, 
+      gridRowSpan: 5, 
+      type: 'back-office',
+      fields: [
+        { id: 'b1', type: 'url', label: 'SharePoint Folder', readonly: false },
+        { id: 'b2', type: 'url', label: 'Jira Project', readonly: false },
+        { id: 'b3', type: 'url', label: 'JUE Dashboard', readonly: false }
+      ]
+    },
+    { 
+      id: 'config-settings', 
+      title: 'Configuration Settings', 
+      icon: Settings, 
+      gridColumn: 26, 
+      gridRow: 1, 
+      gridColumnSpan: 6, 
+      gridRowSpan: 5, 
+      type: 'config-settings',
+      fields: [
+        { id: 'cfg1', type: 'dropdown', label: 'RFID Type', options: ['NFC', 'UHF', 'LF'], readonly: false },
+        { id: 'cfg2', type: 'dropdown', label: 'Currency', options: ['GBP', 'EUR', 'USD'], readonly: false },
+        { id: 'cfg3', type: 'number', label: 'Top-up Limit', readonly: false }
+      ]
+    },
+    { 
+      id: 'cashless-info', 
+      title: 'Cashless Information', 
+      icon: CreditCard, 
+      gridColumn: 1, 
+      gridRow: 7, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'cashless-info',
+      fields: [
+        { id: 'cash1', type: 'dropdown', label: 'Cashless Enabled', options: ['Yes', 'No'], readonly: false },
+        { id: 'cash2', type: 'number', label: 'Top-up Points', readonly: false }
+      ]
+    },
+    { 
+      id: 'refund-info', 
+      title: 'Refund Information', 
+      icon: RefreshCw, 
+      gridColumn: 10, 
+      gridRow: 7, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'refund-info',
+      fields: [
+        { id: 'ref1', type: 'number', label: 'Refund Window (days)', readonly: false },
+        { id: 'ref2', type: 'dropdown', label: 'Refund Method', options: ['Original Payment', 'Bank Transfer', 'Cash'], readonly: false }
+      ]
+    },
+    { 
+      id: 'key-dates', 
+      title: 'Key Dates', 
+      icon: Calendar, 
+      gridColumn: 19, 
+      gridRow: 7, 
+      gridColumnSpan: 6, 
+      gridRowSpan: 5, 
+      type: 'key-dates',
+      fields: [
+        { id: 'd1', type: 'date', label: 'Event Start', readonly: false },
+        { id: 'd2', type: 'date', label: 'Event End', readonly: false },
+        { id: 'd3', type: 'date', label: 'Build Start', readonly: false },
+        { id: 'd4', type: 'date', label: 'Delivery Deadline', readonly: false }
+      ]
+    },
+    { 
+      id: 'summary', 
+      title: 'Summary Overview', 
+      icon: BarChart3, 
+      gridColumn: 26, 
+      gridRow: 7, 
+      gridColumnSpan: 6, 
+      gridRowSpan: 5, 
+      type: 'summary',
+      fields: [
+        { id: 's1', type: 'number', label: 'Devices', readonly: false },
+        { id: 's2', type: 'number', label: 'Readers', readonly: false },
+        { id: 's3', type: 'number', label: 'Capacity', readonly: false },
+        { id: 's4', type: 'number', label: 'Top-ups', readonly: false }
+      ]
+    },
+    { 
+      id: 'delivery-deadlines', 
+      title: 'Delivery & Deadlines', 
+      icon: Truck, 
+      gridColumn: 1, 
+      gridRow: 13, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'delivery-deadlines',
+      fields: [
+        { id: 'del1', type: 'date', label: 'Equipment Delivery', readonly: false },
+        { id: 'del2', type: 'date', label: 'Setup Complete', readonly: false },
+        { id: 'del3', type: 'date', label: 'On-Site Arrival', readonly: false }
+      ]
+    },
+    { 
+      id: 'fees-overview', 
+      title: 'Fees Overview', 
+      icon: DollarSign, 
+      gridColumn: 10, 
+      gridRow: 13, 
+      gridColumnSpan: 8, 
+      gridRowSpan: 5, 
+      type: 'fees-overview',
+      requiresPermission: true,
+      fields: [
+        { id: 'fee1', type: 'number', label: 'Base Fee', readonly: false },
+        { id: 'fee2', type: 'number', label: 'Device Fee', readonly: false },
+        { id: 'fee3', type: 'number', label: 'Service Fee', readonly: false },
+        { id: 'fee4', type: 'number', label: 'Total Value', readonly: true }
+      ]
+    }
+  ]);
+
+  const handleLockLayout = () => {
+    const confirmed = window.confirm(
+      "Save Layout Changes?\n\nThis will save the current card positions and sizes.\nThis action cannot be undone.\n\nDo you want to proceed?"
+    );
+    
+    if (confirmed) {
+      setIsEditMode(false);
+      console.log('Layout locked and saved');
+    }
+  };
+
+  const handleUnlockLayout = () => {
+    setIsEditMode(true);
+    console.log('Edit mode activated');
+  };
+
+  const updateFieldValue = (sectionId, fieldId, value) => {
+    setFieldValues(prev => ({
+      ...prev,
+      [sectionId]: {
+        ...prev[sectionId],
+        [fieldId]: value
+      }
+    }));
+  };
+
+  const saveFields = (fields) => {
+    setSections(sections.map(s => 
+      s.id === editingFieldsSection.id ? { ...s, fields } : s
+    ));
+    setEditingFieldsSection(null);
+  };
+
+  const handleDragStart = (section, e) => {
+    if (!isEditMode) {
+      e.preventDefault();
+      return;
+    }
+    e.stopPropagation();
+    setDraggedSection(section);
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e) => {
+    if (!isDragging || !draggedSection) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const gridContainer = e.currentTarget;
+    const rect = gridContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const cellSize = 30;
+    const gap = 8;
+    
+    let column = 1;
+    let row = 1;
+    
+    let cumulativeWidth = 0;
+    for (let col = 1; col <= gridColumns; col++) {
+      const cellEnd = cumulativeWidth + cellSize;
+      if (x < cellEnd) {
+        column = col;
+        break;
+      }
+      cumulativeWidth = cellEnd + gap;
+      column = col + 1;
+    }
+    
+    let cumulativeHeight = 0;
+    for (let r = 1; r <= gridRows; r++) {
+      const cellEnd = cumulativeHeight + cellSize;
+      if (y < cellEnd) {
+        row = r;
+        break;
+      }
+      cumulativeHeight = cellEnd + gap;
+      row = r + 1;
+    }
+    
+    column = Math.max(1, Math.min(column, gridColumns));
+    row = Math.max(1, Math.min(row, gridRows));
+    
+    setDragOverCell({ column, row });
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!draggedSection || !dragOverCell) {
+      setIsDragging(false);
+      setDraggedSection(null);
+      setDragOverCell(null);
+      return;
+    }
+    
+    const newGridColumn = dragOverCell.column;
+    const newGridRow = dragOverCell.row;
+    
+    setSections(prevSections => 
+      prevSections.map(section => 
+        section.id === draggedSection.id
+          ? { ...section, gridColumn: newGridColumn, gridRow: newGridRow }
+          : section
+      )
+    );
+    
+    setIsDragging(false);
+    setDraggedSection(null);
+    setDragOverCell(null);
+  };
+
+  const handleDragEnd = (e) => {
+    e.stopPropagation();
+    setIsDragging(false);
+    setDraggedSection(null);
+    setDragOverCell(null);
+  };
+
+  const handleResizeStart = (section, e) => {
+    if (!isEditMode) {
+      e.preventDefault();
+      return;
+    }
+    e.stopPropagation();
+    e.preventDefault();
+    setResizingSection(section);
+    setIsResizing(true);
+    setResizeStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleResizeMove = (e) => {
+    if (!isResizing || !resizingSection || !resizeStart) return;
+    
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+    
+    const colThreshold = 38;
+    const rowThreshold = 38;
+    
+    const columnChange = Math.round(deltaX / colThreshold);
+    const rowChange = Math.round(deltaY / rowThreshold);
+    
+    const newColumnSpan = Math.max(1, resizingSection.gridColumnSpan + columnChange);
+    const newRowSpan = Math.max(1, resizingSection.gridRowSpan + rowChange);
+    
+    const maxColumnSpan = gridColumns - resizingSection.gridColumn + 1;
+    const finalColumnSpan = Math.min(newColumnSpan, maxColumnSpan);
+    
+    if (finalColumnSpan !== resizingSection.gridColumnSpan || newRowSpan !== resizingSection.gridRowSpan) {
+      setSections(prevSections =>
+        prevSections.map(section =>
+          section.id === resizingSection.id
+            ? { ...section, gridColumnSpan: finalColumnSpan, gridRowSpan: newRowSpan }
+            : section
+        )
+      );
+      setResizeStart({ x: e.clientX, y: e.clientY });
+      setResizingSection(prev => ({ ...prev, gridColumnSpan: finalColumnSpan, gridRowSpan: newRowSpan }));
+    }
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+    setResizingSection(null);
+    setResizeStart(null);
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      const handleMouseMove = (e) => handleResizeMove(e);
+      const handleMouseUp = () => handleResizeEnd();
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing, resizingSection, resizeStart]);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      const newOverflowing = new Set();
+      
+      sections.forEach(section => {
+        const element = sectionRefs.current[section.id];
+        if (element) {
+          const contentDiv = element.querySelector('.section-content');
+          if (contentDiv) {
+            const isOverflowing = contentDiv.scrollHeight > contentDiv.clientHeight || 
+                                 contentDiv.scrollWidth > contentDiv.clientWidth;
+            if (isOverflowing) {
+              newOverflowing.add(section.id);
+            }
+          }
+        }
+      });
+      
+      setOverflowingSections(newOverflowing);
+    };
+    
+    checkOverflow();
+    const timeoutId = setTimeout(checkOverflow, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [sections, isResizing]);
+
+  const iconColorMap = {
+    'project-info': 'text-blue-600',
+    'key-dates': 'text-orange-600',
+    'client-info': 'text-green-600',
+    'summary': 'text-violet-600',
+    'config-settings': 'text-indigo-600',
+    'fees-overview': 'text-emerald-600',
+    'delivery-deadlines': 'text-amber-600',
+    'back-office': 'text-pink-600',
+    'cashless-info': 'text-cyan-600',
+    'refund-info': 'text-teal-600'
+  };
+
+  return (
+    <div className={'p-6 min-h-screen transition-colors ' + (isEditMode ? 'bg-blue-50' : 'bg-gray-50')} style={{ cursor: isResizing ? 'nwse-resize' : isDragging ? 'grabbing' : 'default', userSelect: isResizing || isDragging ? 'none' : 'auto' }}>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{projectData.eventName}</h1>
+            <p className="text-sm text-gray-600 mt-1">Project Core Information</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {isEditMode && (
+              <div className="p-3 bg-blue-100 border-2 border-blue-400 rounded-lg flex items-center gap-2">
+                <Unlock className="h-5 w-5 text-blue-700 flex-shrink-0" />
+                <p className="text-sm font-semibold text-blue-900">Edit Mode - Drag cards, resize, configure fields</p>
+              </div>
+            )}
+            <button 
+              onClick={isEditMode ? handleLockLayout : handleUnlockLayout}
+              className={'px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 shadow-sm flex-shrink-0 ' + (isEditMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white')}
+            >
+              {isEditMode ? (
+                <>
+                  <Lock className="h-5 w-5" />
+                  Lock Layout & Save
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-5 w-5" />
+                  Edit Layout
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        {isEditMode && (
+          <div className="flex items-center gap-3 justify-end">
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-medium text-gray-600 uppercase">Columns</span>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => setGridColumns(Math.max(3, gridColumns - 1))}
+                    className="px-2 py-0.5 bg-white hover:bg-red-50 border border-gray-300 hover:border-red-300 rounded text-xs font-bold text-gray-700 hover:text-red-600 transition-colors"
+                    disabled={gridColumns <= 3}
+                  >
+                    −
+                  </button>
+                  <span className="text-sm font-bold text-gray-900 min-w-[2rem] text-center">{gridColumns}</span>
+                  <button 
+                    onClick={() => setGridColumns(Math.min(100, gridColumns + 1))}
+                    className="px-2 py-0.5 bg-white hover:bg-green-50 border border-gray-300 hover:border-green-300 rounded text-xs font-bold text-gray-700 hover:text-green-600 transition-colors"
+                    disabled={gridColumns >= 100}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div className="w-px h-10 bg-gray-300"></div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-medium text-gray-600 uppercase">Rows</span>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => setGridRows(Math.max(3, gridRows - 1))}
+                    className="px-2 py-0.5 bg-white hover:bg-red-50 border border-gray-300 hover:border-red-300 rounded text-xs font-bold text-gray-700 hover:text-red-600 transition-colors"
+                    disabled={gridRows <= 3}
+                  >
+                    −
+                  </button>
+                  <span className="text-sm font-bold text-gray-900 min-w-[2rem] text-center">{gridRows}</span>
+                  <button 
+                    onClick={() => setGridRows(Math.min(100, gridRows + 1))}
+                    className="px-2 py-0.5 bg-white hover:bg-green-50 border border-gray-300 hover:border-green-300 rounded text-xs font-bold text-gray-700 hover:text-green-600 transition-colors"
+                    disabled={gridRows >= 100}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowGridGuides(!showGridGuides)}
+              className={'px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 ' + (showGridGuides ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
+            >
+              <Grid3x3 className="h-4 w-4" />
+              {showGridGuides ? 'Hide Grid' : 'Show Grid'}
+            </button>
+            <button 
+              onClick={() => {
+                setGridColumns(35);
+                setGridRows(25);
+              }}
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2"
+              title="Reset to 35x25 grid"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset Grid
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="relative overflow-auto">
+        {isEditMode && showGridGuides && (
+          <div className="absolute inset-0 pointer-events-none z-0" style={{ marginLeft: '-0.25rem', marginRight: '-0.25rem', marginTop: '-1.5rem' }}>
+            <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `repeat(${gridColumns}, 30px)` }}>
+              {[...Array(gridColumns)].map((_, i) => (
+                <div key={i} className="text-center text-[8px] font-semibold text-gray-500 bg-gray-200 rounded py-0.5">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-2 h-full" style={{ gridTemplateColumns: `repeat(${gridColumns}, 30px)`, gridTemplateRows: `repeat(${gridRows}, 30px)` }}>
+              {[...Array(gridColumns * gridRows)].map((_, index) => {
+                const col = (index % gridColumns) + 1;
+                const row = Math.floor(index / gridColumns) + 1;
+                
+                const hoveredSec = sections.find(s => s.id === hoveredSection);
+                const isOccupied = hoveredSec && 
+                  col >= hoveredSec.gridColumn && 
+                  col < hoveredSec.gridColumn + hoveredSec.gridColumnSpan &&
+                  row >= hoveredSec.gridRow && 
+                  row < hoveredSec.gridRow + hoveredSec.gridRowSpan;
+                
+                const isCursorCell = isDragging && dragOverCell && col === dragOverCell.column && row === dragOverCell.row;
+                
+                return (
+                  <div 
+                    key={index}
+                    className={'border border-dashed transition-all ' + (isCursorCell ? 'border-orange-500 bg-orange-100' : isOccupied ? 'border-blue-400 bg-blue-50' : 'border-gray-400')}
+                    style={{ opacity: isCursorCell ? 0.9 : isOccupied ? 0.7 : 0.6 }}
+                  >
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        <div className="grid gap-2 relative z-10" style={{gridTemplateColumns: `repeat(${gridColumns}, 30px)`, gridTemplateRows: `repeat(${gridRows}, 30px)`}} onDragOver={handleDragOver} onDrop={handleDrop} onDragEnter={(e) => e.preventDefault()}>
+          {isEditMode && isDragging && dragOverCell && draggedSection && (
+            <div 
+              className="absolute bg-blue-400 border-2 border-blue-600 rounded pointer-events-none z-20" 
+              style={{
+                gridColumn: dragOverCell.column + ' / span 1', 
+                gridRow: dragOverCell.row + ' / span 1', 
+                opacity: 0.8
+              }}
+            />
+          )}
+          {sections.map((section) => {
+            if (section.requiresPermission && !canViewFinancials) return null;
+            const IconComponent = section.icon;
+            const isBeingDragged = draggedSection?.id === section.id;
+            const isBeingResized = resizingSection?.id === section.id;
+            const hasOverflow = overflowingSections.has(section.id);
+            
+            const atRightEdge = section.gridColumn + section.gridColumnSpan > gridColumns;
+            const atBottomEdge = section.gridRow + section.gridRowSpan > gridRows;
+            
+            return (
+              <div 
+                key={section.id}
+                ref={el => sectionRefs.current[section.id] = el}
+                className={'bg-white/90 p-4 rounded-lg shadow-sm border-2 transition-all relative overflow-hidden ' + (isBeingDragged ? 'opacity-30 cursor-grabbing border-blue-400 shadow-lg' : hasOverflow ? 'border-orange-400 ring-2 ring-orange-300' : 'border-gray-200 hover:shadow-md') + (isBeingResized ? ' ring-4 ring-blue-400 ring-opacity-50 border-blue-400' : '')} 
+                style={{
+                  gridColumn: section.gridColumn + ' / span ' + section.gridColumnSpan, 
+                  gridRow: section.gridRow + ' / span ' + section.gridRowSpan,
+                  minWidth: '160px',
+                  minHeight: '160px'
+                }}
+                onMouseEnter={() => setHoveredSection(section.id)}
+                onMouseLeave={() => setHoveredSection(null)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {isEditMode && (
+                      <div className="drag-handle cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded transition-colors" draggable onDragStart={(e) => handleDragStart(section, e)} onDragEnd={handleDragEnd} title="Drag to reposition">
+                        <GripVertical className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      </div>
+                    )}
+                    <h3 className="text-base flex items-center gap-2 font-semibold text-gray-900">
+                      <IconComponent className={'h-4 w-4 ' + iconColorMap[section.type]} />
+                      {section.title}
+                    </h3>
+                    {hasOverflow && (
+                      <div className="bg-orange-100 text-orange-700 rounded p-1 flex items-center gap-1" title="Content is clipped - resize card to see all">
+                        <AlertTriangle className="h-3 w-3" />
+                      </div>
+                    )}
+                  </div>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setEditingFieldsSection(section)}
+                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Configure fields"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <div className="section-content overflow-auto" style={{ maxHeight: 'calc(100% - 3rem)' }}>
+                  <div className="space-y-3">
+                    {(section.fields || []).map(field => (
+                      <div key={field.id}>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          {field.label}
+                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <FieldRenderer
+                          field={field}
+                          value={fieldValues[section.id]?.[field.id]}
+                          onChange={(value) => updateFieldValue(section.id, field.id, value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {hasOverflow && (
+                  <div className="absolute bottom-2 left-2 right-2 bg-orange-50 border border-orange-300 rounded px-2 py-1 flex items-center gap-1 text-[10px] text-orange-700 pointer-events-none">
+                    <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                    <span className="font-medium">Content clipped - resize to view all</span>
+                  </div>
+                )}
+                {isEditMode && isBeingResized && (
+                  <div className="absolute top-2 right-14 z-30">
+                    <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg flex flex-col items-center gap-1">
+                      <div className="font-bold">{section.gridColumnSpan}×{section.gridRowSpan}</div>
+                      <div className="text-blue-100 text-[10px]">
+                        Pos: {section.gridColumn},{section.gridRow}
+                      </div>
+                      {(atRightEdge || atBottomEdge) && (
+                        <div className="text-yellow-300 text-[10px] flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          At boundary
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {isEditMode && (
+                  <div className="resize-handle absolute bottom-1 right-1 cursor-nwse-resize p-1 hover:bg-gray-100 rounded transition-colors z-30" onMouseDown={(e) => handleResizeStart(section, e)} title="Drag to resize">
+                    <Maximize2 className="h-4 w-4 text-gray-300 hover:text-gray-500" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center">
+        <p className="text-xs text-blue-800"><span className="font-semibold">View:</span> {userRole} - {canViewFinancials ? ' Financial data visible' : ' Financial data hidden'}</p>
+        <div className="flex items-center gap-4">
+          <p className="text-xs text-blue-800"><span className="font-semibold">Grid:</span> {gridColumns} columns × {gridRows} rows ({gridColumns * gridRows} cells)</p>
+          <p className={'text-xs font-semibold flex items-center gap-1 ' + (isEditMode ? 'text-orange-700' : 'text-green-700')}>
+            {isEditMode ? (
+              <>
+                <Unlock className="h-3 w-3" />
+                Layout Unlocked
+              </>
+            ) : (
+              <>
+                <Lock className="h-3 w-3" />
+                Layout Locked
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {editingFieldsSection && (
+        <FieldEditor
+          section={editingFieldsSection}
+          onSave={saveFields}
+          onClose={() => setEditingFieldsSection(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ProjectCoreInfo;

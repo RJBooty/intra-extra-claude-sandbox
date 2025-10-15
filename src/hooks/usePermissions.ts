@@ -38,7 +38,7 @@ interface PermissionHookResult {
  * Hook for checking page-level permissions
  */
 export function usePageAccess(pageId: string | null): PermissionHookResult {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [result, setResult] = useState<PermissionCheckResult>({
     permission: 'none',
     canRead: false,
@@ -47,7 +47,7 @@ export function usePageAccess(pageId: string | null): PermissionHookResult {
     canDelete: false,
     canApprove: false
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash of access denied
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => {
@@ -55,6 +55,11 @@ export function usePageAccess(pageId: string | null): PermissionHookResult {
   }, []);
 
   const checkPermission = useCallback(async () => {
+    // Wait for auth to load before making permission decisions
+    if (authLoading) {
+      return;
+    }
+
     // Early return conditions
     if (!isAuthenticated || !user?.id || !pageId) {
       setResult({
@@ -108,7 +113,7 @@ export function usePageAccess(pageId: string | null): PermissionHookResult {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, pageId]);
+  }, [authLoading, isAuthenticated, user?.id, pageId]);
 
   const refresh = useCallback(async () => {
     if (user?.id && pageId) {
@@ -152,7 +157,7 @@ export function usePageAccess(pageId: string | null): PermissionHookResult {
  * Hook for checking section-level permissions
  */
 export function useSectionAccess(sectionId: string | null): PermissionHookResult {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [result, setResult] = useState<PermissionCheckResult>({
     permission: 'none',
     canRead: false,
@@ -161,7 +166,7 @@ export function useSectionAccess(sectionId: string | null): PermissionHookResult
     canDelete: false,
     canApprove: false
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash of access denied
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => {
@@ -169,6 +174,11 @@ export function useSectionAccess(sectionId: string | null): PermissionHookResult
   }, []);
 
   const checkPermission = useCallback(async () => {
+    // Wait for auth to load before making permission decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!isAuthenticated || !user?.id || !sectionId) {
       setResult({
         permission: 'none',
@@ -219,7 +229,7 @@ export function useSectionAccess(sectionId: string | null): PermissionHookResult
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, sectionId]);
+  }, [authLoading, isAuthenticated, user?.id, sectionId]);
 
   const refresh = useCallback(async () => {
     if (user?.id && sectionId) {
@@ -263,7 +273,7 @@ export function useSectionAccess(sectionId: string | null): PermissionHookResult
  * Hook for checking field-level permissions
  */
 export function useFieldAccess(fieldId: string | null): PermissionHookResult {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [result, setResult] = useState<PermissionCheckResult>({
     permission: 'none',
     canRead: false,
@@ -271,7 +281,7 @@ export function useFieldAccess(fieldId: string | null): PermissionHookResult {
     canUpdate: false,
     canDelete: false
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash of access denied
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => {
@@ -279,6 +289,11 @@ export function useFieldAccess(fieldId: string | null): PermissionHookResult {
   }, []);
 
   const checkPermission = useCallback(async () => {
+    // Wait for auth to load before making permission decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!isAuthenticated || !user?.id || !fieldId) {
       setResult({
         permission: 'none',
@@ -327,7 +342,7 @@ export function useFieldAccess(fieldId: string | null): PermissionHookResult {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, fieldId]);
+  }, [authLoading, isAuthenticated, user?.id, fieldId]);
 
   const refresh = useCallback(async () => {
     if (user?.id && fieldId) {
@@ -371,7 +386,7 @@ export function useFieldAccess(fieldId: string | null): PermissionHookResult {
  * Hook for checking page permissions by page name (convenience hook)
  */
 export function usePageAccessByName(pageName: string | null): PermissionHookResult {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [result, setResult] = useState<PermissionCheckResult>({
     permission: 'none',
     canRead: false,
@@ -380,7 +395,7 @@ export function usePageAccessByName(pageName: string | null): PermissionHookResu
     canDelete: false,
     canApprove: false
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash of access denied
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => {
@@ -388,6 +403,11 @@ export function usePageAccessByName(pageName: string | null): PermissionHookResu
   }, []);
 
   const checkPermission = useCallback(async () => {
+    // Wait for auth to load before making permission decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!isAuthenticated || !user?.id || !pageName) {
       setResult({
         permission: 'none',
@@ -438,7 +458,7 @@ export function usePageAccessByName(pageName: string | null): PermissionHookResu
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, pageName]);
+  }, [authLoading, isAuthenticated, user?.id, pageName]);
 
   const refresh = useCallback(async () => {
     if (user?.id && pageName) {
@@ -486,12 +506,17 @@ export function useMultiplePermissions(requests: Array<{
   id: string;
   name?: string; // For caching/identification
 }>) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [results, setResults] = useState<Record<string, PermissionCheckResult>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash of access denied
   const [error, setError] = useState<string | null>(null);
 
   const checkPermissions = useCallback(async () => {
+    // Wait for auth to load before making permission decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!isAuthenticated || !user?.id || requests.length === 0) {
       setResults({});
       setLoading(false);
@@ -543,7 +568,7 @@ export function useMultiplePermissions(requests: Array<{
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, requests]);
+  }, [authLoading, isAuthenticated, user?.id, requests]);
 
   useEffect(() => {
     checkPermissions();
