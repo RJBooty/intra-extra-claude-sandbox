@@ -2,21 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { 
-  AlertCircle, AlertTriangle, ArrowRight, Award, BarChart3, Briefcase, Building, 
-  Calendar, CalendarDays, Car, CheckCircle, CheckSquare, ChevronLeft, 
-  ChevronRight, Clock, Construction, Copy, CreditCard, DollarSign, Download, Edit, Eye, 
-  EyeOff, FileText, FolderOpen, Globe, Hammer, HardHat, Heart, Key, Lock, Luggage, 
-  Mail, MessageCircle, MessageSquare, Mountain, Package, Paperclip, Phone, Plane, 
-  Plus, Receipt, Save, Scale, Search, Send, Settings, Shield, ShieldCheck, 
-  Star, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog, 
+import {
+  AlertCircle, AlertTriangle, ArrowRight, ArrowUpCircle, Award, BarChart3, Briefcase, Building,
+  Calendar, CalendarDays, Car, CheckCircle, CheckSquare, ChevronLeft,
+  ChevronRight, Clock, Construction, Copy, CreditCard, DollarSign, Download, Edit, Eye,
+  EyeOff, FileText, FolderOpen, Globe, Hammer, HardHat, Heart, Info, Key, Lock, Luggage,
+  Mail, MessageCircle, MessageSquare, Mountain, Package, Paperclip, Phone, Plane,
+  Plus, Receipt, Save, Scale, Search, Send, Settings, Shield, ShieldCheck,
+  Star, Trash2, TrendingUp, Trophy, Truck, Upload, User, UserCog,
   UserX, Users, Wrench, X, XCircle, Zap, Zap as Lightning, CheckCircle2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { TeamsIcon, SlackIcon, WhatsAppIcon, EmailIcon } from '../icons/BrandIcons';
-import { userService } from '../../lib/services/userService';
+import { userService, ProfileType } from '../../lib/services/userService';
 import { UserWithRole } from '../../types/user';
 
 interface UserProfilePageProps {
@@ -550,6 +550,19 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     attachment: null as File | null
   });
   const [financeQueryError, setFinanceQueryError] = useState(false);
+
+  // Salary visibility state for Internal users
+  const [salaryVisible, setSalaryVisible] = useState(false);
+
+  // View As mode for Master users (preview different profile types)
+  const [viewAsProfileType, setViewAsProfileType] = useState<ProfileType | null>(null);
+
+  // Access level request modal state
+  const [showAccessRequestModal, setShowAccessRequestModal] = useState(false);
+  const [accessRequestForm, setAccessRequestForm] = useState({
+    requestedLevel: '',
+    reason: ''
+  });
   
   // Standard lists for dropdowns
   const NATIONALITIES = [
@@ -888,7 +901,36 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     setDocumentToDelete(null);
   };
 
-  const tabs = [
+  // Helper function to determine visible tabs based on profile type
+  const getVisibleTabIds = (profileType?: string, fieldOpsEnabled?: boolean): string[] => {
+    // Default to Internal Office if no profile type is set
+    const type = profileType || 'Internal Office';
+
+    switch (type) {
+      case 'External':
+        // External: personal, work, compliance, payments, availability, performance, preferences
+        // Exclude: reports (My Team)
+        return ['personal', 'work', 'compliance', 'payments', 'availability', 'performance', 'preferences'];
+
+      case 'Internal Field Operations':
+        // Internal Field Operations: All Internal Office tabs + work skills
+        return ['personal', 'work', 'compliance', 'payments', 'availability', 'performance', 'reports', 'preferences'];
+
+      case 'Internal Office':
+      default:
+        // Internal Office base tabs
+        if (fieldOpsEnabled) {
+          // If field operations mode is enabled, include work skills
+          return ['personal', 'work', 'compliance', 'payments', 'availability', 'performance', 'reports', 'preferences'];
+        }
+        // Standard Internal Office: personal, compliance, payments, availability, performance, reports, preferences
+        // Exclude: work
+        return ['personal', 'compliance', 'payments', 'availability', 'performance', 'reports', 'preferences'];
+    }
+  };
+
+  // All available tabs
+  const allTabs = [
     { id: 'personal', label: 'Personal Details', icon: User },
     { id: 'work', label: 'Work Skills', icon: Briefcase },
     { id: 'compliance', label: 'Docs & Compliance', icon: Shield, badge: 2 },
@@ -898,6 +940,58 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     { id: 'reports', label: 'My Team', icon: Users },
     { id: 'preferences', label: 'Preferences', icon: Settings }
   ];
+
+  // Filter tabs based on user's profile type (or View As override for Master users)
+  const effectiveProfileType = viewAsProfileType || userProfile?.profile_type;
+  const visibleTabIds = getVisibleTabIds(effectiveProfileType, userProfile?.field_operations_mode_enabled);
+  const tabs = allTabs.filter(tab => visibleTabIds.includes(tab.id));
+
+  // Editable Checkbox Component for boolean fields
+  const EditableCheckbox = ({
+    label,
+    value,
+    fieldKey,
+    isEditMode,
+    formData,
+    setFormData,
+    userProfile
+  }: {
+    label: string;
+    value: boolean;
+    fieldKey: keyof UserWithRole;
+    isEditMode: boolean;
+    formData: Partial<UserWithRole>;
+    setFormData: React.Dispatch<React.SetStateAction<Partial<UserWithRole>>>;
+    userProfile: UserWithRole | null;
+  }) => {
+    const handleToggle = () => {
+      if (isEditMode) {
+        setFormData(prev => ({ ...prev, [fieldKey]: !value }));
+      }
+    };
+
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-700">{label}</span>
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="sr-only"
+            checked={value}
+            onChange={handleToggle}
+            disabled={!isEditMode}
+          />
+          <div className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out ${
+            value ? 'bg-blue-600' : 'bg-gray-300'
+          } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <span className={`inline-block w-5 h-5 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${
+              value ? 'translate-x-5' : 'translate-x-0.5'
+            }`}></span>
+          </div>
+        </label>
+      </div>
+    );
+  };
 
   // Personal Details Tab
   const renderPersonalTab = () => (
@@ -1115,7 +1209,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       </div>
 
       {/* About Me and Job Information - Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 ${userProfile?.profile_type !== 'External' ? 'lg:grid-cols-2' : ''} gap-6`}>
         <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
             <User className="w-5 h-5 mr-2 text-gray-500" />
@@ -1134,45 +1228,48 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
           />
         </div>
 
-        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
-            <Briefcase className="w-5 h-5 mr-2 text-gray-500" />
-            Job Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <EditableField
-              label="Job Title"
-              value={formData.job_title || userProfile?.job_title || ""}
-              fieldKey="job_title"
-              isEditMode={isEditMode}
-              formData={formData}
-              setFormData={setFormData}
-              userProfile={userProfile}
-            />
-            <EditableField
-              label="Department"
-              value={formData.department || userProfile?.department || ""}
-              fieldKey="department"
-              isEditMode={isEditMode}
-              formData={formData}
-              setFormData={setFormData}
-              userProfile={userProfile}
-            />
-            <div className="col-span-1 md:col-span-2">
+        {/* Job Information - Hidden for External users */}
+        {effectiveProfileType !== 'External' && (
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center border-b pb-3 mb-4">
+              <Briefcase className="w-5 h-5 mr-2 text-gray-500" />
+              Job Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <EditableField
-                label="Brief Description"
-                value={formData.job_description || userProfile?.job_description || ""}
-                isTextarea={true}
-                placeholder="Describe your role and responsibilities..."
-                fieldKey="job_description"
+                label="Job Title"
+                value={formData.job_title || userProfile?.job_title || ""}
+                fieldKey="job_title"
                 isEditMode={isEditMode}
                 formData={formData}
                 setFormData={setFormData}
                 userProfile={userProfile}
               />
+              <EditableField
+                label="Department"
+                value={formData.department || userProfile?.department || ""}
+                fieldKey="department"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <div className="col-span-1 md:col-span-2">
+                <EditableField
+                  label="Brief Description"
+                  value={formData.job_description || userProfile?.job_description || ""}
+                  isTextarea={true}
+                  placeholder="Describe your role and responsibilities..."
+                  fieldKey="job_description"
+                  isEditMode={isEditMode}
+                  formData={formData}
+                  setFormData={setFormData}
+                  userProfile={userProfile}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Documents - Third Row */}
@@ -2094,8 +2191,252 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
   );
 };
 
-  // Payments Tab
-  const renderPaymentsTab = () => (
+  // Internal Payments Tab (for Internal Office and Internal Field Operations)
+  const renderInternalPaymentsTab = () => (
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Compensation & Payments</h1>
+          <p className="mt-1 text-base text-gray-600">View your salary information and payment history.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFinanceQueryModal(true)}
+            className="flex items-center gap-2 rounded-md h-10 px-4 text-sm font-semibold text-indigo-600 border border-indigo-600 bg-white hover:bg-indigo-50 transition-colors flex-shrink-0"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Raise Finance Query</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Salary Information Card with Blur/Unlock */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-5 border-b border-gray-200 flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Salary Information</h2>
+            <p className="text-sm text-gray-500 mt-1">Confidential - Click to reveal</p>
+          </div>
+          <button
+            onClick={() => setSalaryVisible(!salaryVisible)}
+            className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex-shrink-0"
+          >
+            {salaryVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span>{salaryVisible ? 'Hide' : 'Show'} Details</span>
+          </button>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className={`bg-gray-50 p-4 rounded-md transition-all ${!salaryVisible ? 'blur-sm select-none' : ''}`}>
+              <p className="text-sm text-gray-600">Annual Salary</p>
+              <p className="text-2xl text-gray-900 font-bold mt-1">
+                £{userProfile?.annual_salary?.toLocaleString() || '45,000'}
+              </p>
+            </div>
+            <div className={`bg-gray-50 p-4 rounded-md transition-all ${!salaryVisible ? 'blur-sm select-none' : ''}`}>
+              <p className="text-sm text-gray-600">Monthly Gross</p>
+              <p className="text-xl text-gray-900 font-semibold mt-1">
+                £{((userProfile?.annual_salary || 45000) / 12).toLocaleString(undefined, {maximumFractionDigits: 2})}
+              </p>
+            </div>
+            <div className={`bg-gray-50 p-4 rounded-md transition-all ${!salaryVisible ? 'blur-sm select-none' : ''}`}>
+              <p className="text-sm text-gray-600">Tax Code</p>
+              <p className="text-base text-gray-900 font-medium mt-1">1257L</p>
+            </div>
+            <div className={`bg-gray-50 p-4 rounded-md transition-all ${!salaryVisible ? 'blur-sm select-none' : ''}`}>
+              <p className="text-sm text-gray-600">National Insurance</p>
+              <p className="text-base text-gray-900 font-medium mt-1">Category A</p>
+            </div>
+          </div>
+
+          {!salaryVisible && (
+            <div className="mt-4 p-3 rounded-md bg-blue-50 border-l-4 border-blue-400">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Lock className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-800">
+                    Salary information is hidden for security. Click "Show Details" to reveal.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Two Column Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Deductions Breakdown */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Monthly Deductions</h2>
+          </div>
+          <div className="p-5">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <p className="text-sm text-gray-600">Income Tax</p>
+                <p className={`text-sm font-medium ${salaryVisible ? 'text-gray-900' : 'text-gray-400 blur-sm'}`}>
+                  £{salaryVisible ? '542.00' : '•••.••'}
+                </p>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <p className="text-sm text-gray-600">National Insurance</p>
+                <p className={`text-sm font-medium ${salaryVisible ? 'text-gray-900' : 'text-gray-400 blur-sm'}`}>
+                  £{salaryVisible ? '289.00' : '•••.••'}
+                </p>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <p className="text-sm text-gray-600">Pension (5%)</p>
+                <p className={`text-sm font-medium ${salaryVisible ? 'text-gray-900' : 'text-gray-400 blur-sm'}`}>
+                  £{salaryVisible ? '187.50' : '•••.••'}
+                </p>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <p className="text-sm text-gray-600">Student Loan</p>
+                <p className={`text-sm font-medium ${salaryVisible ? 'text-gray-900' : 'text-gray-400 blur-sm'}`}>
+                  £{salaryVisible ? '0.00' : '•••.••'}
+                </p>
+              </div>
+              <div className="flex justify-between items-center pt-3 mt-2 border-t-2 border-gray-200">
+                <p className="text-base font-semibold text-gray-900">Net Monthly Pay</p>
+                <p className={`text-lg font-bold ${salaryVisible ? 'text-green-600' : 'text-gray-400 blur-sm'}`}>
+                  £{salaryVisible ? '2,731.50' : '•,•••.••'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Benefits Overview */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Benefits & Allowances</h2>
+          </div>
+          <div className="p-5">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Company Pension (5% match)</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Employer contributes £187.50/month</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Health Insurance</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Private medical coverage included</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">25 Days Holiday</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Plus bank holidays</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Info className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Travel Allowance</p>
+                  <p className="text-xs text-gray-500 mt-0.5">45p per mile for business travel</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PAYE Payment History */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Payment History (PAYE)</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <input
+                className="w-full sm:w-48 pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Search by month..."
+                type="text"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+            <button className="flex items-center gap-2 rounded-md h-9 px-4 text-sm font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+              <Download className="w-4 h-4" />
+              <span>Download All</span>
+            </button>
+          </div>
+        </div>
+        <div className="p-0">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pay Period</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Gross Pay</th>
+                  <th className="hidden lg:table-cell px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Deductions</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Net Pay</th>
+                  <th className="hidden sm:table-cell px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment Date</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payslip</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {[
+                  { period: 'September 2024', gross: '£3,750.00', deductions: '£1,018.50', net: '£2,731.50', date: 'Sep 30, 2024', status: 'Paid' },
+                  { period: 'August 2024', gross: '£3,750.00', deductions: '£1,018.50', net: '£2,731.50', date: 'Aug 31, 2024', status: 'Paid' },
+                  { period: 'July 2024', gross: '£3,750.00', deductions: '£1,018.50', net: '£2,731.50', date: 'Jul 31, 2024', status: 'Paid' },
+                  { period: 'June 2024', gross: '£3,750.00', deductions: '£1,018.50', net: '£2,731.50', date: 'Jun 30, 2024', status: 'Paid' }
+                ].map((payment, index) => (
+                  <tr key={index} className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0 transition-colors duration-150">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{payment.period}</div>
+                    </td>
+                    <td className={`px-5 py-4 whitespace-nowrap text-sm font-medium ${salaryVisible ? 'text-gray-900' : 'text-gray-400 blur-sm'}`}>
+                      {salaryVisible ? payment.gross : '£•,•••.••'}
+                    </td>
+                    <td className={`hidden lg:table-cell px-5 py-4 whitespace-nowrap text-sm ${salaryVisible ? 'text-gray-600' : 'text-gray-400 blur-sm'}`}>
+                      {salaryVisible ? payment.deductions : '£•,•••.••'}
+                    </td>
+                    <td className={`px-5 py-4 whitespace-nowrap text-sm font-semibold ${salaryVisible ? 'text-green-600' : 'text-gray-400 blur-sm'}`}>
+                      {salaryVisible ? payment.net : '£•,•••.••'}
+                    </td>
+                    <td className="hidden sm:table-cell px-5 py-4 whitespace-nowrap text-sm text-gray-600">{payment.date}</td>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 rounded-md h-8 px-3 text-xs font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                          <Download className="w-3 h-3" />
+                          <span>Download</span>
+                        </button>
+                        <button className="flex items-center gap-1.5 rounded-md h-8 px-3 text-xs font-semibold text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // External Payments Tab (for External contractors/freelancers)
+  const renderExternalPaymentsTab = () => (
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex justify-between items-center flex-wrap gap-4">
@@ -2409,6 +2750,14 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       </div>
     </div>
   );
+
+  // Payments Tab Router - Routes to Internal or External version based on profile type
+  const renderPaymentsTab = () => {
+    const isInternal = effectiveProfileType === 'Internal Office' ||
+                       effectiveProfileType === 'Internal Field Operations';
+
+    return isInternal ? renderInternalPaymentsTab() : renderExternalPaymentsTab();
+  };
 
   // Availability Tab
   const renderAvailabilityTab = () => (
@@ -3237,105 +3586,106 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-6">Preferences</h3>
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="travel">Willingness to Travel</label>
-            <select className="block w-full shadow-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-sm px-3 py-2" id="travel" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}>
-              <option>Willing to travel nationally</option>
-              <option>Willing to travel internationally</option>
-              <option>Only local events</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="event-type">Preferred Event Type</label>
-            <select className="block w-full shadow-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-sm px-3 py-2" id="event-type" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}>
-              <option>No Preference</option>
-              <option>Corporate Events</option>
-              <option>Music Festivals</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="role-type">Preferred Role Type</label>
-            <select className="block w-full shadow-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-sm px-3 py-2" id="role-type" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}>
-              <option>No Preference</option>
-              <option>Technical (e.g. AV, Lighting)</option>
-              <option>Logistics & Build</option>
-            </select>
-          </div>
-          
-          <div className="pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">Other Preferences</label>
+          <EditableField
+            label="Willingness to Travel"
+            value={formData.travel_willingness || userProfile?.travel_willingness || ""}
+            isSelect={true}
+            options={['local', 'national', 'international', 'any']}
+            fieldKey="travel_willingness"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
+          />
+
+          <EditableField
+            label="Preferred Event Type"
+            value={formData.preferred_event_type || userProfile?.preferred_event_type || ""}
+            isSelect={true}
+            options={['No Preference', 'Corporate Events', 'Music Festivals', 'Sports Events', 'Conferences']}
+            fieldKey="preferred_event_type"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
+          />
+
+          <EditableField
+            label="Preferred Role Type"
+            value={formData.preferred_role_type || userProfile?.preferred_role_type || ""}
+            isSelect={true}
+            options={['No Preference', 'Technical (e.g. AV, Lighting)', 'Logistics & Build', 'Event Management', 'Customer Service']}
+            fieldKey="preferred_role_type"
+            isEditMode={isEditMode}
+            formData={formData}
+            setFormData={setFormData}
+            userProfile={userProfile}
+          />
+
+          <div className="pt-4 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Work Preferences</label>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Willing to work unsociable hours</span>
-                <label className="flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only" defaultChecked />
-                  <div className="relative inline-flex items-center h-6 rounded-full w-11 bg-blue-600 transition-colors duration-200 ease-in-out">
-                    <span className="inline-block w-5 h-5 transform bg-white rounded-full transition-transform duration-200 ease-in-out translate-x-5"></span>
-                  </div>
-                </label>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Interested in Team Leader roles</span>
-                <label className="flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only" defaultChecked />
-                  <div className="relative inline-flex items-center h-6 rounded-full w-11 bg-blue-600 transition-colors duration-200 ease-in-out">
-                    <span className="inline-block w-5 h-5 transform bg-white rounded-full transition-transform duration-200 ease-in-out translate-x-5"></span>
-                  </div>
-                </label>
-              </div>
+              <EditableCheckbox
+                label="Willing to work unsociable hours"
+                value={formData.willing_to_work_unsociable_hours ?? userProfile?.willing_to_work_unsociable_hours ?? false}
+                fieldKey="willing_to_work_unsociable_hours"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <EditableCheckbox
+                label="Interested in Team Leader roles"
+                value={formData.interested_in_team_leader_roles ?? userProfile?.interested_in_team_leader_roles ?? false}
+                fieldKey="interested_in_team_leader_roles"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
             </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">Other Information</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">Communication Preferences</h3>
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Communication Preferences</label>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center">
-                <input 
-                  className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                  id="email-comms" 
-                  name="comms" 
-                  type="checkbox" 
-                  defaultChecked
-                />
-                <label className="ml-2 block text-sm text-gray-900" htmlFor="email-comms">
-                  Email Job Alerts
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input 
-                  className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                  id="sms-comms" 
-                  name="comms" 
-                  type="checkbox"
-                />
-                <label className="ml-2 block text-sm text-gray-900" htmlFor="sms-comms">
-                  SMS Notifications for urgent updates
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input 
-                  className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                  id="newsletter-comms" 
-                  name="comms" 
-                  type="checkbox" 
-                  defaultChecked
-                />
-                <label className="ml-2 block text-sm text-gray-900" htmlFor="newsletter-comms">
-                  Receive Company Newsletter
-                </label>
-              </div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Notification Settings</label>
+            <div className="space-y-4">
+              <EditableCheckbox
+                label="Email Job Alerts"
+                value={formData.email_job_alerts ?? userProfile?.email_job_alerts ?? true}
+                fieldKey="email_job_alerts"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <EditableCheckbox
+                label="SMS Notifications for urgent updates"
+                value={formData.sms_notifications ?? userProfile?.sms_notifications ?? false}
+                fieldKey="sms_notifications"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
+              <EditableCheckbox
+                label="Receive Company Newsletter"
+                value={formData.receive_newsletter ?? userProfile?.receive_newsletter ?? true}
+                fieldKey="receive_newsletter"
+                isEditMode={isEditMode}
+                formData={formData}
+                setFormData={setFormData}
+                userProfile={userProfile}
+              />
             </div>
           </div>
-          
+
           <EditableField
-            label="General Notes (Visible to Crew Member)"
+            label="General Notes"
             value={formData.general_notes || userProfile?.general_notes || ""}
             isTextarea={true}
             placeholder="Enter any additional notes or requirements..."
@@ -3345,7 +3695,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             setFormData={setFormData}
             userProfile={userProfile}
           />
-          
+
           <div className="pt-4 bg-gray-50 p-4 rounded-lg -m-4 mt-4">
             <h4 className="text-base font-semibold text-gray-800 mb-4">Account Management</h4>
             <div className="space-y-3">
@@ -3367,30 +3717,62 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">Access Level</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">Access & Profile Type</h3>
         <div className="space-y-6">
-          <p className="text-sm text-gray-500">Defines what the user can see and do within the system.</p>
+          <p className="text-sm text-gray-500">Defines what you can see and do within the system.</p>
+
+          {/* Current Access Level - Read Only */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="access-level">Set Access Level</label>
-            <select className="block w-full shadow-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-sm px-3 py-2" id="access-level" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}>
-              <option>Parent / Top Level</option>
-              <option>Senior Management</option>
-              <option selected>Junior Management</option>
-              <option>Basic</option>
-              <option>HR / Finance</option>
-            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Current Access Level</label>
+            <div className="bg-gray-50 border border-gray-300 rounded-md px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-semibold text-gray-900">
+                    {userProfile?.role?.role_type || 'Mid'}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-500 italic">Read-only</span>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Contact your manager or HR to request a change to your access level.
+            </p>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="staff-type">Staff Type</label>
-            <select className="block w-full shadow-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-sm px-3 py-2" id="staff-type" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}>
-              <option>Internal</option>
-              <option>External</option>
-            </select>
+
+          {/* Request Higher Access Button */}
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              onClick={() => setShowAccessRequestModal(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium text-sm"
+            >
+              <ArrowUpCircle className="w-5 h-5" />
+              Request Higher Access
+            </button>
+            <p className="mt-2 text-xs text-center text-gray-500">
+              Submit a request to upgrade your access level
+            </p>
           </div>
-          
+
+          <div className="border-t border-gray-200 pt-4">
+            <EditableField
+              label="Profile Type"
+              value={formData.profile_type || userProfile?.profile_type || ""}
+              isSelect={true}
+              options={['Internal Office', 'External', 'Internal Field Operations']}
+              fieldKey="profile_type"
+              isEditMode={isEditMode && userProfile?.role?.role_type === 'Master'}
+              formData={formData}
+              setFormData={setFormData}
+              userProfile={userProfile}
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              {userProfile?.role?.role_type === 'Master' ? 'As a Master user, you can change the profile type.' : 'Only Master users can change profile types.'}
+            </p>
+          </div>
+
           <div className="border-t border-gray-200 pt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Permissions for Junior Management</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Current Permissions</h4>
             <ul className="space-y-2 text-sm text-gray-600 list-disc list-inside">
               <li>View and edit own profile</li>
               <li>Access to assigned project dashboards</li>
@@ -3634,6 +4016,48 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
     setShowConfirmDialog(false);
   };
 
+  // Access level request handlers
+  const handleAccessRequestFormChange = (field: string, value: string) => {
+    setAccessRequestForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAccessRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!accessRequestForm.requestedLevel || !accessRequestForm.reason) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const currentLevel = userProfile?.role?.role_type || 'Mid';
+      const success = await userService.createAccessLevelRequest(
+        currentLevel,
+        accessRequestForm.requestedLevel,
+        accessRequestForm.reason
+      );
+
+      if (success) {
+        toast.success('Access level request submitted successfully! HR will review your request.');
+        setShowAccessRequestModal(false);
+        setAccessRequestForm({ requestedLevel: '', reason: '' });
+      } else {
+        toast.error('Failed to submit access level request');
+      }
+    } catch (error) {
+      console.error('Error submitting access request:', error);
+      toast.error('Failed to submit access level request');
+    }
+  };
+
+  const handleAccessRequestCancel = () => {
+    setShowAccessRequestModal(false);
+    setAccessRequestForm({ requestedLevel: '', reason: '' });
+  };
+
   // Show loading state while fetching user data
   if (isLoading && !userProfile) {
     return (
@@ -3665,8 +4089,8 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                 />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">
-                    {userProfile?.display_name || userProfile?.first_name && userProfile?.last_name 
-                      ? `${userProfile.first_name} ${userProfile.last_name}` 
+                    {userProfile?.display_name || userProfile?.first_name && userProfile?.last_name
+                      ? `${userProfile.first_name} ${userProfile.last_name}`
                       : userProfile?.email || 'User'}
                   </h1>
                   <div className="flex items-center space-x-2">
@@ -3675,8 +4099,8 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                       <Star className="w-4 h-4 text-gray-300" />
                     </div>
                     <span className={`text-sm px-2 py-1 rounded-full ${
-                      userProfile?.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                      userProfile?.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {userProfile?.is_active ? 'Active' : 'Inactive'}
@@ -3686,6 +4110,42 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                         {userProfile.role.role_type}
                       </span>
                     )}
+                    {/* Employment Type Indicator */}
+                    {effectiveProfileType && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        effectiveProfileType === 'External'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-indigo-100 text-indigo-800'
+                      }`}>
+                        {effectiveProfileType === 'External' ? 'Partner' : 'Team Member'}
+                        {userProfile.field_operations_mode_enabled && ' • Field Ops'}
+                      </span>
+                    )}
+
+                    {/* View As Mode Dropdown - Master Users Only */}
+                    {userProfile?.role?.role_type === 'Master' && (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={viewAsProfileType || userProfile?.profile_type || 'Internal Office'}
+                          onChange={(e) => setViewAsProfileType(e.target.value as ProfileType)}
+                          className="text-xs px-2 py-1 rounded-md border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="Internal Office">View As: Internal Office</option>
+                          <option value="External">View As: External</option>
+                          <option value="Internal Field Operations">View As: Field Ops</option>
+                        </select>
+                        {viewAsProfileType && (
+                          <button
+                            onClick={() => setViewAsProfileType(null)}
+                            className="text-xs px-2 py-1 rounded-md bg-amber-100 text-amber-800 hover:bg-amber-200 flex items-center gap-1"
+                            title="Reset to your actual profile type"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Preview Mode
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3693,18 +4153,42 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
             <div className="flex items-center space-x-4">
               {!isEditMode ? (
                 <>
-                  <button 
+                  <button
                     onClick={handleEditMode}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Edit Profile
                   </button>
-                  <span className="text-gray-300">|</span>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">Message</button>
-                  <span className="text-gray-300">|</span>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">Assign to Project</button>
-                  <span className="text-sm text-gray-500 italic">View Mode</span>
+
+                  {/* Messaging Buttons - Teams and Slack */}
+                  {userProfile?.teams_handle && (
+                    <>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        onClick={() => window.open(`https://teams.microsoft.com/l/chat/0/0?users=${userProfile.teams_handle}`, '_blank')}
+                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                        title="Message on Microsoft Teams"
+                      >
+                        <TeamsIcon className="w-4 h-4 mr-1" />
+                        Teams
+                      </button>
+                    </>
+                  )}
+
+                  {userProfile?.slack_handle && (
+                    <>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        onClick={() => window.open(`slack://user?team=YOUR_TEAM_ID&id=${userProfile.slack_handle}`, '_blank')}
+                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                        title="Message on Slack"
+                      >
+                        <SlackIcon className="w-4 h-4 mr-1" />
+                        Slack
+                      </button>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -4279,7 +4763,7 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 10000 }}>
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 transition-opacity bg-gray-600 bg-opacity-75"></div>
-            
+
             <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md z-10">
               <div className="p-6 text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
@@ -4314,6 +4798,124 @@ export function UserProfilePage({ onBack }: UserProfilePageProps) {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Access Level Request Modal */}
+      {showAccessRequestModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 10000 }}>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 transition-opacity bg-gray-600 bg-opacity-75" onClick={handleAccessRequestCancel}></div>
+
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg z-10">
+              <form onSubmit={handleAccessRequestSubmit}>
+                {/* Modal Header */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100">
+                        <ArrowUpCircle className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Request Higher Access Level
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAccessRequestCancel}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 space-y-5">
+                  {/* Current Level Display */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Your Current Access Level</p>
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-blue-600" />
+                      <span className="text-lg font-semibold text-gray-900">
+                        {userProfile?.role?.role_type || 'Mid'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Requested Level */}
+                  <div>
+                    <label htmlFor="requestedLevel" className="block text-sm font-medium text-gray-700 mb-2">
+                      Requested Access Level <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="requestedLevel"
+                      required
+                      value={accessRequestForm.requestedLevel}
+                      onChange={(e) => handleAccessRequestFormChange('requestedLevel', e.target.value)}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    >
+                      <option value="">Select access level</option>
+                      <option value="Mid">Mid</option>
+                      <option value="Senior">Senior</option>
+                      <option value="Master">Master</option>
+                    </select>
+                  </div>
+
+                  {/* Reason */}
+                  <div>
+                    <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                      Reason for Request <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="reason"
+                      required
+                      rows={4}
+                      value={accessRequestForm.reason}
+                      onChange={(e) => handleAccessRequestFormChange('reason', e.target.value)}
+                      placeholder="Please explain why you need higher access level..."
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Your request will be reviewed by HR and management. Please provide a clear justification.
+                    </p>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">What happens next?</p>
+                        <ul className="list-disc list-inside space-y-1 text-blue-700">
+                          <li>Your request will be submitted to HR and management</li>
+                          <li>You'll receive a notification once reviewed</li>
+                          <li>Typical review time is 3-5 business days</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 rounded-b-lg">
+                  <button
+                    type="button"
+                    onClick={handleAccessRequestCancel}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Submit Request
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

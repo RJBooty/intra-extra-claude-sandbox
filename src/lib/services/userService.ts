@@ -1,6 +1,9 @@
 // src/lib/services/userService.ts
 import { supabase } from '../supabase';
 
+export type ProfileType = 'Internal Office' | 'External' | 'Internal Field Operations';
+export type PaymentHistoryType = 'invoice' | 'paye' | 'salary';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -42,6 +45,69 @@ export interface UserProfile {
   onboarding_completed?: boolean;
   created_at?: string;
   updated_at?: string;
+
+  // Profile Type System Fields
+  profile_type?: ProfileType;
+  field_operations_mode_enabled?: boolean;
+  annual_salary?: number;
+  payment_history_type?: PaymentHistoryType;
+  teams_handle?: string;
+  slack_handle?: string;
+
+  // Additional Personal Fields
+  bio?: string;
+  date_of_birth?: string;
+  gender?: string;
+  nationality?: string;
+  home_address?: string;
+  work_phone?: string;
+
+  // Emergency Contact
+  emergency_contact_relationship?: string;
+
+  // Health & Dietary
+  dietary_requirements?: string;
+  allergies?: string;
+
+  // Document & Compliance
+  passport_number?: string;
+  passport_country?: string;
+  license_number?: string;
+  license_country?: string;
+  license_expiry?: string;
+
+  // Job Information
+  job_description?: string;
+  primary_role?: string;
+  secondary_role?: string;
+  years_experience?: number;
+
+  // Notes
+  general_notes?: string;
+
+  // Preferences
+  preferred_event_type?: string;
+  preferred_role_type?: string;
+  willing_to_work_unsociable_hours?: boolean;
+  interested_in_team_leader_roles?: boolean;
+  email_job_alerts?: boolean;
+  sms_notifications?: boolean;
+  receive_newsletter?: boolean;
+}
+
+export interface AccessLevelRequest {
+  id: string;
+  user_id: string;
+  current_access_level: string;
+  requested_access_level: string;
+  reason?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requested_at: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  review_notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserRole {
@@ -792,6 +858,309 @@ class UserService {
     // Simple cache clearing - in a real app you might have more sophisticated caching
     console.log('User service cache cleared');
     // You could implement actual cache clearing logic here if needed
+  }
+
+  // =====================================================
+  // PROFILE TYPE MANAGEMENT
+  // =====================================================
+
+  async enableFieldOperationsMode(userId: string): Promise<boolean> {
+    try {
+      const profile = await this.getUserProfileById(userId);
+
+      // Only Internal Office users can enable field operations mode
+      if (profile?.profile_type !== 'Internal Office') {
+        console.error('Only Internal Office users can enable field operations mode');
+        return false;
+      }
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          field_operations_mode_enabled: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error enabling field operations mode:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to enable field operations mode:', error);
+      return false;
+    }
+  }
+
+  async disableFieldOperationsMode(userId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          field_operations_mode_enabled: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error disabling field operations mode:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to disable field operations mode:', error);
+      return false;
+    }
+  }
+
+  async updateProfileType(userId: string, profileType: ProfileType): Promise<boolean> {
+    try {
+      const updates: Partial<UserProfile> = {
+        profile_type: profileType,
+        updated_at: new Date().toISOString()
+      };
+
+      // Reset field operations mode if changing away from Internal Office
+      if (profileType !== 'Internal Office') {
+        updates.field_operations_mode_enabled = false;
+      }
+
+      // Set appropriate payment history type
+      if (profileType === 'Internal Office' || profileType === 'Internal Field Operations') {
+        updates.payment_history_type = 'paye';
+      } else {
+        updates.payment_history_type = 'invoice';
+      }
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating profile type:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to update profile type:', error);
+      return false;
+    }
+  }
+
+  // =====================================================
+  // ACCESS LEVEL REQUESTS
+  // =====================================================
+
+  async createAccessLevelRequest(
+    currentAccessLevel: string,
+    requestedAccessLevel: string,
+    reason?: string
+  ): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from('access_level_requests')
+        .insert({
+          user_id: user.id,
+          current_access_level: currentAccessLevel,
+          requested_access_level: requestedAccessLevel,
+          reason,
+          status: 'pending',
+          requested_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error creating access level request:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to create access level request:', error);
+      return false;
+    }
+  }
+
+  async getAccessLevelRequests(userId?: string): Promise<AccessLevelRequest[]> {
+    try {
+      let query = supabase
+        .from('access_level_requests')
+        .select('*')
+        .order('requested_at', { ascending: false });
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching access level requests:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to fetch access level requests:', error);
+      return [];
+    }
+  }
+
+  async getPendingAccessLevelRequests(): Promise<AccessLevelRequest[]> {
+    try {
+      const { data, error } = await supabase
+        .from('access_level_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching pending access level requests:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to fetch pending access level requests:', error);
+      return [];
+    }
+  }
+
+  async approveAccessLevelRequest(
+    requestId: string,
+    reviewerId: string,
+    reviewNotes?: string
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('access_level_requests')
+        .update({
+          status: 'approved',
+          reviewed_by: reviewerId,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes
+        })
+        .eq('id', requestId);
+
+      if (error) {
+        console.error('Error approving access level request:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to approve access level request:', error);
+      return false;
+    }
+  }
+
+  async rejectAccessLevelRequest(
+    requestId: string,
+    reviewerId: string,
+    reviewNotes?: string
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('access_level_requests')
+        .update({
+          status: 'rejected',
+          reviewed_by: reviewerId,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes
+        })
+        .eq('id', requestId);
+
+      if (error) {
+        console.error('Error rejecting access level request:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to reject access level request:', error);
+      return false;
+    }
+  }
+
+  // =====================================================
+  // PROFILE VISIBILITY HELPERS
+  // =====================================================
+
+  async canViewFullProfile(viewerId: string, targetUserId: string): Promise<boolean> {
+    try {
+      // Same user can always view their own profile
+      if (viewerId === targetUserId) {
+        return true;
+      }
+
+      // Get viewer's role and profile
+      const viewerProfile = await this.getUserProfileById(viewerId);
+      const viewerRole = await this.getUserRole(viewerId);
+      const targetProfile = await this.getUserProfileById(targetUserId);
+
+      if (!viewerProfile || !targetProfile) {
+        return false;
+      }
+
+      // Master users can view all profiles
+      if (viewerRole?.role_type === 'Master') {
+        return true;
+      }
+
+      // HR can view all profiles
+      if (viewerProfile.department === 'HR' || viewerRole?.role_type === 'HR') {
+        return true;
+      }
+
+      // Finance can view all profiles
+      if (viewerProfile.department === 'Finance') {
+        return true;
+      }
+
+      // Line managers can view their direct reports
+      if (targetProfile.manager_id === viewerId) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Failed to check profile visibility:', error);
+      return false;
+    }
+  }
+
+  async getVisibleProfileFields(viewerId: string, targetUserId: string): Promise<string[]> {
+    try {
+      const canViewFull = await this.canViewFullProfile(viewerId, targetUserId);
+
+      if (canViewFull) {
+        return ['all'];
+      }
+
+      // Default visible fields for limited access
+      return [
+        'id',
+        'first_name',
+        'last_name',
+        'display_name',
+        'email',
+        'phone',
+        'avatar_url',
+        'job_title',
+        'office_location',
+        'profile_type'
+      ];
+    } catch (error) {
+      console.error('Failed to get visible profile fields:', error);
+      return [];
+    }
   }
 }
 
